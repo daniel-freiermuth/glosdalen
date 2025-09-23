@@ -1,0 +1,28 @@
+package com.swedishvocab.app.data.network
+
+import retrofit2.http.Body
+import retrofit2.http.Header
+import retrofit2.http.POST
+
+interface DeepLApiService {
+    @POST("v2/translate")
+    suspend fun translate(
+        @Header("Authorization") authKey: String,
+        @Body request: DeepLTranslateRequest
+    ): DeepLTranslateResponse
+}
+
+data class DeepLTranslateRequest(
+    val text: List<String>,
+    val source_lang: String,
+    val target_lang: String
+)
+
+data class DeepLTranslateResponse(
+    val translations: List<DeepLTranslation>
+)
+
+data class DeepLTranslation(
+    val detected_source_language: String,
+    val text: String
+)
