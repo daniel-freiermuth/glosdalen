@@ -100,12 +100,20 @@ class SearchViewModel @Inject constructor(
                 )
             }
             
-            val ankiResult = ankiIntegration.createMultipleCards(card.toAnkiCards())
-            
-            _uiState.value = _uiState.value.copy(
-                isCreatingCard = false,
-                cardCreationResult = ankiResult
-            )
+            try {
+                val ankiCards = card.toAnkiCards()
+                val ankiResult = ankiIntegration.createMultipleCards(ankiCards)
+                
+                _uiState.value = _uiState.value.copy(
+                    isCreatingCard = false,
+                    cardCreationResult = ankiResult
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isCreatingCard = false,
+                    cardCreationResult = Result.failure(AnkiError.IntentFailed("Failed to create card: ${e.message}"))
+                )
+            }
         }
     }
     

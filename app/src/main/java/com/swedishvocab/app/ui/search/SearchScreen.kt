@@ -45,7 +45,14 @@ fun SearchScreen(
     // Handle card creation result
     uiState.cardCreationResult?.let { result ->
         LaunchedEffect(result) {
-            // Show toast or snackbar based on result
+            if (result.isSuccess) {
+                // TODO: Show success snackbar
+                println("SUCCESS: Card created successfully!")
+            } else {
+                // TODO: Show error snackbar
+                val error = result.exceptionOrNull()
+                println("ERROR: Card creation failed - $error")
+            }
             viewModel.clearCardCreationResult()
         }
     }
