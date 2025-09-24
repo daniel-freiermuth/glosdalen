@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.swedishvocab.app.R
 import com.swedishvocab.app.data.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,7 +144,10 @@ fun SearchScreen(
                                 viewModel.updateSourceLanguage(targetLanguage)
                             }
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Swap languages")
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_sync_alt),
+                                contentDescription = "Swap languages"
+                            )
                         }
                         
                         Text(targetLanguage.displayName)
