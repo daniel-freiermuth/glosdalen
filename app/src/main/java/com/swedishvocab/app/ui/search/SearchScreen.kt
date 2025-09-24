@@ -250,7 +250,7 @@ private fun TranslationCard(
                 )
             }
             
-            Divider()
+            HorizontalDivider()
             
             // Card type selection
             Text("Card Type:")
