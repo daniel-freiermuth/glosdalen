@@ -146,42 +146,40 @@ fun SearchScreen(
                     }
                     
                     // Search Input
-                    key("search_input_${uiState.searchQuery}") {
-                        OutlinedTextField(
-                            value = uiState.searchQuery,
-                            onValueChange = viewModel::updateSearchQuery,
-                            label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        if (uiState.searchQuery.isNotEmpty()) {
-                            IconButton(
-                                onClick = {
-                                    viewModel.updateSearchQuery("")
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = viewModel::updateSearchQuery,
+                        label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            if (uiState.searchQuery.isNotEmpty()) {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.updateSearchQuery("")
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
                                 }
-                            ) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
-                            }
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    viewModel.searchWord()
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        viewModel.searchWord()
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
                                 }
-                            ) {
-                                Icon(Icons.Default.Search, contentDescription = "Search")
                             }
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Search
-                    ),
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Search
+                        ),
                         keyboardActions = KeyboardActions(
                             onSearch = {
                                 viewModel.searchWord()
                             }
                         )
                     )
-                }
                 }
             }
         }
