@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
@@ -150,12 +151,22 @@ fun SearchScreen(
                     label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                viewModel.searchWord()
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(
+                                onClick = {
+                                    viewModel.updateSearchQuery("")
+                                }
+                            ) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear")
                             }
-                        ) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    viewModel.searchWord()
+                                }
+                            ) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
+                            }
                         }
                     },
                     keyboardOptions = KeyboardOptions(
@@ -168,6 +179,22 @@ fun SearchScreen(
                         }
                     )
                 )
+            }
+        }
+        
+        // Search Button (shown when there's a query but no results)
+        if (uiState.searchQuery.isNotEmpty() && !uiState.isLoading && uiState.translationResult == null && uiState.error == null) {
+            Button(
+                onClick = { viewModel.searchWord() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Search \"${uiState.searchQuery}\"")
             }
         }
         
