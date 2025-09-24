@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.swedishvocab.app.ui.settings
 
 import androidx.compose.foundation.layout.*
@@ -13,7 +15,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.swedishvocab.app.data.model.CardType
 
 @OptIn(ExperimentalMaterial3Api::class)

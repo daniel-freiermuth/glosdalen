@@ -16,7 +16,6 @@ data class GermanSwedishCard(
     val cardType: CardType = CardType.UNIDIRECTIONAL
 ) {
     fun toAnkiCards(): List<AnkiCard> {
-        val baseFields = mutableMapOf<String, String>()
         val backContent = buildString {
             append(swedishTranslation)
             exampleSentence?.let { 

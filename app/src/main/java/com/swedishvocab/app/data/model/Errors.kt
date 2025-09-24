@@ -6,7 +6,7 @@ sealed class VocabularyError : Exception() {
     object InvalidApiKey : VocabularyError()
     object UnsupportedLanguagePair : VocabularyError()
     data class ApiLimitExceeded(val retryAfter: Long?) : VocabularyError()
-    data class UnknownError(val message: String?) : VocabularyError()
+    data class UnknownError(override val message: String?) : VocabularyError()
 }
 
 sealed class AnkiError : Exception() {

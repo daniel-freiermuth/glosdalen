@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.swedishvocab.app.ui.search
 
 import androidx.compose.foundation.layout.*
@@ -6,17 +8,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.swedishvocab.app.data.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +34,6 @@ fun SearchScreen(
     val uiState by viewModel.uiState.collectAsState()
     val defaultCardType by viewModel.defaultCardType.collectAsState(CardType.UNIDIRECTIONAL)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
-    val keyboardController = LocalSoftwareKeyboardController.current
     
     // Show settings if first launch
     LaunchedEffect(isFirstLaunch) {
@@ -90,7 +95,7 @@ fun SearchScreen(
                             viewModel.updateSourceLanguage(newLanguage)
                         }
                     ) {
-                        Icon(Icons.Default.SwapHoriz, contentDescription = "Swap languages")
+                        Icon(Icons.Default.Refresh, contentDescription = "Swap languages")
                     }
                     
                     Text(
@@ -111,7 +116,6 @@ fun SearchScreen(
                         IconButton(
                             onClick = {
                                 viewModel.searchWord()
-                                keyboardController?.hide()
                             }
                         ) {
                             Icon(Icons.Default.Search, contentDescription = "Search")
@@ -124,7 +128,6 @@ fun SearchScreen(
                     keyboardActions = KeyboardActions(
                         onSearch = {
                             viewModel.searchWord()
-                            keyboardController?.hide()
                         }
                     )
                 )
