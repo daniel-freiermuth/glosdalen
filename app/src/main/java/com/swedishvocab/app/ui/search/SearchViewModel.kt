@@ -102,7 +102,7 @@ class SearchViewModel @Inject constructor(
             
             try {
                 val ankiCards = card.toAnkiCards()
-                val ankiResult = ankiIntegration.createMultipleCards(ankiCards)
+                val ankiResult = ankiIntegration.createAnkiCards(ankiCards)
                 
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,

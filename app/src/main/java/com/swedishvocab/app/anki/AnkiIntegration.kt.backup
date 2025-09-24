@@ -64,21 +64,38 @@ class AnkiIntegration @Inject constructor(
     
     private fun shareFormattedCardData(card: AnkiCard): Result<Unit> {
         return try {
-            println("Sharing clean card data with AnkiDroid")
+            println("Sharing formatted card data with AnkiDroid")
             
             val front = card.fields["Front"] ?: ""
             val back = card.fields["Back"] ?: ""
             
-            // Send ONLY the clean card data - no instructions or formatting
-            // AnkiDroid will put this in the first field, user copies to correct fields
-            val cardText = "$front\t$back"
+            // Create clean, structured format for easy copying
+            val cardText = buildString {
+                appendLine("📚 New Vocabulary Card")
+                appendLine()
+                appendLine("Front: $front")
+                appendLine("Back: $back")
+                appendLine()
+                appendLine("📋 Setup Instructions:")
+                appendLine("• Deck: ${card.deckName}")
+                appendLine("• Note Type: ${card.modelName}")
+                if (card.tags.isNotEmpty()) {
+                    appendLine("• Tags: ${card.tags.joinToString(" ")}")
+                }
+                appendLine()
+                appendLine("💡 In AnkiDroid:")
+                appendLine("1. Select '${card.deckName}' deck")
+                appendLine("2. Choose '${card.modelName}' note type")  
+                appendLine("3. Copy the Front/Back text above")
+            }
             
-            println("Clean card data: $cardText")
+            println("Formatted card data:")
+            println(cardText)
             
             val intent = Intent(ACTION_SEND).apply {
                 type = TYPE_TEXT_PLAIN
                 putExtra(Intent.EXTRA_TEXT, cardText)
-                putExtra(Intent.EXTRA_SUBJECT, front) // Just the word, no prefix
+                putExtra(Intent.EXTRA_SUBJECT, "Vocabulary: $front")
                 setPackage(ANKIDROID_PACKAGE)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
@@ -228,16 +245,40 @@ class AnkiIntegration @Inject constructor(
         }
     }
     
-    fun createAnkiCards(note: AnkiCard): Result<Unit> {
+    fun createMultipleCards(cards: List<AnkiCard>): Result<Unit> {
         if (!isAnkiDroidInstalled()) {
             return Result.failure(AnkiError.AnkiDroidNotInstalled)
         }
         
         return try {
+            val allCardsText = buildString {
+                appendLine("📚 ${cards.size} Vocabulary Cards")
+                appendLine()
+                
+                cards.forEachIndexed { index, card ->
+                    val front = card.fields["Front"] ?: ""
+                    val back = card.fields["Back"] ?: ""
+                    
+                    appendLine("--- Card ${index + 1} ---")
+                    appendLine("Front: $front")
+                    appendLine("Back: $back")
+                    if (card.tags.isNotEmpty()) {
+                        appendLine("Tags: ${card.tags.joinToString(" ")}")
+                    }
+                    appendLine()
+                }
+                
+                appendLine("📋 Setup Instructions:")
+                appendLine("• Target Deck: ${cards.first().deckName}")
+                appendLine("• Note Type: ${cards.first().modelName}")
+                appendLine()
+                appendLine("💡 Add each card to AnkiDroid using the Front/Back text above")
+            }
+            
             val intent = Intent(ACTION_SEND).apply {
                 type = TYPE_TEXT_PLAIN
-                putExtra(Intent.EXTRA_TEXT, note.fields["Front"])
-                putExtra(Intent.EXTRA_SUBJECT, note.fields["Back"])
+                putExtra(Intent.EXTRA_TEXT, allCardsText)
+                putExtra(Intent.EXTRA_SUBJECT, "${cards.size} Vocabulary Cards")
                 setPackage(ANKIDROID_PACKAGE)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }

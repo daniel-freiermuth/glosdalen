@@ -15,7 +15,7 @@ data class GermanSwedishCard(
     val deckName: String,
     val cardType: CardType = CardType.UNIDIRECTIONAL
 ) {
-    fun toAnkiCards(): List<AnkiCard> {
+    fun toAnkiCards(): AnkiCard {
         val backContent = buildString {
             append(swedishTranslation)
             exampleSentence?.let { 
@@ -26,11 +26,8 @@ data class GermanSwedishCard(
             }
         }
         
-        val cards = mutableListOf<AnkiCard>()
-        
         // German -> Swedish card
-        cards.add(
-            AnkiCard(
+        return AnkiCard(
                 deckName = deckName,
                 fields = mapOf(
                     "Front" to germanWord,
@@ -38,23 +35,6 @@ data class GermanSwedishCard(
                 ),
                 tags = listOf("german", "swedish", "vocab-app", "de-sv")
             )
-        )
-        
-        // Add reverse card for bidirectional
-        if (cardType == CardType.BIDIRECTIONAL) {
-            cards.add(
-                AnkiCard(
-                    deckName = deckName,
-                    fields = mapOf(
-                        "Front" to swedishTranslation,
-                        "Back" to germanWord + (exampleSentence?.let { "<br><br><i>$it</i>" } ?: "") + (notes?.let { "<br><br>$it" } ?: "")
-                    ),
-                    tags = listOf("german", "swedish", "vocab-app", "sv-de")
-                )
-            )
-        }
-        
-        return cards
     }
 }
 
