@@ -32,19 +32,7 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     val apiKey by viewModel.deepLApiKey.collectAsState("")
-    
-    // Show settings if first launch or API key not configured
-    // Use remember to track if we've already navigated to prevent loops
-    var hasNavigatedToSettings by remember { mutableStateOf(false) }
-    
-    LaunchedEffect(isFirstLaunch, apiKey) {
-        if (!hasNavigatedToSettings && (isFirstLaunch || apiKey.isBlank())) {
-            hasNavigatedToSettings = true
-            onNavigateToSettings()
-        }
-    }
     
     // Handle card creation result
     uiState.cardCreationResult?.let { result ->
@@ -80,6 +68,39 @@ fun SearchScreen(
             
             IconButton(onClick = onNavigateToSettings) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings")
+            }
+        }
+        
+        // Configuration Warning
+        if (apiKey.isBlank()) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "⚠️ Configuration Required",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = "Please configure your DeepL API key in Settings to use translation features.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Button(
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Go to Settings")
+                    }
+                }
             }
         }
         
