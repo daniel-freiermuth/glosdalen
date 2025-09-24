@@ -38,7 +38,12 @@ class SearchViewModel @Inject constructor(
     }
     
     fun updateSearchQuery(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
+        _uiState.value = _uiState.value.copy(
+            searchQuery = query,
+            translationResult = null,
+            error = null,
+            cardCreationResult = null
+        )
     }
     
     fun updateSourceLanguage(language: Language) {
