@@ -2,6 +2,7 @@
 
 package com.swedishvocab.app.ui.search
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -189,7 +190,18 @@ fun SearchScreen(
                 vocabularyEntry = result,
                 isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
                 isCreatingCard = uiState.isCreatingCard,
-                onCreateCard = viewModel::createAnkiCard
+                onCreateCard = viewModel::createAnkiCard,
+                onTranslationClick = { translationText ->
+                    // Set the translation as new search query and reverse language
+                    viewModel.updateSearchQuery(translationText)
+                    val newLanguage = when (result.sourceLanguage) {
+                        Language.GERMAN -> Language.SWEDISH
+                        Language.SWEDISH -> Language.GERMAN
+                    }
+                    viewModel.updateSourceLanguage(newLanguage)
+                    // Trigger new search
+                    viewModel.searchWord()
+                }
             )
         }
     }
@@ -252,7 +264,8 @@ private fun TranslationCard(
     vocabularyEntry: VocabularyEntry,
     isAnkiDroidAvailable: Boolean,
     isCreatingCard: Boolean,
-    onCreateCard: () -> Unit
+    onCreateCard: () -> Unit,
+    onTranslationClick: (String) -> Unit
 ) {
     
     Card {
@@ -275,7 +288,12 @@ private fun TranslationCard(
             vocabularyEntry.translations.forEach { translation ->
                 Text(
                     text = "→ ${translation.text}",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .clickable { onTranslationClick(translation.text) }
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
             
