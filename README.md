@@ -1,4 +1,4 @@
-# Swedish Vocabulary App
+# Glosordalen
 
 A Kotlin Android app for German-Swedish vocabulary lookup with direct Anki card creation.
 

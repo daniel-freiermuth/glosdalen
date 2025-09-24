@@ -77,7 +77,7 @@ fun SearchScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Swedish Vocab",
+                text = "Glosordalen",
                 style = MaterialTheme.typography.headlineMedium
             )
             

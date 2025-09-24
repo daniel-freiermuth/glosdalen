@@ -1,4 +1,4 @@
-# Swedish Vocabulary App - Project Overview
+# Glosordalen - Project Overview
 
 ## 🎯 Project Goal
 Create an Android app for German-Swedish vocabulary lookup with direct AnkiDroid card creation, emphasizing "technologies that provide strong compile-time correctness guarantees."
