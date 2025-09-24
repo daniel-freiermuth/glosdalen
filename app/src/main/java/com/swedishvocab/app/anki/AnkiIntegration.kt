@@ -21,11 +21,32 @@ class AnkiIntegration @Inject constructor(
     }
     
     fun isAnkiDroidInstalled(): Boolean {
-        return try {
+        // Method 1: Try package manager
+        try {
             context.packageManager.getPackageInfo(ANKIDROID_PACKAGE, 0)
-            true
+            return true
         } catch (e: PackageManager.NameNotFoundException) {
-            false
+            // Continue to method 2
+        }
+        
+        // Method 2: Check if intent can be resolved
+        try {
+            val intent = Intent(ANKIDROID_ACTION_ADD_NOTE).apply {
+                setPackage(ANKIDROID_PACKAGE)
+            }
+            val resolveInfo = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            if (resolveInfo != null) return true
+        } catch (e: Exception) {
+            // Continue to method 3
+        }
+        
+        // Method 3: Try to query activities that handle our intent
+        try {
+            val intent = Intent(ANKIDROID_ACTION_ADD_NOTE)
+            val activities = context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            return activities.any { it.activityInfo.packageName == ANKIDROID_PACKAGE }
+        } catch (e: Exception) {
+            return false
         }
     }
     
