@@ -34,6 +34,8 @@ fun SearchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val apiKey by viewModel.deepLApiKey.collectAsState("")
+    val nativeLanguage by viewModel.nativeLanguage.collectAsState(Language.GERMAN)
+    val foreignLanguage by viewModel.foreignLanguage.collectAsState(Language.SWEDISH)
     
     // Handle card creation result
     uiState.cardCreationResult?.let { result ->
@@ -122,8 +124,9 @@ fun SearchScreen(
                     IconButton(
                         onClick = {
                             val newLanguage = when (uiState.sourceLanguage) {
-                                Language.GERMAN -> Language.SWEDISH
-                                Language.SWEDISH -> Language.GERMAN
+                                nativeLanguage -> foreignLanguage
+                                foreignLanguage -> nativeLanguage
+                                else -> foreignLanguage
                             }
                             viewModel.updateSourceLanguage(newLanguage)
                         }
@@ -133,8 +136,9 @@ fun SearchScreen(
                     
                     Text(
                         when (uiState.sourceLanguage) {
-                            Language.GERMAN -> Language.SWEDISH.displayName
-                            Language.SWEDISH -> Language.GERMAN.displayName
+                            nativeLanguage -> foreignLanguage.displayName
+                            foreignLanguage -> nativeLanguage.displayName
+                            else -> foreignLanguage.displayName
                         }
                     )
                 }
@@ -195,8 +199,9 @@ fun SearchScreen(
                     // Set the translation as new search query and reverse language
                     viewModel.updateSearchQuery(translationText)
                     val newLanguage = when (result.sourceLanguage) {
-                        Language.GERMAN -> Language.SWEDISH
-                        Language.SWEDISH -> Language.GERMAN
+                        nativeLanguage -> foreignLanguage
+                        foreignLanguage -> nativeLanguage
+                        else -> foreignLanguage
                     }
                     viewModel.updateSourceLanguage(newLanguage)
                     // Trigger new search

@@ -2,6 +2,7 @@ package com.swedishvocab.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.repository.VocabularyRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,10 +20,20 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
     
     val currentApiKey = userPreferences.getDeepLApiKey()
+    val currentNativeLanguage = userPreferences.getNativeLanguage()
+    val currentForeignLanguage = userPreferences.getForeignLanguage()
     val isFirstLaunch = userPreferences.isFirstLaunch()
     
     fun updateApiKey(apiKey: String) {
         _uiState.value = _uiState.value.copy(apiKey = apiKey)
+    }
+    
+    fun updateNativeLanguage(language: Language) {
+        _uiState.value = _uiState.value.copy(nativeLanguage = language)
+    }
+    
+    fun updateForeignLanguage(language: Language) {
+        _uiState.value = _uiState.value.copy(foreignLanguage = language)
     }
     
     fun validateAndSaveApiKey() {
@@ -62,6 +73,8 @@ class SettingsViewModel @Inject constructor(
     
     fun saveSettings() {
         viewModelScope.launch {
+            userPreferences.setNativeLanguage(_uiState.value.nativeLanguage)
+            userPreferences.setForeignLanguage(_uiState.value.foreignLanguage)
             userPreferences.setFirstLaunchCompleted()
             _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
@@ -78,15 +91,19 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(settingsSaved = false)
     }
     
-    fun initializeFromCurrentSettings(apiKey: String) {
+    fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language) {
         _uiState.value = _uiState.value.copy(
-            apiKey = apiKey
+            apiKey = apiKey,
+            nativeLanguage = nativeLanguage,
+            foreignLanguage = foreignLanguage
         )
     }
 }
 
 data class SettingsUiState(
     val apiKey: String = "",
+    val nativeLanguage: Language = Language.GERMAN,
+    val foreignLanguage: Language = Language.SWEDISH,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,

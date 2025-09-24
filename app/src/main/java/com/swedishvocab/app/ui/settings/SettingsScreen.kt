@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.swedishvocab.app.data.model.Language
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,11 +28,13 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
+    val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
+    val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.SWEDISH)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey) {
-        viewModel.initializeFromCurrentSettings(currentApiKey)
+    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage) {
+        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage)
     }
     
     // Handle settings saved
@@ -152,7 +156,45 @@ fun SettingsScreen(
                 }
             }
             
-            // Anki Configuration
+            // Language Configuration
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Language Configuration",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    
+                    // Native Language
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Native Language:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        LanguageDropdown(
+                            selectedLanguage = uiState.nativeLanguage,
+                            onLanguageSelected = viewModel::updateNativeLanguage,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    // Foreign Language
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Foreign Language:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        LanguageDropdown(
+                            selectedLanguage = uiState.foreignLanguage,
+                            onLanguageSelected = viewModel::updateForeignLanguage,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+            
             Spacer(modifier = Modifier.weight(1f))
             
             // Save Button
@@ -162,6 +204,51 @@ fun SettingsScreen(
                 enabled = uiState.apiKeyValidated
             ) {
                 Text(if (isFirstLaunch) "Get Started" else "Save Settings")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LanguageDropdown(
+    selectedLanguage: Language,
+    onLanguageSelected: (Language) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            readOnly = true,
+            value = selectedLanguage.displayName,
+            onValueChange = { },
+            label = { Text("Language") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            Language.values().forEach { language ->
+                DropdownMenuItem(
+                    onClick = {
+                        onLanguageSelected(language)
+                        expanded = false
+                    },
+                    text = { Text(language.displayName) }
+                )
             }
         }
     }

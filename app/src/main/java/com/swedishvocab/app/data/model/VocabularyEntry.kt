@@ -24,7 +24,18 @@ data class VocabularyMetadata(
 
 enum class Language(val code: String, val displayName: String) {
     GERMAN("DE", "German"),
-    SWEDISH("SV", "Swedish")
+    ENGLISH("EN", "English"),
+    SPANISH("ES", "Spanish"),
+    FRENCH("FR", "French"),
+    ITALIAN("IT", "Italian"),
+    DUTCH("NL", "Dutch"),
+    POLISH("PL", "Polish"),
+    PORTUGUESE("PT", "Portuguese"),
+    RUSSIAN("RU", "Russian"),
+    SWEDISH("SV", "Swedish"),
+    DANISH("DA", "Danish"),
+    NORWEGIAN("NO", "Norwegian"),
+    FINNISH("FI", "Finnish")
 }
 
 enum class PartOfSpeech {

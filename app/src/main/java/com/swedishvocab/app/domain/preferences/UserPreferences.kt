@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.swedishvocab.app.data.model.CardType
+import com.swedishvocab.app.data.model.Language
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -21,6 +22,8 @@ class UserPreferences @Inject constructor(
         private val DEFAULT_DECK_NAME = stringPreferencesKey("default_deck_name")
         private val DEFAULT_CARD_TYPE = stringPreferencesKey("default_card_type")
         private val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
+        private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
+        private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
     }
     
     fun getDeepLApiKey(): Flow<String> {
@@ -69,6 +72,32 @@ class UserPreferences @Inject constructor(
     suspend fun setFirstLaunchCompleted() {
         dataStore.edit { preferences ->
             preferences[IS_FIRST_LAUNCH] = false
+        }
+    }
+    
+    fun getNativeLanguage(): Flow<Language> {
+        return dataStore.data.map { preferences ->
+            val languageCode = preferences[NATIVE_LANGUAGE] ?: "DE" // Default to German
+            Language.values().find { it.code == languageCode } ?: Language.GERMAN
+        }
+    }
+    
+    suspend fun setNativeLanguage(language: Language) {
+        dataStore.edit { preferences ->
+            preferences[NATIVE_LANGUAGE] = language.code
+        }
+    }
+    
+    fun getForeignLanguage(): Flow<Language> {
+        return dataStore.data.map { preferences ->
+            val languageCode = preferences[FOREIGN_LANGUAGE] ?: "SV" // Default to Swedish
+            Language.values().find { it.code == languageCode } ?: Language.SWEDISH
+        }
+    }
+    
+    suspend fun setForeignLanguage(language: Language) {
+        dataStore.edit { preferences ->
+            preferences[FOREIGN_LANGUAGE] = language.code
         }
     }
 }

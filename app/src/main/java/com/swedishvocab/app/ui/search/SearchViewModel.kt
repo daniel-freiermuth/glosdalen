@@ -22,11 +22,19 @@ class SearchViewModel @Inject constructor(
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
     
     val deepLApiKey = userPreferences.getDeepLApiKey()
+    val nativeLanguage = userPreferences.getNativeLanguage()
+    val foreignLanguage = userPreferences.getForeignLanguage()
     
     init {
         _uiState.value = _uiState.value.copy(
             isAnkiDroidAvailable = ankiIntegration.isAnkiDroidInstalled()
         )
+        
+        // Initialize with native language as default source
+        viewModelScope.launch {
+            val native = nativeLanguage.first()
+            _uiState.value = _uiState.value.copy(sourceLanguage = native)
+        }
     }
     
     fun updateSearchQuery(query: String) {
@@ -48,12 +56,16 @@ class SearchViewModel @Inject constructor(
                 translationResult = null
             )
             
+            val currentNative = nativeLanguage.first()
+            val currentForeign = foreignLanguage.first()
+            
             val result = vocabularyRepository.lookupWord(
                 word = query,
                 sourceLanguage = _uiState.value.sourceLanguage,
                 targetLanguage = when (_uiState.value.sourceLanguage) {
-                    Language.GERMAN -> Language.SWEDISH
-                    Language.SWEDISH -> Language.GERMAN
+                    currentNative -> currentForeign
+                    currentForeign -> currentNative
+                    else -> currentForeign // Default fallback
                 }
             )
             
