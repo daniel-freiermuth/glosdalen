@@ -12,10 +12,20 @@ class DeepLDataSource @Inject constructor(
     private val apiService: DeepLApiService
 ) : VocabularyDataSource {
     
-    override val supportedLanguagePairs = setOf(
-        Language.GERMAN to Language.SWEDISH,
-        Language.SWEDISH to Language.GERMAN
-    )
+    override val supportedLanguagePairs = run {
+        val languages = Language.values().toList()
+        val pairs = mutableSetOf<Pair<Language, Language>>()
+        
+        // Add all bidirectional language pairs
+        for (source in languages) {
+            for (target in languages) {
+                if (source != target) {
+                    pairs.add(source to target)
+                }
+            }
+        }
+        pairs.toSet()
+    }
     
     override val dataSource = DataSource.DEEPL
     
