@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.swedishvocab.app.data.model.CardType
+import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,6 +25,7 @@ class UserPreferences @Inject constructor(
         private val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
         private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
+        private val DEEPL_MODEL_TYPE = stringPreferencesKey("deepl_model_type")
     }
     
     fun getDeepLApiKey(): Flow<String> {
@@ -98,6 +100,19 @@ class UserPreferences @Inject constructor(
     suspend fun setForeignLanguage(language: Language) {
         dataStore.edit { preferences ->
             preferences[FOREIGN_LANGUAGE] = language.code
+        }
+    }
+    
+    fun getDeepLModelType(): Flow<DeepLModelType> {
+        return dataStore.data.map { preferences ->
+            val modelTypeValue = preferences[DEEPL_MODEL_TYPE] ?: ""
+            DeepLModelType.values().find { it.value == modelTypeValue } ?: DeepLModelType.DEFAULT
+        }
+    }
+    
+    suspend fun setDeepLModelType(modelType: DeepLModelType) {
+        dataStore.edit { preferences ->
+            preferences[DEEPL_MODEL_TYPE] = modelType.value
         }
     }
 }

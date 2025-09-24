@@ -2,6 +2,7 @@ package com.swedishvocab.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.repository.VocabularyRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
@@ -22,6 +23,7 @@ class SettingsViewModel @Inject constructor(
     val currentApiKey = userPreferences.getDeepLApiKey()
     val currentNativeLanguage = userPreferences.getNativeLanguage()
     val currentForeignLanguage = userPreferences.getForeignLanguage()
+    val currentDeepLModelType = userPreferences.getDeepLModelType()
     val isFirstLaunch = userPreferences.isFirstLaunch()
     
     fun updateApiKey(apiKey: String) {
@@ -34,6 +36,10 @@ class SettingsViewModel @Inject constructor(
     
     fun updateForeignLanguage(language: Language) {
         _uiState.value = _uiState.value.copy(foreignLanguage = language)
+    }
+    
+    fun updateDeepLModelType(modelType: DeepLModelType) {
+        _uiState.value = _uiState.value.copy(deepLModelType = modelType)
     }
     
     fun validateAndSaveApiKey() {
@@ -75,6 +81,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setNativeLanguage(_uiState.value.nativeLanguage)
             userPreferences.setForeignLanguage(_uiState.value.foreignLanguage)
+            userPreferences.setDeepLModelType(_uiState.value.deepLModelType)
             userPreferences.setFirstLaunchCompleted()
             _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
@@ -91,11 +98,12 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(settingsSaved = false)
     }
     
-    fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language) {
+    fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language, deepLModelType: DeepLModelType) {
         _uiState.value = _uiState.value.copy(
             apiKey = apiKey,
             nativeLanguage = nativeLanguage,
-            foreignLanguage = foreignLanguage
+            foreignLanguage = foreignLanguage,
+            deepLModelType = deepLModelType
         )
     }
 }
@@ -104,6 +112,7 @@ data class SettingsUiState(
     val apiKey: String = "",
     val nativeLanguage: Language = Language.GERMAN,
     val foreignLanguage: Language = Language.SWEDISH,
+    val deepLModelType: DeepLModelType = DeepLModelType.DEFAULT,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,

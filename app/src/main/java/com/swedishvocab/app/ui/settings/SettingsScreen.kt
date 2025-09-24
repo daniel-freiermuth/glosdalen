@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,18 +31,20 @@ fun SettingsScreen(
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
     val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
     val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.SWEDISH)
+    val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.DEFAULT)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage)
+    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType) {
+        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType)
     }
     
-    // Handle settings saved
+    // Handle settings saved (only for first launch auto-navigation)
     LaunchedEffect(uiState.settingsSaved) {
         if (uiState.settingsSaved) {
             viewModel.clearSettingsSaved()
-            if (!isFirstLaunch) {
+            // Only auto-navigate on first launch, manual navigation handles other cases
+            if (isFirstLaunch) {
                 onNavigateBack()
             }
         }
@@ -55,7 +58,13 @@ fun SettingsScreen(
             title = { Text("Settings") },
             navigationIcon = {
                 if (!isFirstLaunch) {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = {
+                            // Save settings first, then navigate back
+                            viewModel.saveSettings()
+                            onNavigateBack()
+                        }
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -192,18 +201,32 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
+                    
+                    // DeepL Model Type
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Translation Quality:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        ModelTypeDropdown(
+                            selectedModelType = uiState.deepLModelType,
+                            onModelTypeSelected = viewModel::updateDeepLModelType,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
             
             Spacer(modifier = Modifier.weight(1f))
             
-            // Save Button
-            Button(
-                onClick = viewModel::saveSettings,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.apiKeyValidated
-            ) {
-                Text(if (isFirstLaunch) "Get Started" else "Save Settings")
+            // Auto-save when API key is validated or on first launch when API key is provided
+            if (isFirstLaunch && uiState.apiKeyValidated) {
+                Button(
+                    onClick = viewModel::saveSettings,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Get Started")
+                }
             }
         }
     }
@@ -248,6 +271,63 @@ private fun LanguageDropdown(
                         expanded = false
                     },
                     text = { Text(language.displayName) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelTypeDropdown(
+    selectedModelType: DeepLModelType,
+    onModelTypeSelected: (DeepLModelType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            readOnly = true,
+            value = selectedModelType.displayName,
+            onValueChange = { },
+            label = { Text("Quality") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DeepLModelType.values().forEach { modelType ->
+                DropdownMenuItem(
+                    onClick = {
+                        onModelTypeSelected(modelType)
+                        expanded = false
+                    },
+                    text = { 
+                        Column {
+                            Text(
+                                text = modelType.displayName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = modelType.description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 )
             }
         }

@@ -15,11 +15,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +33,21 @@ import com.swedishvocab.app.data.model.*
 @Composable
 fun SearchScreen(
     onNavigateToSettings: () -> Unit,
-    viewModel: SearchViewModel = hiltViewModel()
+    viewModel: SearchViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val apiKey by viewModel.deepLApiKey.collectAsState("")
     val nativeLanguage by viewModel.nativeLanguage.collectAsState(Language.GERMAN)
     val foreignLanguage by viewModel.foreignLanguage.collectAsState(Language.SWEDISH)
+    
+    // Memoize target language calculation to prevent unnecessary recompositions
+    val targetLanguage = remember(uiState.sourceLanguage, nativeLanguage, foreignLanguage) {
+        when (uiState.sourceLanguage) {
+            nativeLanguage -> foreignLanguage
+            foreignLanguage -> nativeLanguage
+            else -> foreignLanguage
+        }
+    }
     
     // Handle card creation result
     uiState.cardCreationResult?.let { result ->
@@ -109,46 +120,37 @@ fun SearchScreen(
         }
         
         // Search Section
-        Card {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Language Toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+        key("search_section") {
+            Card {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(uiState.sourceLanguage.displayName)
-                    
-                    IconButton(
-                        onClick = {
-                            val newLanguage = when (uiState.sourceLanguage) {
-                                nativeLanguage -> foreignLanguage
-                                foreignLanguage -> nativeLanguage
-                                else -> foreignLanguage
-                            }
-                            viewModel.updateSourceLanguage(newLanguage)
-                        }
+                    // Language Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Swap languages")
+                        Text(uiState.sourceLanguage.displayName)
+                        
+                        IconButton(
+                            onClick = {
+                                viewModel.updateSourceLanguage(targetLanguage)
+                            }
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Swap languages")
+                        }
+                        
+                        Text(targetLanguage.displayName)
                     }
                     
-                    Text(
-                        when (uiState.sourceLanguage) {
-                            nativeLanguage -> foreignLanguage.displayName
-                            foreignLanguage -> nativeLanguage.displayName
-                            else -> foreignLanguage.displayName
-                        }
-                    )
-                }
-                
-                // Search Input
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = viewModel::updateSearchQuery,
-                    label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
+                    // Search Input
+                    key("search_input_${uiState.searchQuery}") {
+                        OutlinedTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = viewModel::updateSearchQuery,
+                            label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         if (uiState.searchQuery.isNotEmpty()) {
@@ -173,12 +175,14 @@ fun SearchScreen(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Search
                     ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            viewModel.searchWord()
-                        }
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                viewModel.searchWord()
+                            }
+                        )
                     )
-                )
+                }
+                }
             }
         }
         
@@ -225,12 +229,8 @@ fun SearchScreen(
                 onTranslationClick = { translationText ->
                     // Set the translation as new search query and reverse language
                     viewModel.updateSearchQuery(translationText)
-                    val newLanguage = when (result.sourceLanguage) {
-                        nativeLanguage -> foreignLanguage
-                        foreignLanguage -> nativeLanguage
-                        else -> foreignLanguage
-                    }
-                    viewModel.updateSourceLanguage(newLanguage)
+                    // Use the memoized target language calculation
+                    viewModel.updateSourceLanguage(targetLanguage)
                     // Trigger new search
                     viewModel.searchWord()
                 }

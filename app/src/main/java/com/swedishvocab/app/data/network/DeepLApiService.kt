@@ -15,7 +15,9 @@ interface DeepLApiService {
 data class DeepLTranslateRequest(
     val text: List<String>,
     val source_lang: String,
-    val target_lang: String
+    val target_lang: String,
+    val model_type: String? = null,
+    val formality: String? = null
 )
 
 data class DeepLTranslateResponse(

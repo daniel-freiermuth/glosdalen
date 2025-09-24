@@ -32,8 +32,13 @@ class SearchViewModel @Inject constructor(
         
         // Initialize with native language as default source
         viewModelScope.launch {
-            val native = nativeLanguage.first()
-            _uiState.value = _uiState.value.copy(sourceLanguage = native)
+            // Only initialize if the current source language is still the default (GERMAN)
+            // This prevents reinitializing when returning from settings
+            val currentState = _uiState.value
+            if (currentState.sourceLanguage == Language.GERMAN) {
+                val native = nativeLanguage.first()
+                _uiState.value = currentState.copy(sourceLanguage = native)
+            }
         }
     }
     
@@ -63,6 +68,7 @@ class SearchViewModel @Inject constructor(
             
             val currentNative = nativeLanguage.first()
             val currentForeign = foreignLanguage.first()
+            val modelType = userPreferences.getDeepLModelType().first()
             
             val result = vocabularyRepository.lookupWord(
                 word = query,
@@ -71,7 +77,8 @@ class SearchViewModel @Inject constructor(
                     currentNative -> currentForeign
                     currentForeign -> currentNative
                     else -> currentForeign // Default fallback
-                }
+                },
+                modelType = modelType
             )
             
             result.fold(

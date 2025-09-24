@@ -45,3 +45,10 @@ enum class PartOfSpeech {
 enum class DataSource {
     DEEPL, SVENSKA_ORDBOKEN, LLM, DICT_CC, UNKNOWN
 }
+
+enum class DeepLModelType(val value: String, val displayName: String, val description: String) {
+    DEFAULT("", "Default", "Standard DeepL model"),
+    QUALITY_OPTIMIZED("quality_optimized", "Quality Optimized", "Higher quality translations, may be slower"),
+    PREFER_QUALITY_OPTIMIZED("prefer_quality_optimized", "Prefer Quality", "Quality optimized if available, otherwise default"),
+    LATENCY_OPTIMIZED("latency_optimized", "Speed Optimized", "Faster translations, standard quality")
+}

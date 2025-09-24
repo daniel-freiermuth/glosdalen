@@ -45,8 +45,6 @@ fun SwedishVocabApp() {
             SearchScreen(
                 onNavigateToSettings = {
                     navController.navigate("settings") {
-                        // Clear any existing settings screens from the back stack
-                        popUpTo("search") { inclusive = false }
                         launchSingleTop = true
                     }
                 }
