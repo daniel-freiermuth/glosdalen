@@ -21,9 +21,8 @@ class SearchViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
     
-    val defaultDeckName = userPreferences.getDefaultDeckName()
-    val defaultCardType = userPreferences.getDefaultCardType()
     val isFirstLaunch = userPreferences.isFirstLaunch()
+    val deepLApiKey = userPreferences.getDeepLApiKey()
     
     init {
         _uiState.value = _uiState.value.copy(
@@ -76,33 +75,25 @@ class SearchViewModel @Inject constructor(
         }
     }
     
-    fun createAnkiCard(cardType: CardType) {
+    fun createAnkiCard() {
         val result = _uiState.value.translationResult ?: return
         
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreatingCard = true)
             
-            val deckName = defaultDeckName.first()
             val translation = result.translations.firstOrNull()?.text ?: ""
             
-            val card = when (result.sourceLanguage) {
-                Language.GERMAN -> GermanSwedishCard(
-                    germanWord = result.originalWord,
-                    swedishTranslation = translation,
-                    deckName = deckName,
-                    cardType = cardType
+            // Create simple card for AnkiDroid sharing
+            val ankiCard = AnkiCard(
+                deckName = "German::Swedish", // Default deck name
+                fields = mapOf(
+                    "Front" to result.originalWord,
+                    "Back" to translation
                 )
-                Language.SWEDISH -> GermanSwedishCard(
-                    germanWord = translation,
-                    swedishTranslation = result.originalWord,
-                    deckName = deckName,
-                    cardType = cardType
-                )
-            }
+            )
             
             try {
-                val ankiCards = card.toAnkiCards()
-                val ankiResult = ankiIntegration.createAnkiCards(ankiCards)
+                val ankiResult = ankiIntegration.createAnkiCards(ankiCard)
                 
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,

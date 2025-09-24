@@ -2,7 +2,6 @@ package com.swedishvocab.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.swedishvocab.app.data.model.CardType
 import com.swedishvocab.app.data.repository.VocabularyRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,20 +19,10 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
     
     val currentApiKey = userPreferences.getDeepLApiKey()
-    val currentDeckName = userPreferences.getDefaultDeckName()
-    val currentCardType = userPreferences.getDefaultCardType()
     val isFirstLaunch = userPreferences.isFirstLaunch()
     
     fun updateApiKey(apiKey: String) {
         _uiState.value = _uiState.value.copy(apiKey = apiKey)
-    }
-    
-    fun updateDeckName(deckName: String) {
-        _uiState.value = _uiState.value.copy(deckName = deckName)
-    }
-    
-    fun updateCardType(cardType: CardType) {
-        _uiState.value = _uiState.value.copy(cardType = cardType)
     }
     
     fun validateAndSaveApiKey() {
@@ -73,14 +62,7 @@ class SettingsViewModel @Inject constructor(
     
     fun saveSettings() {
         viewModelScope.launch {
-            val deckName = _uiState.value.deckName.trim()
-            if (deckName.isNotEmpty()) {
-                userPreferences.setDefaultDeckName(deckName)
-            }
-            
-            userPreferences.setDefaultCardType(_uiState.value.cardType)
             userPreferences.setFirstLaunchCompleted()
-            
             _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
     }
@@ -96,19 +78,15 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(settingsSaved = false)
     }
     
-    fun initializeFromCurrentSettings(apiKey: String, deckName: String, cardType: CardType) {
+    fun initializeFromCurrentSettings(apiKey: String) {
         _uiState.value = _uiState.value.copy(
-            apiKey = apiKey,
-            deckName = deckName,
-            cardType = cardType
+            apiKey = apiKey
         )
     }
 }
 
 data class SettingsUiState(
     val apiKey: String = "",
-    val deckName: String = "",
-    val cardType: CardType = CardType.UNIDIRECTIONAL,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,

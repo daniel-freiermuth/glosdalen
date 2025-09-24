@@ -32,12 +32,16 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val defaultCardType by viewModel.defaultCardType.collectAsState(CardType.UNIDIRECTIONAL)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
+    val apiKey by viewModel.deepLApiKey.collectAsState("")
     
-    // Show settings if first launch
-    LaunchedEffect(isFirstLaunch) {
-        if (isFirstLaunch) {
+    // Show settings if first launch or API key not configured
+    // Use remember to track if we've already navigated to prevent loops
+    var hasNavigatedToSettings by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(isFirstLaunch, apiKey) {
+        if (!hasNavigatedToSettings && (isFirstLaunch || apiKey.isBlank())) {
+            hasNavigatedToSettings = true
             onNavigateToSettings()
         }
     }
@@ -162,7 +166,6 @@ fun SearchScreen(
         uiState.translationResult?.let { result ->
             TranslationCard(
                 vocabularyEntry = result,
-                defaultCardType = defaultCardType,
                 isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
                 isCreatingCard = uiState.isCreatingCard,
                 onCreateCard = viewModel::createAnkiCard
@@ -226,12 +229,10 @@ private fun ErrorCard(
 @Composable
 private fun TranslationCard(
     vocabularyEntry: VocabularyEntry,
-    defaultCardType: CardType,
     isAnkiDroidAvailable: Boolean,
     isCreatingCard: Boolean,
-    onCreateCard: (CardType) -> Unit
+    onCreateCard: () -> Unit
 ) {
-    var selectedCardType by remember(defaultCardType) { mutableStateOf(defaultCardType) }
     
     Card {
         Column(
@@ -259,26 +260,9 @@ private fun TranslationCard(
             
             HorizontalDivider()
             
-            // Card type selection
-            Text("Card Type:")
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = selectedCardType == CardType.UNIDIRECTIONAL,
-                    onClick = { selectedCardType = CardType.UNIDIRECTIONAL },
-                    label = { Text("Unidirectional") }
-                )
-                FilterChip(
-                    selected = selectedCardType == CardType.BIDIRECTIONAL,
-                    onClick = { selectedCardType = CardType.BIDIRECTIONAL },
-                    label = { Text("Bidirectional") }
-                )
-            }
-            
             // Create card button
             Button(
-                onClick = { onCreateCard(selectedCardType) },
+                onClick = { onCreateCard() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isCreatingCard && isAnkiDroidAvailable
             ) {
@@ -294,7 +278,7 @@ private fun TranslationCard(
                         Text("Creating...")
                     }
                 } else {
-                    Text("Create Anki Card${if (selectedCardType == CardType.BIDIRECTIONAL) "s" else ""}")
+                    Text("Create Anki Card")
                 }
             }
             

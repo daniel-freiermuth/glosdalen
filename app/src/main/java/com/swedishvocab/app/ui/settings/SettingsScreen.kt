@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.swedishvocab.app.data.model.CardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,13 +26,11 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
-    val currentDeckName by viewModel.currentDeckName.collectAsState("")
-    val currentCardType by viewModel.currentCardType.collectAsState(CardType.UNIDIRECTIONAL)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentDeckName, currentCardType) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentDeckName, currentCardType)
+    LaunchedEffect(currentApiKey) {
+        viewModel.initializeFromCurrentSettings(currentApiKey)
     }
     
     // Handle settings saved
@@ -156,49 +153,13 @@ fun SettingsScreen(
             }
             
             // Anki Configuration
-            Card {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Anki Configuration",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    
-                    OutlinedTextField(
-                        value = uiState.deckName,
-                        onValueChange = viewModel::updateDeckName,
-                        label = { Text("Default Deck Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("German::Swedish") }
-                    )
-                    
-                    Text("Default Card Type:")
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = uiState.cardType == CardType.UNIDIRECTIONAL,
-                            onClick = { viewModel.updateCardType(CardType.UNIDIRECTIONAL) },
-                            label = { Text("Unidirectional") }
-                        )
-                        FilterChip(
-                            selected = uiState.cardType == CardType.BIDIRECTIONAL,
-                            onClick = { viewModel.updateCardType(CardType.BIDIRECTIONAL) },
-                            label = { Text("Bidirectional") }
-                        )
-                    }
-                }
-            }
-            
             Spacer(modifier = Modifier.weight(1f))
             
             // Save Button
             Button(
                 onClick = viewModel::saveSettings,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.apiKeyValidated && uiState.deckName.isNotBlank()
+                enabled = uiState.apiKeyValidated
             ) {
                 Text(if (isFirstLaunch) "Get Started" else "Save Settings")
             }
