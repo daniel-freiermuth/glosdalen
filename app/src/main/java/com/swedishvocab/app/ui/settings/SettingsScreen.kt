@@ -533,17 +533,19 @@ private fun AnkiSettingsSection() {
                         }
                     }
                     
-                    val deckDisplayText = if (uiState.selectedDeckName.isNotEmpty()) {
-                        uiState.selectedDeckName
-                    } else {
-                        "Default"
-                    }
-                    
                     OutlinedTextField(
-                        value = deckDisplayText,
-                        onValueChange = { },
-                        readOnly = true,
+                        value = uiState.selectedDeckName,
+                        onValueChange = ankiViewModel::selectDeck,
+                        label = { Text("Deck Name") },
+                        placeholder = { Text("Enter deck name") },
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = uiState.isUsingApiImplementation,
+                        supportingText = if (!uiState.isUsingApiImplementation) {
+                            { Text(
+                                text = "Deck selection requires AnkiDroid API. Cards will be created in the default deck.",
+                                style = MaterialTheme.typography.bodySmall
+                            ) }
+                        } else null,
                         trailingIcon = {
                             IconButton(onClick = { ankiViewModel.loadAvailableDecks() }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "Refresh decks")
