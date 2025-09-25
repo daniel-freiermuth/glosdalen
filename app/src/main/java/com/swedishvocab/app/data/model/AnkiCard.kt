@@ -1,7 +1,6 @@
 package com.swedishvocab.app.data.model
 
 data class AnkiCard(
-    val deckName: String,
     val modelName: String = "Basic",
     val fields: Map<String, String>,
     val tags: List<String> = emptyList()
@@ -12,7 +11,6 @@ data class GermanSwedishCard(
     val swedishTranslation: String,
     val exampleSentence: String? = null,
     val notes: String? = null,
-    val deckName: String,
     val cardType: CardType = CardType.UNIDIRECTIONAL
 ) {
     fun toAnkiCards(): AnkiCard {
@@ -28,7 +26,6 @@ data class GermanSwedishCard(
         
         // German -> Swedish card
         return AnkiCard(
-                deckName = deckName,
                 fields = mapOf(
                     "Front" to germanWord,
                     "Back" to backContent

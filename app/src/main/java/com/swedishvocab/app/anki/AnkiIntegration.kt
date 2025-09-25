@@ -117,13 +117,6 @@ class AnkiIntegration @Inject constructor(
                 putExtra(Intent.EXTRA_TEXT, cardText)
                 putExtra(Intent.EXTRA_SUBJECT, front) // Use front as subject, not "Anki Card: ..."
                 
-                // Try AnkiDroid-specific extras that might work
-                putExtra("deckName", card.deckName)
-                putExtra("deck_name", card.deckName)
-                putExtra("modelName", card.modelName)
-                putExtra("note_type", card.modelName)
-                putExtra("notetype", card.modelName)
-                
                 setPackage(ANKIDROID_PACKAGE)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
@@ -158,12 +151,6 @@ class AnkiIntegration @Inject constructor(
             
             for (action in apiActions) {
                 val intent = Intent(action).apply {
-                    // Multiple parameter formats that AnkiDroid API might accept
-                    putExtra("note_type", card.modelName)
-                    putExtra("modelName", card.modelName) 
-                    putExtra("deck_name", card.deckName)
-                    putExtra("deckName", card.deckName)
-                    
                     // Field formats
                     val front = card.fields["Front"] ?: ""
                     val back = card.fields["Back"] ?: ""

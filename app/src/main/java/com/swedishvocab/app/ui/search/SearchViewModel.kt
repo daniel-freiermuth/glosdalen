@@ -155,7 +155,6 @@ class SearchViewModel @Inject constructor(
             
             // Create card with consistent direction: Native language always on Front
             val ankiCard = AnkiCard(
-                deckName = "${currentNative.displayName}::${currentForeign.displayName}",
                 fields = mapOf(
                     "Front" to nativeWord,    // Native language always on front
                     "Back" to foreignWord     // Foreign language always on back
