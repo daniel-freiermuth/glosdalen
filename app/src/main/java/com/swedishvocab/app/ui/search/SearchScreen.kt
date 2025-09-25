@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -191,7 +192,7 @@ fun SearchScreen(
                     OutlinedTextField(
                         value = uiState.searchQuery,
                         onValueChange = viewModel::updateSearchQuery,
-                        label = { Text("Enter ${uiState.sourceLanguage.displayName} word") },
+                        label = { Text("Enter ${uiState.sourceLanguage.displayName} text") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             if (uiState.searchQuery.isNotEmpty()) {
@@ -222,6 +223,26 @@ fun SearchScreen(
                             }
                         )
                     )
+                    
+                    // Context tip
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Info,
+                            contentDescription = "Translation tip",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "💡 Add context (phrases, sentences) for more precise translations",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
