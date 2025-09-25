@@ -354,12 +354,6 @@ private fun TranslationCard(
                 style = MaterialTheme.typography.titleMedium
             )
             
-            // Original word
-            Text(
-                text = vocabularyEntry.originalWord,
-                style = MaterialTheme.typography.headlineSmall
-            )
-            
             // Translations Section
             val translations = vocabularyEntry.translations
             if (translations.isNotEmpty()) {
