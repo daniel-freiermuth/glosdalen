@@ -1,9 +1,5 @@
 - Use svenska.se for svenska ordboken
 - Use proper AnkiDroid API
+    - API permissions not requested
 
-- invite to puttin in more context
-- query braucht nicht repeated sein
-- enable multiple sentense understanding
-- danish
-- release number
-- 
+- clean up git history
