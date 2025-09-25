@@ -118,12 +118,21 @@ class AnkiApiRepositoryImpl @Inject constructor(
             if (existingModel != null) {
                 Result.success(existingModel.key)
             } else {
-                // Create new basic model with Front/Back fields
-                val modelId = api.addNewBasicModel(modelName)
-                if (modelId != null) {
-                    Result.success(modelId)
-                } else {
-                    Result.failure(AnkiError.ModelCreationFailed("Failed to create model: $modelName"))
+                // Handle built-in models vs custom models
+                when (modelName) {
+                    "Basic (and reversed card)" -> {
+                        // This should be a built-in model - if not found, it's an error
+                        Result.failure(AnkiError.ModelCreationFailed("Built-in model '$modelName' not found. Please ensure AnkiDroid is properly set up."))
+                    }
+                    else -> {
+                        // Create new basic model with Front/Back fields for custom models
+                        val modelId = api.addNewBasicModel(modelName)
+                        if (modelId != null) {
+                            Result.success(modelId)
+                        } else {
+                            Result.failure(AnkiError.ModelCreationFailed("Failed to create model: $modelName"))
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -160,8 +169,8 @@ class AnkiApiRepositoryImpl @Inject constructor(
             
             if (cachedDeckId == null) cachedDeckId = deckId
 
-            // Ensure model exists
-            val modelResult = getOrCreateBasicModel()
+            // Ensure model exists - use the model specified in the card
+            val modelResult = ensureModelExists(card.modelName)
             val modelId = modelResult.getOrElse { 
                 return@withContext Result.failure(it)
             }
@@ -195,18 +204,22 @@ class AnkiApiRepositoryImpl @Inject constructor(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
             )
 
-            // Group cards by deck for batch operations
-            val cardsByDeck = cards.groupBy { it.deckName ?: DEFAULT_DECK_NAME }
+            // Group cards by deck and model for batch operations  
+            val cardsByDeckAndModel = cards.groupBy { 
+                Pair(it.deckName ?: DEFAULT_DECK_NAME, it.modelName) 
+            }
             
-            for ((deckName, deckCards) in cardsByDeck) {
+            for ((deckModelPair, deckCards) in cardsByDeckAndModel) {
+                val (deckName, modelName) = deckModelPair
+                
                 // Ensure deck exists
                 val deckResult = ensureDeckExists(deckName)
                 val deckId = deckResult.getOrElse { 
                     return@withContext Result.failure(it)
                 }
 
-                // Ensure model exists
-                val modelResult = getOrCreateBasicModel()
+                // Ensure model exists - use the model specified in the cards
+                val modelResult = ensureModelExists(modelName)
                 val modelId = modelResult.getOrElse { 
                     return@withContext Result.failure(it)
                 }
@@ -220,7 +233,7 @@ class AnkiApiRepositoryImpl @Inject constructor(
                 }
 
                 // Use batch API for better performance - convert to List
-                val noteIds = api.addNotes(modelId, deckId, notes.toMutableList(), null)
+                api.addNotes(modelId, deckId, notes.toMutableList(), null)
                 
                 // Note: API documentation suggests this always returns a valid result
             }

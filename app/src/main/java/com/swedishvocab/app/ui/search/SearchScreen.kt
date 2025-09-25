@@ -71,10 +71,13 @@ fun SearchScreen(
                 val successMessage = if (uiState.ankiImplementationType == "INTENT") {
                     "Opened AnkiDroid - please complete card creation"
                 } else {
-                    when (uiState.cardsCreatedCount) {
-                        1 -> "Card created successfully!"
-                        2 -> "2 cards created successfully! (Bidirectional)"
-                        else -> "${uiState.cardsCreatedCount} cards created successfully!"
+                    when {
+                        uiState.cardsCreatedCount == 1 && uiState.lastCardDirection == CardDirection.BOTH_DIRECTIONS -> 
+                            "Bidirectional card created successfully!"
+                        uiState.cardsCreatedCount == 1 -> 
+                            "Card created successfully!"
+                        else -> 
+                            "${uiState.cardsCreatedCount} cards created successfully!"
                     }
                 }
                 Toast.makeText(

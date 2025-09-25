@@ -187,14 +187,10 @@ class SearchViewModel @Inject constructor(
                 CardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
+                            modelName = "Basic (and reversed card)",
                             fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
                             deckName = deckName,
-                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
-                        ),
-                        AnkiCard(
-                            fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
-                            deckName = deckName,
-                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
+                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "bidirectional")
                         )
                     )
                 }
@@ -214,7 +210,8 @@ class SearchViewModel @Inject constructor(
                     isCreatingCard = false,
                     cardCreationResult = ankiResult,
                     cardsCreatedCount = cardsToCreate.size,
-                    ankiImplementationType = currentImplementationType
+                    ankiImplementationType = currentImplementationType,
+                    lastCardDirection = cardDirection
                 )
             } catch (e: Exception) {
                 // Update implementation type in case permissions state changed
@@ -224,7 +221,8 @@ class SearchViewModel @Inject constructor(
                     isCreatingCard = false,
                     cardCreationResult = Result.failure(AnkiError.IntentFailed("Failed to create card: ${e.message}")),
                     cardsCreatedCount = 0,
-                    ankiImplementationType = currentImplementationType
+                    ankiImplementationType = currentImplementationType,
+                    lastCardDirection = cardDirection
                 )
             }
         }
@@ -267,5 +265,6 @@ data class SearchUiState(
     val cardCreationResult: Result<Unit>? = null,
     val cardsCreatedCount: Int = 0,
     val selectedTranslation: String? = null,
-    val ankiImplementationType: String = "UNKNOWN"
+    val ankiImplementationType: String = "UNKNOWN",
+    val lastCardDirection: CardDirection? = null
 )
