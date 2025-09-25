@@ -74,7 +74,9 @@ class DeepLDataSource @Inject constructor(
                         source_lang = sourceLanguage.code,
                         target_lang = targetLanguage.code,
                         model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
-                        formality = formality
+                        formality = formality,
+                        split_sentences = "0", // Don't split sentences - treat as one context
+                        context = null // No additional context needed for single words
                     )
                     
                     val response = apiService.translate("DeepL-Auth-Key $apiKey", request)
@@ -101,7 +103,9 @@ class DeepLDataSource @Inject constructor(
                     text = listOf(word),
                     source_lang = sourceLanguage.code,
                     target_lang = targetLanguage.code,
-                    model_type = if (modelType.value.isNotEmpty()) modelType.value else null
+                    model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
+                    split_sentences = "0", // Don't split sentences - treat as one context
+                    context = null // No additional context needed for single words
                 )
                 
                 val response = apiService.translate("DeepL-Auth-Key $apiKey", request)

@@ -17,7 +17,9 @@ data class DeepLTranslateRequest(
     val source_lang: String,
     val target_lang: String,
     val model_type: String? = null,
-    val formality: String? = null
+    val formality: String? = null,
+    val split_sentences: String? = null,
+    val context: String? = null
 )
 
 data class DeepLTranslateResponse(
