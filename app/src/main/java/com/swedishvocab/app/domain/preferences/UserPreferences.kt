@@ -26,6 +26,7 @@ class UserPreferences @Inject constructor(
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
         private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
         private val DEEPL_MODEL_TYPE = stringPreferencesKey("deepl_model_type")
+        private val ENABLE_MULTIPLE_FORMALITIES = booleanPreferencesKey("enable_multiple_formalities")
     }
     
     fun getDeepLApiKey(): Flow<String> {
@@ -113,6 +114,18 @@ class UserPreferences @Inject constructor(
     suspend fun setDeepLModelType(modelType: DeepLModelType) {
         dataStore.edit { preferences ->
             preferences[DEEPL_MODEL_TYPE] = modelType.value
+        }
+    }
+    
+    fun getEnableMultipleFormalities(): Flow<Boolean> {
+        return dataStore.data.map { preferences ->
+            preferences[ENABLE_MULTIPLE_FORMALITIES] ?: true // Default to enabled
+        }
+    }
+    
+    suspend fun setEnableMultipleFormalities(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[ENABLE_MULTIPLE_FORMALITIES] = enabled
         }
     }
 }

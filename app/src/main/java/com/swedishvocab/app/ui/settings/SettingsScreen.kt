@@ -36,11 +36,12 @@ fun SettingsScreen(
     val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
     val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.SWEDISH)
     val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
+    val currentEnableMultipleFormalities by viewModel.currentEnableMultipleFormalities.collectAsState(true)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType)
+    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
+        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities)
     }
     
     // Handle settings saved (only for first launch auto-navigation)
@@ -217,6 +218,30 @@ fun SettingsScreen(
                             selectedModelType = uiState.deepLModelType,
                             onModelTypeSelected = viewModel::updateDeepLModelType,
                             modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    
+                    // Multiple Formalities Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Multiple Translation Suggestions",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Query different formality levels for supported languages (slower but more options)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        Switch(
+                            checked = uiState.enableMultipleFormalities,
+                            onCheckedChange = viewModel::updateEnableMultipleFormalities
                         )
                     }
                 }

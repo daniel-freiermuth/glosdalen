@@ -56,7 +56,8 @@ class SearchViewModel @Inject constructor(
             searchQuery = query,
             translationResult = null,
             error = null,
-            cardCreationResult = null
+            cardCreationResult = null,
+            selectedTranslation = null
         )
     }
     
@@ -65,7 +66,8 @@ class SearchViewModel @Inject constructor(
             sourceLanguage = language,
             translationResult = null,
             error = null,
-            cardCreationResult = null
+            cardCreationResult = null,
+            selectedTranslation = null
         )
     }
     
@@ -96,7 +98,8 @@ class SearchViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
                 error = null,
-                translationResult = null
+                translationResult = null,
+                selectedTranslation = null
             )
             
             val currentNative = nativeLanguage.first()
@@ -137,7 +140,7 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreatingCard = true)
             
-            val translation = result.translations.firstOrNull()?.text ?: ""
+            val translation = _uiState.value.selectedTranslation ?: result.translations.firstOrNull()?.text ?: ""
             
             // Create simple card for AnkiDroid sharing
             val ankiCard = AnkiCard(
@@ -172,6 +175,10 @@ class SearchViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(cardCreationResult = null)
     }
     
+    fun selectTranslation(translation: String) {
+        _uiState.value = _uiState.value.copy(selectedTranslation = translation)
+    }
+    
     fun retrySearch() {
         searchWord()
     }
@@ -185,5 +192,6 @@ data class SearchUiState(
     val error: VocabularyError? = null,
     val isAnkiDroidAvailable: Boolean = false,
     val isCreatingCard: Boolean = false,
-    val cardCreationResult: Result<Unit>? = null
+    val cardCreationResult: Result<Unit>? = null,
+    val selectedTranslation: String? = null
 )

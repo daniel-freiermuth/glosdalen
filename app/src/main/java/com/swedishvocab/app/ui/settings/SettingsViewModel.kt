@@ -24,6 +24,7 @@ class SettingsViewModel @Inject constructor(
     val currentNativeLanguage = userPreferences.getNativeLanguage()
     val currentForeignLanguage = userPreferences.getForeignLanguage()
     val currentDeepLModelType = userPreferences.getDeepLModelType()
+    val currentEnableMultipleFormalities = userPreferences.getEnableMultipleFormalities()
     val isFirstLaunch = userPreferences.isFirstLaunch()
     
     fun updateApiKey(apiKey: String) {
@@ -40,6 +41,10 @@ class SettingsViewModel @Inject constructor(
     
     fun updateDeepLModelType(modelType: DeepLModelType) {
         _uiState.value = _uiState.value.copy(deepLModelType = modelType)
+    }
+    
+    fun updateEnableMultipleFormalities(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(enableMultipleFormalities = enabled)
     }
     
     fun validateAndSaveApiKey() {
@@ -82,6 +87,7 @@ class SettingsViewModel @Inject constructor(
             userPreferences.setNativeLanguage(_uiState.value.nativeLanguage)
             userPreferences.setForeignLanguage(_uiState.value.foreignLanguage)
             userPreferences.setDeepLModelType(_uiState.value.deepLModelType)
+            userPreferences.setEnableMultipleFormalities(_uiState.value.enableMultipleFormalities)
             userPreferences.setFirstLaunchCompleted()
             _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
@@ -98,12 +104,13 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(settingsSaved = false)
     }
     
-    fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language, deepLModelType: DeepLModelType) {
+    fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language, deepLModelType: DeepLModelType, enableMultipleFormalities: Boolean) {
         _uiState.value = _uiState.value.copy(
             apiKey = apiKey,
             nativeLanguage = nativeLanguage,
             foreignLanguage = foreignLanguage,
-            deepLModelType = deepLModelType
+            deepLModelType = deepLModelType,
+            enableMultipleFormalities = enableMultipleFormalities
         )
     }
 }
@@ -113,6 +120,7 @@ data class SettingsUiState(
     val nativeLanguage: Language = Language.GERMAN,
     val foreignLanguage: Language = Language.SWEDISH,
     val deepLModelType: DeepLModelType = DeepLModelType.QUALITY_OPTIMIZED,
+    val enableMultipleFormalities: Boolean = true,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,
