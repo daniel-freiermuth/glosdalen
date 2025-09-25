@@ -53,6 +53,11 @@ fun SearchScreen(
         }
     }
     
+    // Refresh language state when languages change (e.g., returning from settings)
+    LaunchedEffect(nativeLanguage, foreignLanguage) {
+        viewModel.refreshLanguageState()
+    }
+    
     // Handle card creation result
     uiState.cardCreationResult?.let { result ->
         LaunchedEffect(result) {

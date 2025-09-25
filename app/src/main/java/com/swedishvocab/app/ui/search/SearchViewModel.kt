@@ -30,14 +30,23 @@ class SearchViewModel @Inject constructor(
             isAnkiDroidAvailable = ankiIntegration.isAnkiDroidInstalled()
         )
         
-        // Initialize with native language as default source
+        // React to language preference changes and update source language accordingly
         viewModelScope.launch {
-            // Only initialize if the current source language is still the default (GERMAN)
-            // This prevents reinitializing when returning from settings
-            val currentState = _uiState.value
-            if (currentState.sourceLanguage == Language.GERMAN) {
-                val native = nativeLanguage.first()
-                _uiState.value = currentState.copy(sourceLanguage = native)
+            combine(nativeLanguage, foreignLanguage) { native, foreign ->
+                Pair(native, foreign)
+            }.collect { (native, foreign) ->
+                val currentState = _uiState.value
+                
+                // If current source language is not one of the configured languages,
+                // reset to native language
+                if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
+                    _uiState.value = currentState.copy(
+                        sourceLanguage = native,
+                        translationResult = null,
+                        error = null,
+                        cardCreationResult = null
+                    )
+                }
             }
         }
     }
@@ -58,6 +67,25 @@ class SearchViewModel @Inject constructor(
             error = null,
             cardCreationResult = null
         )
+    }
+    
+    fun refreshLanguageState() {
+        viewModelScope.launch {
+            val native = nativeLanguage.first()
+            val foreign = foreignLanguage.first()
+            val currentState = _uiState.value
+            
+            // If current source language is not one of the configured languages,
+            // reset to native language
+            if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
+                _uiState.value = currentState.copy(
+                    sourceLanguage = native,
+                    translationResult = null,
+                    error = null,
+                    cardCreationResult = null
+                )
+            }
+        }
     }
     
     fun searchWord() {
