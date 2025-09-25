@@ -446,7 +446,7 @@ private fun AboutSection() {
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = "Developed with ♥ in GBG with cacao and lazy beats.",
+                    text = "Developed with ♥ by Erik and Daniel.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
