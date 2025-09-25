@@ -141,13 +141,24 @@ class SearchViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isCreatingCard = true)
             
             val translation = _uiState.value.selectedTranslation ?: result.translations.firstOrNull()?.text ?: ""
+            val currentNative = nativeLanguage.first()
+            val currentForeign = foreignLanguage.first()
             
-            // Create simple card for AnkiDroid sharing
+            // Determine which word is native and which is foreign
+            val (nativeWord, foreignWord) = if (result.sourceLanguage == currentNative) {
+                // Original search: Native → Foreign
+                result.originalWord to translation
+            } else {
+                // Reverse search: Foreign → Native  
+                translation to result.originalWord
+            }
+            
+            // Create card with consistent direction: Native language always on Front
             val ankiCard = AnkiCard(
-                deckName = "German::Swedish", // Default deck name
+                deckName = "${currentNative.displayName}::${currentForeign.displayName}",
                 fields = mapOf(
-                    "Front" to result.originalWord,
-                    "Back" to translation
+                    "Front" to nativeWord,    // Native language always on front
+                    "Back" to foreignWord     // Foreign language always on back
                 )
             )
             
