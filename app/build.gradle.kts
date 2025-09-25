@@ -18,13 +18,20 @@ scmVersion {
         // Remove 'v' prefix if present for clean version names
         version.replace("^v".toRegex(), "")
     }
+    
+    // Configure semantic versioning - since we have feat: commits, use minor increment
+    branchVersionIncrementer = mapOf(
+        "main" to "incrementMinor"
+    )
     repository {
         pushTagsOnly.set(false)
     }
+    localOnly.set(true)  // Don't auto-push, create local release only
     checks {
         aheadOfRemote.set(false)
         uncommittedChanges.set(false)
     }
+
 }
 
 android {
