@@ -77,8 +77,8 @@ class AnkiIntegration @Inject constructor(
             
             val intent = Intent(ACTION_SEND).apply {
                 type = TYPE_TEXT_PLAIN
-                putExtra(Intent.EXTRA_TEXT, front)
-                putExtra(Intent.EXTRA_SUBJECT, cardText) // Just the word, no prefix
+                putExtra(Intent.EXTRA_TEXT, cardText)
+                putExtra(Intent.EXTRA_SUBJECT, front) // Just the word, no prefix
                 setPackage(ANKIDROID_PACKAGE)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
