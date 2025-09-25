@@ -52,7 +52,12 @@ class SearchViewModel @Inject constructor(
     }
     
     fun updateSourceLanguage(language: Language) {
-        _uiState.value = _uiState.value.copy(sourceLanguage = language)
+        _uiState.value = _uiState.value.copy(
+            sourceLanguage = language,
+            translationResult = null,
+            error = null,
+            cardCreationResult = null
+        )
     }
     
     fun searchWord() {
