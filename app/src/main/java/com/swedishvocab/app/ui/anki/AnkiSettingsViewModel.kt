@@ -6,7 +6,9 @@ import com.swedishvocab.app.data.model.CardDirection
 import com.swedishvocab.app.data.repository.AnkiRepository
 import com.swedishvocab.app.data.repository.AnkiImplementationType
 import com.swedishvocab.app.data.repository.impl.AnkiApiRepositoryImpl
+import com.swedishvocab.app.data.repository.impl.AnkiRepositoryImpl
 import com.swedishvocab.app.domain.preferences.UserPreferences
+import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import javax.inject.Inject
 class AnkiSettingsViewModel @Inject constructor(
     private val ankiRepository: AnkiRepository,
     private val apiRepository: AnkiApiRepositoryImpl,
+    private val ankiRepositoryImpl: AnkiRepositoryImpl,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
@@ -27,16 +30,18 @@ class AnkiSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 userPreferences.getDefaultDeckName(),
-                userPreferences.getDefaultCardDirection()
-            ) { deckName, direction ->
+                userPreferences.getDefaultCardDirection(),
+                userPreferences.getPreferredAnkiMethod()
+            ) { deckName, direction, preferredMethod ->
                 _uiState.value = _uiState.value.copy(
                     selectedDeckName = deckName,
-                    selectedDirection = direction
+                    selectedDirection = direction,
+                    selectedMethod = preferredMethod
                 )
             }.collect()
         }
 
-        // Check Anki availability
+        // Check Anki availability and available methods
         refreshAnkiAvailability()
         
         // Load available decks
@@ -54,6 +59,15 @@ class AnkiSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setDefaultCardDirection(direction)
             _uiState.value = _uiState.value.copy(selectedDirection = direction)
+        }
+    }
+    
+    fun selectMethod(method: AnkiMethodPreference) {
+        viewModelScope.launch {
+            userPreferences.setPreferredAnkiMethod(method)
+            _uiState.value = _uiState.value.copy(selectedMethod = method)
+            // Refresh availability after method change
+            refreshAnkiAvailability()
         }
     }
 
@@ -96,19 +110,28 @@ class AnkiSettingsViewModel @Inject constructor(
                 val implementationType = ankiRepository.getImplementationType()
                 val supportsBatch = ankiRepository.supportsBatchOperations()
                 val usingApi = implementationType == AnkiImplementationType.API
+                val availableMethods = ankiRepositoryImpl.getAvailableMethods()
+                val bothMethodsAvailable = ankiRepositoryImpl.areBothMethodsAvailable()
+                
+                android.util.Log.d("AnkiSettingsViewModel", "Available methods: $availableMethods")
+                android.util.Log.d("AnkiSettingsViewModel", "Both methods available: $bothMethodsAvailable")
                 
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = isAvailable,
                     implementationType = implementationType.name,
                     supportsBatchOperations = supportsBatch,
-                    isUsingApiImplementation = usingApi
+                    isUsingApiImplementation = usingApi,
+                    availableMethods = availableMethods,
+                    bothMethodsAvailable = bothMethodsAvailable
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = false,
                     implementationType = "UNAVAILABLE",
                     supportsBatchOperations = false,
-                    isUsingApiImplementation = false
+                    isUsingApiImplementation = false,
+                    availableMethods = emptyList(),
+                    bothMethodsAvailable = false
                 )
             }
         }
@@ -122,11 +145,14 @@ class AnkiSettingsViewModel @Inject constructor(
 data class AnkiSettingsUiState(
     val selectedDeckName: String = "",
     val selectedDirection: CardDirection = CardDirection.NATIVE_TO_FOREIGN,
+    val selectedMethod: AnkiMethodPreference = AnkiMethodPreference.AUTO,
     val availableDecks: Map<Long, String> = emptyMap(),
     val isLoadingDecks: Boolean = false,
     val isAnkiAvailable: Boolean = false,
     val implementationType: String = "UNKNOWN",
     val supportsBatchOperations: Boolean = false,
     val isUsingApiImplementation: Boolean = false,
+    val availableMethods: List<AnkiImplementationType> = emptyList(),
+    val bothMethodsAvailable: Boolean = false,
     val errorMessage: String? = null
 )

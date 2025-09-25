@@ -9,6 +9,7 @@ import com.swedishvocab.app.data.model.CardType
 import com.swedishvocab.app.data.model.CardDirection
 import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
+import com.swedishvocab.app.data.repository.AnkiImplementationType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -29,6 +30,7 @@ class UserPreferences @Inject constructor(
         private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
         private val DEEPL_MODEL_TYPE = stringPreferencesKey("deepl_model_type")
         private val ENABLE_MULTIPLE_FORMALITIES = booleanPreferencesKey("enable_multiple_formalities")
+        private val PREFERRED_ANKI_METHOD = stringPreferencesKey("preferred_anki_method")
     }
     
     fun getDeepLApiKey(): Flow<String> {
@@ -143,4 +145,27 @@ class UserPreferences @Inject constructor(
             preferences[ENABLE_MULTIPLE_FORMALITIES] = enabled
         }
     }
+    
+    fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> {
+        return dataStore.data.map { preferences ->
+            val methodString = preferences[PREFERRED_ANKI_METHOD] ?: "AUTO"
+            try {
+                AnkiMethodPreference.valueOf(methodString)
+            } catch (e: IllegalArgumentException) {
+                AnkiMethodPreference.AUTO
+            }
+        }
+    }
+    
+    suspend fun setPreferredAnkiMethod(method: AnkiMethodPreference) {
+        dataStore.edit { preferences ->
+            preferences[PREFERRED_ANKI_METHOD] = method.name
+        }
+    }
+}
+
+enum class AnkiMethodPreference {
+    AUTO,   // Automatically choose the best available method
+    API,    // Prefer AnkiDroid API
+    INTENT  // Prefer Intent method
 }

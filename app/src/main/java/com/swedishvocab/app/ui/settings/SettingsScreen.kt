@@ -35,6 +35,8 @@ import com.swedishvocab.app.BuildConfig
 import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.model.CardDirection
+import com.swedishvocab.app.data.repository.AnkiImplementationType
+import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
 import com.swedishvocab.app.ui.anki.AnkiSettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -479,37 +481,53 @@ private fun AnkiSettingsSection() {
                 style = MaterialTheme.typography.titleMedium
             )
 
-            // Integration Status
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val statusIcon = if (uiState.isUsingApiImplementation) 
-                    Icons.Default.Check else Icons.Default.Settings
-                val statusColor = if (uiState.isUsingApiImplementation)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.secondary
-                
-                Icon(
-                    imageVector = statusIcon,
-                    contentDescription = null,
-                    tint = statusColor
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
+            // Method Selection
+            if (uiState.bothMethodsAvailable) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = if (uiState.isUsingApiImplementation) "API Mode" else "Intent Mode",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
+                        text = "Integration Method:",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(
-                        text = if (uiState.isUsingApiImplementation)
-                            "Full features available"
-                        else
-                            "Basic card creation only",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    AnkiMethodDropdown(
+                        selectedMethod = uiState.selectedMethod,
+                        availableMethods = uiState.availableMethods,
+                        onMethodSelected = ankiViewModel::selectMethod,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                }
+            } else {
+                // Show current status when only one method is available
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val statusIcon = if (uiState.isUsingApiImplementation) 
+                        Icons.Default.Check else Icons.Default.Settings
+                    val statusColor = if (uiState.isUsingApiImplementation)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.secondary
+                    
+                    Icon(
+                        imageVector = statusIcon,
+                        contentDescription = null,
+                        tint = statusColor
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = if (uiState.isUsingApiImplementation) "API Mode" else "Intent Mode",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = if (uiState.isUsingApiImplementation)
+                                "Full features available"
+                            else
+                                "Basic card creation only",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -594,6 +612,92 @@ private fun AnkiSettingsSection() {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AnkiMethodDropdown(
+    selectedMethod: AnkiMethodPreference,
+    availableMethods: List<AnkiImplementationType>,
+    onMethodSelected: (AnkiMethodPreference) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = getMethodDisplayName(selectedMethod, availableMethods),
+            onValueChange = { },
+            readOnly = true,
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            // AUTO option
+            DropdownMenuItem(
+                text = { Text("Automatic (recommended)") },
+                onClick = {
+                    onMethodSelected(AnkiMethodPreference.AUTO)
+                    expanded = false
+                }
+            )
+            
+            // API option (if available)
+            if (availableMethods.contains(AnkiImplementationType.API)) {
+                DropdownMenuItem(
+                    text = { Text("AnkiDroid API") },
+                    onClick = {
+                        onMethodSelected(AnkiMethodPreference.API)
+                        expanded = false
+                    }
+                )
+            }
+            
+            // Intent option (if available)
+            if (availableMethods.contains(AnkiImplementationType.INTENT)) {
+                DropdownMenuItem(
+                    text = { Text("Intent Method") },
+                    onClick = {
+                        onMethodSelected(AnkiMethodPreference.INTENT)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun getMethodDisplayName(
+    selectedMethod: AnkiMethodPreference, 
+    availableMethods: List<AnkiImplementationType>
+): String {
+    return when (selectedMethod) {
+        AnkiMethodPreference.AUTO -> "Automatic (recommended)"
+        AnkiMethodPreference.API -> {
+            if (availableMethods.contains(AnkiImplementationType.API)) {
+                "AnkiDroid API"
+            } else {
+                "AnkiDroid API (unavailable)"
+            }
+        }
+        AnkiMethodPreference.INTENT -> {
+            if (availableMethods.contains(AnkiImplementationType.INTENT)) {
+                "Intent Method"  
+            } else {
+                "Intent Method (unavailable)"
             }
         }
     }

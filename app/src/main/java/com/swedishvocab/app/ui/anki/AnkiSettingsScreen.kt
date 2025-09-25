@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.swedishvocab.app.data.model.CardDirection
+import com.swedishvocab.app.data.repository.AnkiImplementationType
+import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,6 +118,17 @@ fun AnkiSettingsScreen(
                 AnkiIntegrationStatusSection(
                     isUsingApi = uiState.isUsingApiImplementation
                 )
+            }
+            
+            // Method Selection (if both methods are available)
+            if (uiState.bothMethodsAvailable) {
+                item {
+                    MethodSelectionSection(
+                        selectedMethod = uiState.selectedMethod,
+                        availableMethods = uiState.availableMethods,
+                        onMethodSelected = viewModel::selectMethod
+                    )
+                }
             }
             
             // Deck Selection
@@ -428,6 +441,107 @@ private fun AnkiStatusSection(
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun MethodSelectionSection(
+    selectedMethod: AnkiMethodPreference,
+    availableMethods: List<AnkiImplementationType>,
+    onMethodSelected: (AnkiMethodPreference) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .selectableGroup()
+        ) {
+            Text(
+                text = "AnkiDroid Integration Method",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Text(
+                text = "Both methods are available. Choose your preferred integration method.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // AUTO option
+            MethodOption(
+                method = AnkiMethodPreference.AUTO,
+                selectedMethod = selectedMethod,
+                onMethodSelected = onMethodSelected,
+                title = "Automatic",
+                description = "Let the app choose the best available method (recommended)"
+            )
+
+            // API option (if available)
+            if (availableMethods.contains(AnkiImplementationType.API)) {
+                MethodOption(
+                    method = AnkiMethodPreference.API,
+                    selectedMethod = selectedMethod,
+                    onMethodSelected = onMethodSelected,
+                    title = "AnkiDroid API",
+                    description = "Direct integration with advanced features like deck selection and batch operations"
+                )
+            }
+
+            // INTENT option (if available)
+            if (availableMethods.contains(AnkiImplementationType.INTENT)) {
+                MethodOption(
+                    method = AnkiMethodPreference.INTENT,
+                    selectedMethod = selectedMethod,
+                    onMethodSelected = onMethodSelected,
+                    title = "Intent Method",
+                    description = "Uses Android sharing system. User can review cards before creation"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MethodOption(
+    method: AnkiMethodPreference,
+    selectedMethod: AnkiMethodPreference,
+    onMethodSelected: (AnkiMethodPreference) -> Unit,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = (selectedMethod == method),
+                onClick = { onMethodSelected(method) }
+            )
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = (selectedMethod == method),
+            onClick = { onMethodSelected(method) }
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

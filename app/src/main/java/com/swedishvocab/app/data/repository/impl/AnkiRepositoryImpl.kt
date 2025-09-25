@@ -7,6 +7,9 @@ import com.swedishvocab.app.data.model.AnkiCard
 import com.swedishvocab.app.data.model.AnkiError
 import com.swedishvocab.app.data.repository.AnkiImplementationType
 import com.swedishvocab.app.data.repository.AnkiRepository
+import com.swedishvocab.app.domain.preferences.UserPreferences
+import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
+import kotlinx.coroutines.flow.first
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -18,7 +21,8 @@ import javax.inject.Singleton
 class AnkiRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val apiRepository: AnkiApiRepositoryImpl,
-    private val intentRepository: AnkiIntentRepositoryImpl
+    private val intentRepository: AnkiIntentRepositoryImpl,
+    private val userPreferences: UserPreferences
 ) : AnkiRepository {
 
     companion object {
@@ -26,44 +30,80 @@ class AnkiRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Determine the best available AnkiDroid integration method
+     * Determine the best available AnkiDroid integration method based on user preference
      */
     private suspend fun getBestAvailableRepository(): AnkiRepository = withContext(Dispatchers.IO) {
-        // 1. Try API first (recommended approach)
-        val apiAvailable = apiRepository.isAnkiDroidAvailable()
-        Log.d(TAG, "API available: $apiAvailable")
+        val userPreference = userPreferences.getPreferredAnkiMethod().first()
+        Log.d(TAG, "User preference: $userPreference")
         
+        // Check availability of both methods
+        val apiAvailable = apiRepository.isAnkiDroidAvailable()
+        val intentAvailable = intentRepository.isAnkiDroidAvailable()
+        Log.d(TAG, "API available: $apiAvailable, Intent available: $intentAvailable")
+        
+        when (userPreference) {
+            AnkiMethodPreference.API -> {
+                return@withContext tryApiFirst(apiAvailable, intentAvailable)
+            }
+            AnkiMethodPreference.INTENT -> {
+                return@withContext tryIntentFirst(apiAvailable, intentAvailable)
+            }
+            AnkiMethodPreference.AUTO -> {
+                // Default behavior: prefer API, fall back to Intent
+                return@withContext tryApiFirst(apiAvailable, intentAvailable)
+            }
+        }
+    }
+    
+    private suspend fun tryApiFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiRepository {
         if (apiAvailable) {
-            Log.d(TAG, "API is available, checking permissions...")
-            
+            Log.d(TAG, "Trying API implementation...")
             val hasPermission = apiRepository.hasApiPermission()
             Log.d(TAG, "Has API permission: $hasPermission")
             
             if (hasPermission) {
                 Log.d(TAG, "API permission granted, using API implementation")
-                return@withContext apiRepository
+                return apiRepository
             } else {
                 Log.d(TAG, "API permission not granted, attempting to trigger permission request...")
-                // Try to trigger permission request
                 val permissionGranted = apiRepository.triggerPermissionRequest()
                 if (permissionGranted) {
                     Log.d(TAG, "Permission granted after request, using API implementation")
-                    return@withContext apiRepository
+                    return apiRepository
                 } else {
-                    Log.d(TAG, "Permission request failed or denied, falling back to intent")
+                    Log.d(TAG, "Permission request failed or denied")
                 }
             }
-        } else {
-            Log.d(TAG, "AnkiDroid API not available")
         }
         
-        // 2. Fall back to intent-based approach
-        if (intentRepository.isAnkiDroidAvailable()) {
-            Log.d(TAG, "API not available, falling back to intent implementation")
-            return@withContext intentRepository
+        // Fall back to intent if available
+        if (intentAvailable) {
+            Log.d(TAG, "Falling back to intent implementation")
+            return intentRepository
         }
         
-        // 3. No AnkiDroid integration available
+        Log.w(TAG, "No AnkiDroid integration available")
+        throw AnkiError.AnkiDroidNotInstalled
+    }
+    
+    private suspend fun tryIntentFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiRepository {
+        if (intentAvailable) {
+            Log.d(TAG, "Using intent implementation (user preference)")
+            return intentRepository
+        }
+        
+        // Fall back to API if available
+        if (apiAvailable) {
+            Log.d(TAG, "Intent not available, trying API implementation...")
+            val hasPermission = apiRepository.hasApiPermission()
+            if (hasPermission) {
+                Log.d(TAG, "Using API implementation as fallback")
+                return apiRepository
+            } else {
+                Log.d(TAG, "API available but no permission, and intent unavailable")
+            }
+        }
+        
         Log.w(TAG, "No AnkiDroid integration available")
         throw AnkiError.AnkiDroidNotInstalled
     }
@@ -153,5 +193,31 @@ class AnkiRepositoryImpl @Inject constructor(
             Log.w(TAG, "Error refreshing availability", e)
             AnkiImplementationType.UNAVAILABLE
         }
+    }
+    
+    /**
+     * Check if both API and Intent methods are available
+     */
+    suspend fun areBothMethodsAvailable(): Boolean = withContext(Dispatchers.IO) {
+        val apiAvailable = apiRepository.isAnkiDroidAvailable()
+        val intentAvailable = intentRepository.isAnkiDroidAvailable()
+        return@withContext apiAvailable && intentAvailable
+    }
+    
+    /**
+     * Get list of available methods for user selection
+     */
+    suspend fun getAvailableMethods(): List<AnkiImplementationType> = withContext(Dispatchers.IO) {
+        val methods = mutableListOf<AnkiImplementationType>()
+        
+        if (apiRepository.isAnkiDroidAvailable()) {
+            methods.add(AnkiImplementationType.API)
+        }
+        
+        if (intentRepository.isAnkiDroidAvailable()) {
+            methods.add(AnkiImplementationType.INTENT)
+        }
+        
+        return@withContext methods
     }
 }
