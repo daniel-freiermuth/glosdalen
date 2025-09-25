@@ -12,4 +12,12 @@ sealed class VocabularyError : Exception() {
 sealed class AnkiError : Exception() {
     object AnkiDroidNotInstalled : AnkiError()
     data class IntentFailed(val reason: String?) : AnkiError()
+    
+    // API-specific errors
+    data class ApiNotAvailable(val reason: String) : AnkiError()
+    data class PermissionDenied(val reason: String) : AnkiError()
+    data class ApiError(val reason: String) : AnkiError()
+    data class DeckCreationFailed(val reason: String) : AnkiError()
+    data class ModelCreationFailed(val reason: String) : AnkiError()
+    data class CardCreationFailed(val reason: String) : AnkiError()
 }

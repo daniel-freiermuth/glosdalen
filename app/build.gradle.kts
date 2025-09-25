@@ -94,6 +94,9 @@ android {
 }
 
 dependencies {
+    // AnkiDroid API
+    implementation("com.github.ankidroid:Anki-Android:api-v1.1.0")
+    
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.activity:activity-compose:1.9.1")

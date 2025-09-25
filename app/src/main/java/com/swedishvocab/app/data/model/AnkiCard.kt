@@ -3,7 +3,8 @@ package com.swedishvocab.app.data.model
 data class AnkiCard(
     val modelName: String = "Basic",
     val fields: Map<String, String>,
-    val tags: List<String> = emptyList()
+    val tags: List<String> = emptyList(),
+    val deckName: String? = null
 )
 
 data class GermanSwedishCard(
@@ -38,4 +39,10 @@ data class GermanSwedishCard(
 enum class CardType {
     UNIDIRECTIONAL,
     BIDIRECTIONAL
+}
+
+enum class CardDirection {
+    NATIVE_TO_FOREIGN,  // Native language on front → Foreign on back
+    FOREIGN_TO_NATIVE,  // Foreign language on front → Native on back  
+    BOTH_DIRECTIONS     // Create cards in both directions (bidirectional)
 }

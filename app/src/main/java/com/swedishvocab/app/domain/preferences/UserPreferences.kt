@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.swedishvocab.app.data.model.CardType
+import com.swedishvocab.app.data.model.CardDirection
 import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ class UserPreferences @Inject constructor(
         private val DEEPL_API_KEY = stringPreferencesKey("deepl_api_key")
         private val DEFAULT_DECK_NAME = stringPreferencesKey("default_deck_name")
         private val DEFAULT_CARD_TYPE = stringPreferencesKey("default_card_type")
+        private val DEFAULT_CARD_DIRECTION = stringPreferencesKey("default_card_direction")
         private val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
         private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
@@ -63,6 +65,19 @@ class UserPreferences @Inject constructor(
     suspend fun setDefaultCardType(cardType: CardType) {
         dataStore.edit { preferences ->
             preferences[DEFAULT_CARD_TYPE] = cardType.name
+        }
+    }
+    
+    fun getDefaultCardDirection(): Flow<CardDirection> {
+        return dataStore.data.map { preferences ->
+            val directionString = preferences[DEFAULT_CARD_DIRECTION] ?: CardDirection.NATIVE_TO_FOREIGN.name
+            CardDirection.valueOf(directionString)
+        }
+    }
+    
+    suspend fun setDefaultCardDirection(direction: CardDirection) {
+        dataStore.edit { preferences ->
+            preferences[DEFAULT_CARD_DIRECTION] = direction.name
         }
     }
     

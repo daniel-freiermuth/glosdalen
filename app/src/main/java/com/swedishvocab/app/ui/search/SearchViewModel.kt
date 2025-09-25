@@ -2,9 +2,9 @@ package com.swedishvocab.app.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.swedishvocab.app.anki.AnkiIntegration
 import com.swedishvocab.app.data.model.*
 import com.swedishvocab.app.data.repository.VocabularyRepository
+import com.swedishvocab.app.data.repository.AnkiRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -14,7 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val vocabularyRepository: VocabularyRepository,
-    private val ankiIntegration: AnkiIntegration,
+    private val ankiRepository: AnkiRepository,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
     
@@ -24,11 +24,16 @@ class SearchViewModel @Inject constructor(
     val deepLApiKey = userPreferences.getDeepLApiKey()
     val nativeLanguage = userPreferences.getNativeLanguage()
     val foreignLanguage = userPreferences.getForeignLanguage()
+    val defaultDeckName = userPreferences.getDefaultDeckName()
+    val defaultCardDirection = userPreferences.getDefaultCardDirection()
     
     init {
-        _uiState.value = _uiState.value.copy(
-            isAnkiDroidAvailable = ankiIntegration.isAnkiDroidInstalled()
-        )
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
+                ankiImplementationType = ankiRepository.getImplementationType().name
+            )
+        }
         
         // React to language preference changes and update source language accordingly
         viewModelScope.launch {
@@ -44,7 +49,8 @@ class SearchViewModel @Inject constructor(
                         sourceLanguage = native,
                         translationResult = null,
                         error = null,
-                        cardCreationResult = null
+                        cardCreationResult = null,
+                        cardsCreatedCount = 0
                     )
                 }
             }
@@ -57,6 +63,7 @@ class SearchViewModel @Inject constructor(
             translationResult = null,
             error = null,
             cardCreationResult = null,
+            cardsCreatedCount = 0,
             selectedTranslation = null
         )
     }
@@ -67,6 +74,7 @@ class SearchViewModel @Inject constructor(
             translationResult = null,
             error = null,
             cardCreationResult = null,
+            cardsCreatedCount = 0,
             selectedTranslation = null
         )
     }
@@ -84,7 +92,8 @@ class SearchViewModel @Inject constructor(
                     sourceLanguage = native,
                     translationResult = null,
                     error = null,
-                    cardCreationResult = null
+                    cardCreationResult = null,
+                    cardsCreatedCount = 0
                 )
             }
         }
@@ -143,6 +152,8 @@ class SearchViewModel @Inject constructor(
             val translation = _uiState.value.selectedTranslation ?: result.translations.firstOrNull()?.text ?: ""
             val currentNative = nativeLanguage.first()
             val currentForeign = foreignLanguage.first()
+            val deckName = defaultDeckName.first()
+            val cardDirection = defaultCardDirection.first()
             
             // Determine which word is native and which is foreign
             val (nativeWord, foreignWord) = if (result.sourceLanguage == currentNative) {
@@ -153,25 +164,59 @@ class SearchViewModel @Inject constructor(
                 translation to result.originalWord
             }
             
-            // Create card with consistent direction: Native language always on Front
-            val ankiCard = AnkiCard(
-                fields = mapOf(
-                    "Front" to nativeWord,    // Native language always on front
-                    "Back" to foreignWord     // Foreign language always on back
-                )
-            )
+            // Create cards based on user's direction preference
+            val cardsToCreate = when (cardDirection) {
+                CardDirection.NATIVE_TO_FOREIGN -> {
+                    listOf(
+                        AnkiCard(
+                            fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
+                            deckName = deckName,
+                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
+                        )
+                    )
+                }
+                CardDirection.FOREIGN_TO_NATIVE -> {
+                    listOf(
+                        AnkiCard(
+                            fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
+                            deckName = deckName,
+                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
+                        )
+                    )
+                }
+                CardDirection.BOTH_DIRECTIONS -> {
+                    listOf(
+                        AnkiCard(
+                            fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
+                            deckName = deckName,
+                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
+                        ),
+                        AnkiCard(
+                            fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
+                            deckName = deckName,
+                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
+                        )
+                    )
+                }
+            }
             
             try {
-                val ankiResult = ankiIntegration.createAnkiCards(ankiCard)
+                val ankiResult = if (cardsToCreate.size == 1) {
+                    ankiRepository.createCard(cardsToCreate.first())
+                } else {
+                    ankiRepository.createCards(cardsToCreate)
+                }
                 
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,
-                    cardCreationResult = ankiResult
+                    cardCreationResult = ankiResult,
+                    cardsCreatedCount = cardsToCreate.size
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,
-                    cardCreationResult = Result.failure(AnkiError.IntentFailed("Failed to create card: ${e.message}"))
+                    cardCreationResult = Result.failure(AnkiError.IntentFailed("Failed to create card: ${e.message}")),
+                    cardsCreatedCount = 0
                 )
             }
         }
@@ -182,7 +227,7 @@ class SearchViewModel @Inject constructor(
     }
     
     fun clearCardCreationResult() {
-        _uiState.value = _uiState.value.copy(cardCreationResult = null)
+        _uiState.value = _uiState.value.copy(cardCreationResult = null, cardsCreatedCount = 0)
     }
     
     fun selectTranslation(translation: String) {
@@ -203,5 +248,7 @@ data class SearchUiState(
     val isAnkiDroidAvailable: Boolean = false,
     val isCreatingCard: Boolean = false,
     val cardCreationResult: Result<Unit>? = null,
-    val selectedTranslation: String? = null
+    val cardsCreatedCount: Int = 0,
+    val selectedTranslation: String? = null,
+    val ankiImplementationType: String = "UNKNOWN"
 )

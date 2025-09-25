@@ -17,7 +17,15 @@
    - Language toggle functionality
    - Real-time search with loading states
 
-2. **Translation Display**
+2. **AnkiDroid Integration** (NEW: Enhanced Architecture)
+   - **AnkiDroid API**: Primary integration using AddContentApi
+   - **Intent Fallback**: ACTION_SEND intent for compatibility  
+   - **Smart Selection**: Automatic API/Intent selection with fallback
+   - **Batch Operations**: Efficient multiple card creation (API mode)
+   - **Native Language Consistency**: Cards always show native → foreign
+   - **Comprehensive Error Handling**: Covers all failure scenarios
+
+3. **Translation Display**
    - Clean presentation of DeepL results
    - Error handling with retry options
    - Card type selection (uni/bidirectional)

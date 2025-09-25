@@ -18,6 +18,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -61,15 +63,40 @@ fun SearchScreen(
     }
     
     // Handle card creation result
+    val context = LocalContext.current
     uiState.cardCreationResult?.let { result ->
         LaunchedEffect(result) {
             if (result.isSuccess) {
-                // TODO: Show success snackbar
-                println("SUCCESS: Card created successfully!")
+                val successMessage = if (uiState.ankiImplementationType == "INTENT") {
+                    "Opened AnkiDroid - please complete card creation"
+                } else {
+                    when (uiState.cardsCreatedCount) {
+                        1 -> "Card created successfully!"
+                        2 -> "2 cards created successfully! (Bidirectional)"
+                        else -> "${uiState.cardsCreatedCount} cards created successfully!"
+                    }
+                }
+                Toast.makeText(
+                    context, 
+                    successMessage, 
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
-                // TODO: Show error snackbar
                 val error = result.exceptionOrNull()
-                println("ERROR: Card creation failed - $error")
+                val errorMessage = when {
+                    error?.message?.contains("permission", ignoreCase = true) == true -> 
+                        "AnkiDroid permission required. Please grant access in settings."
+                    error?.message?.contains("not installed", ignoreCase = true) == true -> 
+                        "AnkiDroid is not installed. Please install it from the Play Store."
+                    error?.message?.contains("deck", ignoreCase = true) == true -> 
+                        "Failed to create deck. Please check AnkiDroid settings."
+                    else -> "Failed to create card: ${error?.message ?: "Unknown error"}"
+                }
+                Toast.makeText(
+                    context, 
+                    errorMessage, 
+                    Toast.LENGTH_LONG
+                ).show()
             }
             viewModel.clearCardCreationResult()
         }

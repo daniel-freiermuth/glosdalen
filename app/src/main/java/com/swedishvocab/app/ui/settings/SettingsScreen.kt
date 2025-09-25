@@ -2,15 +2,17 @@
 
 package com.swedishvocab.app.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import com.swedishvocab.app.BuildConfig
 import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
+import com.swedishvocab.app.data.model.CardDirection
+import com.swedishvocab.app.ui.anki.AnkiSettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -274,6 +278,9 @@ fun SettingsScreen(
                 }
             }
             
+            // AnkiDroid Integration
+            AnkiSettingsSection()
+            
             Spacer(modifier = Modifier.weight(1f))
             
             // About section
@@ -451,6 +458,139 @@ private fun AboutSection() {
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnkiSettingsSection() {
+    val ankiViewModel: AnkiSettingsViewModel = hiltViewModel()
+    val uiState by ankiViewModel.uiState.collectAsState()
+
+    Card {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "AnkiDroid Integration",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            // Integration Status
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val statusIcon = if (uiState.isUsingApiImplementation) 
+                    Icons.Default.Check else Icons.Default.Settings
+                val statusColor = if (uiState.isUsingApiImplementation)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.secondary
+                
+                Icon(
+                    imageVector = statusIcon,
+                    contentDescription = null,
+                    tint = statusColor
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = if (uiState.isUsingApiImplementation) "API Mode" else "Intent Mode",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = if (uiState.isUsingApiImplementation)
+                            "Full features available"
+                        else
+                            "Basic card creation only",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Deck Selection (only if API available)
+            if (uiState.isUsingApiImplementation) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Anki Deck:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (uiState.isLoadingDecks) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                    
+                    val deckDisplayText = if (uiState.selectedDeckName.isNotEmpty()) {
+                        uiState.selectedDeckName
+                    } else {
+                        "Default"
+                    }
+                    
+                    OutlinedTextField(
+                        value = deckDisplayText,
+                        onValueChange = { },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(onClick = { ankiViewModel.loadAvailableDecks() }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Refresh decks")
+                            }
+                        }
+                    )
+                }
+
+                // Card Direction
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Card Direction:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    
+                    CardDirection.values().forEach { direction ->
+                        val displayName = when (direction) {
+                            CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                            CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                            CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                        }
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { ankiViewModel.selectDirection(direction) }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = uiState.selectedDirection == direction,
+                                onClick = { ankiViewModel.selectDirection(direction) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = displayName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Intent mode limitations
+                Text(
+                    text = "Using basic intent integration. Install AnkiDroid API for advanced features like deck and note model selection.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
