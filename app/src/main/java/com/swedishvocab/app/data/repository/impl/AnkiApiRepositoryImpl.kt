@@ -41,18 +41,42 @@ class AnkiApiRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isAnkiDroidAvailable(): Boolean = withContext(Dispatchers.IO) {
-        AddContentApi.getAnkiDroidPackageName(context) != null && getApi() != null
+        val packageName = AddContentApi.getAnkiDroidPackageName(context)
+        val apiAvailable = getApi() != null
+        android.util.Log.d("AnkiApiRepository", "AnkiDroid package: $packageName, API available: $apiAvailable")
+        return@withContext packageName != null && apiAvailable
     }
 
     override suspend fun hasApiPermission(): Boolean = withContext(Dispatchers.IO) {
-        ContextCompat.checkSelfPermission(context, PERMISSION_READ_WRITE_DATABASE) == 
+        val hasPermission = ContextCompat.checkSelfPermission(context, PERMISSION_READ_WRITE_DATABASE) == 
                 PackageManager.PERMISSION_GRANTED
+        android.util.Log.d("AnkiApiRepository", "API permission check: $hasPermission")
+        return@withContext hasPermission
     }
 
     override suspend fun requestApiPermission(): Boolean = withContext(Dispatchers.IO) {
         // Permission request is handled automatically by AddContentApi when needed
         // This method indicates whether permission will be requested
         !hasApiPermission()
+    }
+
+    /**
+     * Trigger permission request by attempting a simple API operation
+     */
+    suspend fun triggerPermissionRequest(): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val api = getApi() ?: return@withContext false
+            // This should trigger the permission dialog if not already granted
+            api.deckList
+            android.util.Log.d("AnkiApiRepository", "Permission request triggered successfully")
+            hasApiPermission()
+        } catch (e: SecurityException) {
+            android.util.Log.d("AnkiApiRepository", "Security exception during permission request: ${e.message}")
+            false
+        } catch (e: Exception) {
+            android.util.Log.d("AnkiApiRepository", "Exception during permission request: ${e.message}")
+            false
+        }
     }
 
     override suspend fun ensureDeckExists(deckName: String): Result<Long> = withContext(Dispatchers.IO) {

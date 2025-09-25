@@ -37,7 +37,7 @@ class AnkiSettingsViewModel @Inject constructor(
         }
 
         // Check Anki availability
-        checkAnkiAvailability()
+        refreshAnkiAvailability()
         
         // Load available decks
         loadAvailableDecks()
@@ -89,7 +89,7 @@ class AnkiSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun checkAnkiAvailability() {
+    fun refreshAnkiAvailability() {
         viewModelScope.launch {
             try {
                 val isAvailable = ankiRepository.isAnkiDroidAvailable()

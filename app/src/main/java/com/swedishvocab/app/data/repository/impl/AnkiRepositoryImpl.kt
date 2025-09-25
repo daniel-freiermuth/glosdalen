@@ -30,17 +30,31 @@ class AnkiRepositoryImpl @Inject constructor(
      */
     private suspend fun getBestAvailableRepository(): AnkiRepository = withContext(Dispatchers.IO) {
         // 1. Try API first (recommended approach)
-        if (apiRepository.isAnkiDroidAvailable()) {
+        val apiAvailable = apiRepository.isAnkiDroidAvailable()
+        Log.d(TAG, "API available: $apiAvailable")
+        
+        if (apiAvailable) {
             Log.d(TAG, "API is available, checking permissions...")
             
-            if (apiRepository.hasApiPermission()) {
+            val hasPermission = apiRepository.hasApiPermission()
+            Log.d(TAG, "Has API permission: $hasPermission")
+            
+            if (hasPermission) {
                 Log.d(TAG, "API permission granted, using API implementation")
                 return@withContext apiRepository
             } else {
-                Log.d(TAG, "API permission not granted, will fall back to intent")
-                // Don't attempt to create test cards - this was causing phantom "success" toasts
-                // Permission will be requested when user first tries to create a real card
+                Log.d(TAG, "API permission not granted, attempting to trigger permission request...")
+                // Try to trigger permission request
+                val permissionGranted = apiRepository.triggerPermissionRequest()
+                if (permissionGranted) {
+                    Log.d(TAG, "Permission granted after request, using API implementation")
+                    return@withContext apiRepository
+                } else {
+                    Log.d(TAG, "Permission request failed or denied, falling back to intent")
+                }
             }
+        } else {
+            Log.d(TAG, "AnkiDroid API not available")
         }
         
         // 2. Fall back to intent-based approach
