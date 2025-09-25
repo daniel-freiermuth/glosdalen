@@ -551,24 +551,13 @@ private fun AnkiSettingsSection() {
                         }
                     }
                     
-                    OutlinedTextField(
-                        value = uiState.selectedDeckName,
-                        onValueChange = ankiViewModel::selectDeck,
-                        label = { Text("Deck Name") },
-                        placeholder = { Text("Enter deck name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = uiState.isUsingApiImplementation,
-                        supportingText = if (!uiState.isUsingApiImplementation) {
-                            { Text(
-                                text = "Deck selection requires AnkiDroid API. Cards will be created in the default deck.",
-                                style = MaterialTheme.typography.bodySmall
-                            ) }
-                        } else null,
-                        trailingIcon = {
-                            IconButton(onClick = { ankiViewModel.loadAvailableDecks() }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Refresh decks")
-                            }
-                        }
+                    DeckNameField(
+                        selectedDeckName = uiState.selectedDeckName,
+                        availableDecks = uiState.availableDecks,
+                        isLoadingDecks = uiState.isLoadingDecks,
+                        isEnabled = uiState.isUsingApiImplementation,
+                        onDeckNameChange = ankiViewModel::selectDeck,
+                        onRefreshDecks = ankiViewModel::loadAvailableDecks
                     )
                 }
 
@@ -698,6 +687,132 @@ private fun getMethodDisplayName(
                 "Intent Method"  
             } else {
                 "Intent Method (unavailable)"
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DeckNameField(
+    selectedDeckName: String,
+    availableDecks: Map<Long, String>,
+    isLoadingDecks: Boolean,
+    isEnabled: Boolean,
+    onDeckNameChange: (String) -> Unit,
+    onRefreshDecks: () -> Unit
+) {
+    // Use local state for text editing to prevent cursor jumping
+    var localDeckName by remember(selectedDeckName) { mutableStateOf(selectedDeckName) }
+    var showSuggestions by remember { mutableStateOf(false) }
+    
+    // Update local state when external state changes (e.g., from loading available decks)
+    LaunchedEffect(selectedDeckName) {
+        if (localDeckName != selectedDeckName) {
+            localDeckName = selectedDeckName
+        }
+    }
+    
+    Column {
+        OutlinedTextField(
+            value = localDeckName,
+            onValueChange = { newValue ->
+                localDeckName = newValue
+                onDeckNameChange(newValue)
+                showSuggestions = newValue.isNotEmpty() && availableDecks.isNotEmpty()
+            },
+            label = { Text("Deck Name") },
+            placeholder = { Text("Enter deck name") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isEnabled,
+            supportingText = if (!isEnabled) {
+                { Text(
+                    text = "Deck selection requires AnkiDroid API. Cards will be created in the default deck.",
+                    style = MaterialTheme.typography.bodySmall
+                ) }
+            } else if (availableDecks.isNotEmpty()) {
+                { Text(
+                    text = "Tip: Click refresh to load available decks from AnkiDroid, or type a custom deck name.",
+                    style = MaterialTheme.typography.bodySmall
+                ) }
+            } else {
+                { Text(
+                    text = "Enter a deck name or click refresh to load available decks from AnkiDroid.",
+                    style = MaterialTheme.typography.bodySmall
+                ) }
+            },
+            trailingIcon = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (availableDecks.isNotEmpty() && isEnabled) {
+                        IconButton(
+                            onClick = { showSuggestions = !showSuggestions }
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowDropDown, 
+                                contentDescription = "Show available decks"
+                            )
+                        }
+                    }
+                    if (isLoadingDecks) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        IconButton(onClick = onRefreshDecks) {
+                            Icon(
+                                Icons.Default.Refresh, 
+                                contentDescription = "Load available decks from AnkiDroid"
+                            )
+                        }
+                    }
+                }
+            }
+        )
+        
+        // Show available decks as suggestions
+        if (showSuggestions && availableDecks.isNotEmpty() && isEnabled) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text(
+                        text = "Available decks:",
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    availableDecks.values.take(5).forEach { deckName ->
+                        TextButton(
+                            onClick = {
+                                localDeckName = deckName
+                                onDeckNameChange(deckName)
+                                showSuggestions = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = deckName,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                            )
+                        }
+                    }
+                    
+                    if (availableDecks.size > 5) {
+                        Text(
+                            text = "... and ${availableDecks.size - 5} more",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
             }
         }
     }
