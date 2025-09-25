@@ -35,7 +35,7 @@ fun SettingsScreen(
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
     val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
     val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.SWEDISH)
-    val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.DEFAULT)
+    val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings

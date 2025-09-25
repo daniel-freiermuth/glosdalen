@@ -106,7 +106,7 @@ class UserPreferences @Inject constructor(
     fun getDeepLModelType(): Flow<DeepLModelType> {
         return dataStore.data.map { preferences ->
             val modelTypeValue = preferences[DEEPL_MODEL_TYPE] ?: ""
-            DeepLModelType.values().find { it.value == modelTypeValue } ?: DeepLModelType.DEFAULT
+            DeepLModelType.values().find { it.value == modelTypeValue } ?: DeepLModelType.QUALITY_OPTIMIZED
         }
     }
     

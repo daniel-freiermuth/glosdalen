@@ -112,7 +112,7 @@ data class SettingsUiState(
     val apiKey: String = "",
     val nativeLanguage: Language = Language.GERMAN,
     val foreignLanguage: Language = Language.SWEDISH,
-    val deepLModelType: DeepLModelType = DeepLModelType.DEFAULT,
+    val deepLModelType: DeepLModelType = DeepLModelType.QUALITY_OPTIMIZED,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,
