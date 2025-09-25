@@ -4,6 +4,7 @@ package com.swedishvocab.app.ui.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -14,8 +15,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
@@ -163,8 +171,27 @@ fun SettingsScreen(
                         }
                     }
                     
+                    // Clickable API key help link
+                    val linkText = buildAnnotatedString {
+                        append("Get your free API key at ")
+                        
+                        withLink(
+                            LinkAnnotation.Url("https://www.deepl.com/pro-api")
+                        ) {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = TextDecoration.Underline,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            ) {
+                                append("deepl.com/pro-api")
+                            }
+                        }
+                    }
+                    
                     Text(
-                        text = "Get your free API key at deepl.com/pro-api",
+                        text = linkText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
