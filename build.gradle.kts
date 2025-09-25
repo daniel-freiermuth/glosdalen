@@ -5,4 +5,5 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.48" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.20" apply false
     id("com.google.devtools.ksp") version "1.9.20-1.0.14" apply false
+    id("pl.allegro.tech.build.axion-release") version "1.15.5" apply false
 }

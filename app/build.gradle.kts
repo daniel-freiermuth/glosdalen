@@ -6,6 +6,25 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("pl.allegro.tech.build.axion-release")
+}
+
+scmVersion {
+    tag {
+        prefix.set("v")
+        versionSeparator.set("")
+    }
+    versionCreator { version, _ ->
+        // Remove 'v' prefix if present for clean version names
+        version.replace("^v".toRegex(), "")
+    }
+    repository {
+        pushTagsOnly.set(false)
+    }
+    checks {
+        aheadOfRemote.set(false)
+        uncommittedChanges.set(false)
+    }
 }
 
 android {
@@ -16,8 +35,10 @@ android {
         applicationId = "com.swedishvocab.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText.get().trim().toIntOrNull() ?: 1
+        versionName = scmVersion.version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
