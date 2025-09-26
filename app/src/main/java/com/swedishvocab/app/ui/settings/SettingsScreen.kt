@@ -50,14 +50,13 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
     val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
-    val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.SWEDISH)
     val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
     val currentEnableMultipleFormalities by viewModel.currentEnableMultipleFormalities.collectAsState(true)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities)
+    LaunchedEffect(currentApiKey, currentNativeLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
+        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, Language.SWEDISH, currentDeepLModelType, currentEnableMultipleFormalities)
     }
     
     // Handle settings saved (only for first launch auto-navigation)
@@ -226,19 +225,6 @@ fun SettingsScreen(
                         LanguageDropdown(
                             selectedLanguage = uiState.nativeLanguage,
                             onLanguageSelected = viewModel::updateNativeLanguage,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    
-                    // Foreign Language
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = "Foreign Language:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        LanguageDropdown(
-                            selectedLanguage = uiState.foreignLanguage,
-                            onLanguageSelected = viewModel::updateForeignLanguage,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

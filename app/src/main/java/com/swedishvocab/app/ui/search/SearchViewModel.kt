@@ -79,6 +79,24 @@ class SearchViewModel @Inject constructor(
         )
     }
     
+    fun updateForeignLanguage(language: Language) {
+        viewModelScope.launch {
+            userPreferences.setForeignLanguage(language)
+        }
+    }
+    
+    fun cycleForeignLanguage() {
+        viewModelScope.launch {
+            val currentForeign = foreignLanguage.first()
+            val availableLanguages = Language.values().filter { it != nativeLanguage.first() }
+            val currentIndex = availableLanguages.indexOf(currentForeign)
+            val nextIndex = (currentIndex + 1) % availableLanguages.size
+            val nextLanguage = availableLanguages[nextIndex]
+            
+            userPreferences.setForeignLanguage(nextLanguage)
+        }
+    }
+    
     fun refreshLanguageState() {
         viewModelScope.launch {
             val native = nativeLanguage.first()

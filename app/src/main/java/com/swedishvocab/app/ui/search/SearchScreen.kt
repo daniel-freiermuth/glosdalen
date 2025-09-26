@@ -15,7 +15,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -175,20 +177,37 @@ fun SearchScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(uiState.sourceLanguage.displayName)
+                        // Native Language (left, fixed)
+                        Text(
+                            text = nativeLanguage.displayName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                         
+                        // Direction Arrow (center)
                         IconButton(
                             onClick = {
                                 viewModel.updateSourceLanguage(targetLanguage)
                             }
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_sync_alt),
-                                contentDescription = "Swap languages"
+                                imageVector = if (uiState.sourceLanguage == nativeLanguage) {
+                                    Icons.AutoMirrored.Filled.ArrowForward
+                                } else {
+                                    Icons.AutoMirrored.Filled.ArrowBack
+                                },
+                                contentDescription = "Change translation direction"
                             )
                         }
                         
-                        Text(targetLanguage.displayName)
+                        // Foreign Language (right, clickable dropdown)
+                        ForeignLanguageDropdown(
+                            currentLanguage = foreignLanguage,
+                            availableLanguages = Language.values().filter { it != nativeLanguage },
+                            onLanguageSelect = { language ->
+                                viewModel.updateForeignLanguage(language)
+                            }
+                        )
                     }
                     
                     // Search Input
@@ -531,6 +550,64 @@ private fun TranslationCard(
                     text = "AnkiDroid not installed. Please install AnkiDroid to create cards.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ForeignLanguageDropdown(
+    currentLanguage: Language,
+    availableLanguages: List<Language>,
+    onLanguageSelect: (Language) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable { expanded = true }
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = currentLanguage.displayName,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Select language",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+        
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            availableLanguages.forEach { language ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = language.displayName,
+                            color = if (language == currentLanguage) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                    },
+                    onClick = {
+                        onLanguageSelect(language)
+                        expanded = false
+                    }
                 )
             }
         }
