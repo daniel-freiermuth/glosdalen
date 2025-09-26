@@ -4,6 +4,8 @@ package com.swedishvocab.app.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -782,35 +784,33 @@ private fun DeckNameField(
                     modifier = Modifier.padding(8.dp)
                 ) {
                     Text(
-                        text = "Available decks:",
+                        text = "Available decks (${availableDecks.size}):",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     
-                    availableDecks.values.take(5).forEach { deckName ->
-                        TextButton(
-                            onClick = {
-                                localDeckName = deckName
-                                onDeckNameChange(deckName)
-                                showSuggestions = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = deckName,
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Start
-                            )
+                    // Scrollable list of all decks
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp) // Limit height to make it scrollable
+                    ) {
+                        items(availableDecks.values.toList()) { deckName ->
+                            TextButton(
+                                onClick = {
+                                    localDeckName = deckName
+                                    onDeckNameChange(deckName)
+                                    showSuggestions = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = deckName,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                )
+                            }
                         }
-                    }
-                    
-                    if (availableDecks.size > 5) {
-                        Text(
-                            text = "... and ${availableDecks.size - 5} more",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
                     }
                 }
             }
