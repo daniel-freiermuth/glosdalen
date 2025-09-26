@@ -21,10 +21,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import android.widget.Toast
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.activity.ComponentActivity
@@ -50,6 +52,10 @@ fun SearchScreen(
     val apiKey by viewModel.deepLApiKey.collectAsState("")
     val nativeLanguage by viewModel.nativeLanguage.collectAsState(Language.GERMAN)
     val foreignLanguage by viewModel.foreignLanguage.collectAsState(Language.SWEDISH)
+    
+    // Focus management for keyboard dismissal
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
     
     // Memoize target language calculation to prevent unnecessary recompositions
     val targetLanguage = remember(uiState.sourceLanguage, nativeLanguage, foreignLanguage) {
@@ -215,7 +221,9 @@ fun SearchScreen(
                         value = uiState.searchQuery,
                         onValueChange = viewModel::updateSearchQuery,
                         label = { Text("Enter ${uiState.sourceLanguage.displayName} text") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
                         trailingIcon = {
                             if (uiState.searchQuery.isNotEmpty()) {
                                 IconButton(
@@ -241,6 +249,7 @@ fun SearchScreen(
                         ),
                         keyboardActions = KeyboardActions(
                             onSearch = {
+                                focusManager.clearFocus()
                                 viewModel.searchWord()
                             }
                         )
@@ -272,7 +281,10 @@ fun SearchScreen(
         // Search Button (shown when there's a query but no results)
         if (uiState.searchQuery.isNotEmpty() && !uiState.isLoading && uiState.translationResult == null && uiState.error == null) {
             Button(
-                onClick = { viewModel.searchWord() },
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.searchWord()
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
