@@ -400,13 +400,6 @@ private fun TranslationCard(
             // Translations Section
             val translations = vocabularyEntry.translations
             if (translations.isNotEmpty()) {
-                Text(
-                    text = if (translations.size > 1) "Translations (${translations.size} suggestions):" else "Translation:",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                
                 translations.forEachIndexed { index, translation ->
                     val isSelected = selectedTranslation == translation.text
                     val isDefault = selectedTranslation == null && index == 0
