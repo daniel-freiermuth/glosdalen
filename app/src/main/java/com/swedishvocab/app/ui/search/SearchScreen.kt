@@ -3,6 +3,8 @@
 package com.swedishvocab.app.ui.search
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -422,7 +424,10 @@ private fun TranslationCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.dp)
-                            .clickable { onTranslationSelect(translation.text) },
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { onTranslationSelect(translation.text) },
                         colors = CardDefaults.cardColors(
                             containerColor = when {
                                 isSelected -> MaterialTheme.colorScheme.primaryContainer
