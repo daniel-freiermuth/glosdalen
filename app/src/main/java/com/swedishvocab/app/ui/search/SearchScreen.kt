@@ -417,17 +417,16 @@ private fun TranslationCard(
                 translations.forEachIndexed { index, translation ->
                     val isSelected = selectedTranslation == translation.text
                     val isDefault = selectedTranslation == null && index == 0
-                    val isPrimary = index == 0
                     
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 2.dp),
+                            .padding(vertical = 2.dp)
+                            .clickable { onTranslationSelect(translation.text) },
                         colors = CardDefaults.cardColors(
                             containerColor = when {
-                                isSelected -> MaterialTheme.colorScheme.secondary
-                                isDefault -> MaterialTheme.colorScheme.primaryContainer
-                                isPrimary -> MaterialTheme.colorScheme.primaryContainer
+                                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                                isDefault && selectedTranslation == null -> MaterialTheme.colorScheme.primaryContainer
                                 else -> MaterialTheme.colorScheme.surfaceVariant
                             }
                         )
@@ -439,26 +438,12 @@ private fun TranslationCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Selection/Priority indicator
-                            when {
-                                isSelected -> Icon(
-                                    Icons.Default.Star,
-                                    contentDescription = "Selected for Anki card",
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondary
-                                )
-                                isPrimary -> Icon(
-                                    Icons.Default.Star,
-                                    contentDescription = "Primary suggestion",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                else -> Text(
-                                    text = "${index + 1}.",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            // Translation number
+                            Text(
+                                text = "${index + 1}.",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             
                             // Translation text
                             Column(modifier = Modifier.weight(1f)) {
@@ -466,46 +451,29 @@ private fun TranslationCard(
                                     text = translation.text,
                                     style = when {
                                         isSelected -> MaterialTheme.typography.titleMedium
-                                        isPrimary -> MaterialTheme.typography.titleMedium
+                                        isDefault && selectedTranslation == null -> MaterialTheme.typography.titleMedium
                                         else -> MaterialTheme.typography.bodyLarge
                                     },
-                                    color = when {
-                                        isSelected -> MaterialTheme.colorScheme.onSecondary
-                                        isPrimary -> MaterialTheme.colorScheme.onPrimaryContainer
-                                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 
                                 if (isSelected) {
                                     Text(
                                         text = "Selected for Anki card",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondary
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                } else if (isDefault) {
+                                } else if (isDefault && selectedTranslation == null) {
                                     Text(
                                         text = "Will be used for Anki card",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
                             
                             // Action buttons
                             Column(horizontalAlignment = Alignment.End) {
-                                // Select for card button
-                                if (!isSelected && !isDefault) {
-                                    TextButton(
-                                        onClick = { onTranslationSelect(translation.text) },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(
-                                            text = "Select",
-                                            style = MaterialTheme.typography.labelSmall
-                                        )
-                                    }
-                                }
-                                
                                 // Reverse search button
                                 TextButton(
                                     onClick = { onTranslationClick(translation.text) },
