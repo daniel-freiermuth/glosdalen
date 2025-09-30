@@ -321,6 +321,7 @@ fun SearchScreen(
                 isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
                 isCreatingCard = uiState.isCreatingCard,
                 selectedTranslation = uiState.selectedTranslation,
+                hasCardBeenCreated = uiState.hasCardBeenCreated,
                 onCreateCard = viewModel::createAnkiCard,
                 onTranslationClick = { translationText ->
                     // Set the translation as new search query and reverse language
@@ -394,6 +395,7 @@ private fun TranslationCard(
     isAnkiDroidAvailable: Boolean,
     isCreatingCard: Boolean,
     selectedTranslation: String?,
+    hasCardBeenCreated: Boolean,
     onCreateCard: () -> Unit,
     onTranslationClick: (String) -> Unit,
     onTranslationSelect: (String) -> Unit
@@ -532,7 +534,7 @@ private fun TranslationCard(
             Button(
                 onClick = { onCreateCard() },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isCreatingCard && isAnkiDroidAvailable
+                enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated
             ) {
                 if (isCreatingCard) {
                     Row(
@@ -545,6 +547,8 @@ private fun TranslationCard(
                         )
                         Text("Creating...")
                     }
+                } else if (hasCardBeenCreated) {
+                    Text("Card Created ✓")
                 } else {
                     Text("Create Anki Card")
                 }

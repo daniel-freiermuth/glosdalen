@@ -126,7 +126,8 @@ class SearchViewModel @Inject constructor(
                 isLoading = true,
                 error = null,
                 translationResult = null,
-                selectedTranslation = null
+                selectedTranslation = null,
+                hasCardBeenCreated = false
             )
             
             val currentNative = nativeLanguage.first()
@@ -229,7 +230,8 @@ class SearchViewModel @Inject constructor(
                     cardCreationResult = ankiResult,
                     cardsCreatedCount = cardsToCreate.size,
                     ankiImplementationType = currentImplementationType,
-                    lastCardDirection = cardDirection
+                    lastCardDirection = cardDirection,
+                    hasCardBeenCreated = ankiResult.isSuccess
                 )
             } catch (e: Exception) {
                 // Update implementation type in case permissions state changed
@@ -284,5 +286,6 @@ data class SearchUiState(
     val cardsCreatedCount: Int = 0,
     val selectedTranslation: String? = null,
     val ankiImplementationType: String = "UNKNOWN",
-    val lastCardDirection: CardDirection? = null
+    val lastCardDirection: CardDirection? = null,
+    val hasCardBeenCreated: Boolean = false
 )
