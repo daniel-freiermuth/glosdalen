@@ -83,6 +83,15 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setForeignLanguage(language)
         }
+        // Clear translation results when foreign language changes
+        _uiState.value = _uiState.value.copy(
+            translationResult = null,
+            error = null,
+            cardCreationResult = null,
+            cardsCreatedCount = 0,
+            selectedTranslation = null,
+            hasCardBeenCreated = false
+        )
     }
     
     fun cycleForeignLanguage() {
