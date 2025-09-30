@@ -321,7 +321,7 @@ private fun LanguageDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            Language.values().forEach { language ->
+            Language.values().sortedBy { it.displayName }.forEach { language ->
                 DropdownMenuItem(
                     onClick = {
                         onLanguageSelected(language)
@@ -781,7 +781,7 @@ private fun DeckNameField(
                             .fillMaxWidth()
                             .heightIn(max = 200.dp) // Limit height to make it scrollable
                     ) {
-                        items(availableDecks.values.toList()) { deckName ->
+                        items(availableDecks.values.toList().sorted()) { deckName ->
                             TextButton(
                                 onClick = {
                                     localDeckName = deckName

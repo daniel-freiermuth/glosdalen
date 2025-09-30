@@ -209,7 +209,7 @@ fun SearchScreen(
                         // Foreign Language (right, clickable dropdown)
                         ForeignLanguageDropdown(
                             currentLanguage = foreignLanguage,
-                            availableLanguages = Language.values().filter { it != nativeLanguage },
+                            availableLanguages = Language.values().filter { it != nativeLanguage }.sortedBy { it.displayName },
                             onLanguageSelect = { language ->
                                 viewModel.updateForeignLanguage(language)
                             }
