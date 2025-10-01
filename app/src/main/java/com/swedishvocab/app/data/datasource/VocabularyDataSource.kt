@@ -8,7 +8,8 @@ interface VocabularyDataSource {
         sourceLanguage: Language, 
         targetLanguage: Language,
         apiKey: String,
-        modelType: DeepLModelType = DeepLModelType.DEFAULT
+        modelType: DeepLModelType = DeepLModelType.DEFAULT,
+        context: String? = null
     ): Result<VocabularyEntry>
     
     val supportedLanguagePairs: Set<Pair<Language, Language>>

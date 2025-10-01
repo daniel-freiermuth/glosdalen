@@ -126,6 +126,34 @@ class SearchViewModel @Inject constructor(
         }
     }
     
+    fun updateContextQuery(context: String) {
+        _uiState.value = _uiState.value.copy(
+            contextQuery = context,
+            translationResult = null,
+            error = null,
+            cardCreationResult = null,
+            cardsCreatedCount = 0,
+            selectedTranslation = null,
+            hasCardBeenCreated = false
+        )
+    }
+    
+    fun toggleContextExpanded() {
+        val newExpandedState = !_uiState.value.isContextExpanded
+        _uiState.value = _uiState.value.copy(
+            isContextExpanded = newExpandedState,
+            // Clear context when collapsing
+            contextQuery = if (newExpandedState) _uiState.value.contextQuery else "",
+            // Clear translation results when hiding context
+            translationResult = if (newExpandedState) _uiState.value.translationResult else null,
+            error = if (newExpandedState) _uiState.value.error else null,
+            cardCreationResult = if (newExpandedState) _uiState.value.cardCreationResult else null,
+            cardsCreatedCount = if (newExpandedState) _uiState.value.cardsCreatedCount else 0,
+            selectedTranslation = if (newExpandedState) _uiState.value.selectedTranslation else null,
+            hasCardBeenCreated = if (newExpandedState) _uiState.value.hasCardBeenCreated else false
+        )
+    }
+    
     fun searchWord() {
         val query = _uiState.value.searchQuery.trim()
         if (query.isEmpty()) return
@@ -151,7 +179,8 @@ class SearchViewModel @Inject constructor(
                     currentForeign -> currentNative
                     else -> currentForeign // Default fallback
                 },
-                modelType = modelType
+                modelType = modelType,
+                context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
             )
             
             result.fold(
@@ -296,5 +325,7 @@ data class SearchUiState(
     val selectedTranslation: String? = null,
     val ankiImplementationType: String = "UNKNOWN",
     val lastCardDirection: CardDirection? = null,
-    val hasCardBeenCreated: Boolean = false
+    val hasCardBeenCreated: Boolean = false,
+    val contextQuery: String = "",
+    val isContextExpanded: Boolean = false
 )

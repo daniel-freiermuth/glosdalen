@@ -36,7 +36,8 @@ class DeepLDataSource @Inject constructor(
         sourceLanguage: Language,
         targetLanguage: Language,
         apiKey: String,
-        modelType: DeepLModelType
+        modelType: DeepLModelType,
+        context: String?
     ): Result<VocabularyEntry> {
         if (!supportedLanguagePairs.contains(sourceLanguage to targetLanguage)) {
             return Result.failure(VocabularyError.UnsupportedLanguagePair)
@@ -76,7 +77,7 @@ class DeepLDataSource @Inject constructor(
                         model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
                         formality = formality,
                         split_sentences = "0", // Don't split sentences - treat as one context
-                        context = null // No additional context needed for single words
+                        context = context?.takeIf { it.isNotBlank() }
                     )
                     
                     val response = apiService.translate("DeepL-Auth-Key $apiKey", request)
@@ -105,7 +106,7 @@ class DeepLDataSource @Inject constructor(
                     target_lang = targetLanguage.code,
                     model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
                     split_sentences = "0", // Don't split sentences - treat as one context
-                    context = null // No additional context needed for single words
+                    context = context?.takeIf { it.isNotBlank() }
                 )
                 
                 val response = apiService.translate("DeepL-Auth-Key $apiKey", request)

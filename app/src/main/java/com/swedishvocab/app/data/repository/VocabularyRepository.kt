@@ -17,7 +17,8 @@ class VocabularyRepository @Inject constructor(
         word: String,
         sourceLanguage: Language,
         targetLanguage: Language,
-        modelType: DeepLModelType = DeepLModelType.DEFAULT
+        modelType: DeepLModelType = DeepLModelType.DEFAULT,
+        context: String? = null
     ): Result<VocabularyEntry> {
         val apiKey = userPreferences.getDeepLApiKey().first()
         
@@ -25,7 +26,7 @@ class VocabularyRepository @Inject constructor(
             return Result.failure(VocabularyError.InvalidApiKey)
         }
         
-        return deepLDataSource.translate(word, sourceLanguage, targetLanguage, apiKey, modelType)
+        return deepLDataSource.translate(word, sourceLanguage, targetLanguage, apiKey, modelType, context)
     }
     
     suspend fun validateApiKey(apiKey: String): Result<Unit> {

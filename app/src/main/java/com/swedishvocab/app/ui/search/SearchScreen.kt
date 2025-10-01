@@ -2,6 +2,7 @@
 
 package com.swedishvocab.app.ui.search
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -275,6 +278,51 @@ fun SearchScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
                         )
+                    }
+                    
+                    // Context Input Section
+                    Column {
+                        // Context Toggle Button
+                        TextButton(
+                            onClick = { viewModel.toggleContextExpanded() },
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(vertical = 8.dp, horizontal = 0.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (uiState.isContextExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (uiState.isContextExpanded) "Hide context" else "Show context",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (uiState.isContextExpanded) "Hide Context" else "Add Context for Better Translation",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                        
+                        // Context Input Field (shown when expanded)
+                        AnimatedVisibility(
+                            visible = uiState.isContextExpanded,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.contextQuery,
+                                onValueChange = viewModel::updateContextQuery,
+                                label = { Text("Context (optional)") },
+                                placeholder = { Text("E.g., \"The bank of the river\" or \"I need to bank this money\"") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                maxLines = 3,
+                                supportingText = {
+                                    Text(
+                                        text = "Provide context to help DeepL understand which meaning you want.",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }
