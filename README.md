@@ -1,4 +1,4 @@
-# Glosordalen
+# Glosdalen
 
 A Kotlin Android app for German-Swedish vocabulary lookup with direct Anki card creation.
 

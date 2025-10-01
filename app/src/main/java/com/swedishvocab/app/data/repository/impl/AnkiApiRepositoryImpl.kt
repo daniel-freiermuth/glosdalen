@@ -21,8 +21,8 @@ class AnkiApiRepositoryImpl @Inject constructor(
 
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
-        private const val APP_MODEL_NAME = "Glosordalen Basic"
-        private const val DEFAULT_DECK_NAME = "Glosordalen"
+        private const val APP_MODEL_NAME = "Glosdalen Basic"
+        private const val DEFAULT_DECK_NAME = "Glosdalen"
     }
 
     private var cachedApi: AddContentApi? = null

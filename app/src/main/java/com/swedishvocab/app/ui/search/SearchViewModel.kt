@@ -199,7 +199,7 @@ class SearchViewModel @Inject constructor(
                         AnkiCard(
                             fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
                             deckName = deckName,
-                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
+                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
                         )
                     )
                 }
@@ -208,7 +208,7 @@ class SearchViewModel @Inject constructor(
                         AnkiCard(
                             fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
                             deckName = deckName,
-                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
+                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
                         )
                     )
                 }
@@ -218,7 +218,7 @@ class SearchViewModel @Inject constructor(
                             modelName = "Basic (and reversed card)",
                             fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
                             deckName = deckName,
-                            tags = listOf("glosordalen", "vocab", currentNative.code, currentForeign.code, "bidirectional")
+                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional")
                         )
                     )
                 }

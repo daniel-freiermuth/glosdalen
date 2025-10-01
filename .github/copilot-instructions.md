@@ -1,4 +1,4 @@
-# Glosordalen - Android Project
+# Glosdalen - Android Project
 
 ## Project Overview
 Kotlin Android app for German-Swedish vocabulary lookup with DeepL API integration and AnkiDroid card creation.

@@ -130,7 +130,7 @@ fun SearchScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Glosordalen",
+                text = "Glosdalen",
                 style = MaterialTheme.typography.headlineMedium
             )
             

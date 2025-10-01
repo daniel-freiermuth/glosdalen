@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Glosordalen"
+rootProject.name = "Glosdalen"
 include(":app")
