@@ -19,6 +19,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -39,6 +45,7 @@ import com.swedishvocab.app.BuildConfig
 import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.model.CardDirection
+import com.swedishvocab.app.data.model.SearchContext
 import com.swedishvocab.app.data.repository.AnkiImplementationType
 import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
 import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
@@ -552,9 +559,12 @@ private fun AnkiSettingsSection(
                         }
                     }
                     
-                    DeckNameTemplateField(
-                        value = uiState.selectedDeckName,
-                        onValueChange = ankiViewModel::selectDeck,
+                    DeckNameFieldWithDropdown(
+                        selectedDeckName = uiState.selectedDeckName,
+                        availableDecks = uiState.availableDecks,
+                        isLoadingDecks = uiState.isLoadingDecks,
+                        onDeckNameChange = ankiViewModel::selectDeck,
+                        onRefreshDecks = ankiViewModel::loadAvailableDecks,
                         nativeLanguage = nativeLanguage,
                         foreignLanguage = foreignLanguage,
                         templateResolver = templateResolver
@@ -870,6 +880,292 @@ private fun DeckNameField(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DeckNameFieldWithDropdown(
+    selectedDeckName: String,
+    availableDecks: Map<Long, String>,
+    isLoadingDecks: Boolean,
+    onDeckNameChange: (String) -> Unit,
+    onRefreshDecks: () -> Unit,
+    nativeLanguage: Language,
+    foreignLanguage: Language,
+    templateResolver: DeckNameTemplateResolver
+) {
+    var showDropdown by remember { mutableStateOf(false) }
+    var showTemplateHelp by remember { mutableStateOf(false) }
+    
+    // Use TextFieldValue for proper cursor management
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(selectedDeckName, TextRange(selectedDeckName.length))) }
+    
+    // Track if we're currently typing to avoid interference
+    var isUserTyping by remember { mutableStateOf(false) }
+    
+    // Only sync external changes when user is not actively typing
+    LaunchedEffect(selectedDeckName) {
+        if (!isUserTyping && textFieldValue.text != selectedDeckName) {
+            textFieldValue = TextFieldValue(selectedDeckName, TextRange(selectedDeckName.length))
+        }
+    }
+    
+    // Create search context for template resolution  
+    val searchContext = remember(nativeLanguage, foreignLanguage) {
+        SearchContext(
+            nativeLanguage = nativeLanguage, 
+            foreignLanguage = foreignLanguage,
+            sourceLanguage = foreignLanguage,
+            targetLanguage = nativeLanguage,
+            context = null
+        )
+    }
+    
+    // Resolve preview
+    val resolvedDeckName by remember(textFieldValue.text, searchContext) {
+        derivedStateOf {
+            try {
+                templateResolver.resolveDeckName(textFieldValue.text, searchContext)
+            } catch (e: Exception) {
+                textFieldValue.text
+            }
+        }
+    }
+    
+    Column {
+        // Main dropdown-style text field with proper cursor management
+        OutlinedTextField(
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                isUserTyping = true
+                textFieldValue = newValue
+                onDeckNameChange(newValue.text)
+                // Reset typing flag after a short delay
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(500) 
+                    isUserTyping = false
+                }
+            },
+            label = { Text("Deck Name") },
+            placeholder = { Text("Type custom name or select existing deck") },
+            supportingText = if (textFieldValue.text != resolvedDeckName) {
+                { 
+                    Text(
+                        text = "Preview: $resolvedDeckName",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else null,
+            trailingIcon = {
+                // Only show dropdown arrow if we have decks available
+                if (availableDecks.isNotEmpty()) {
+                    IconButton(
+                        onClick = { showDropdown = !showDropdown }
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = if (showDropdown) "Hide available decks" else "Show available decks"
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Available decks dropdown
+        if (showDropdown && availableDecks.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Available Anki Decks (${availableDecks.size}):",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        
+                        if (isLoadingDecks) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            TextButton(
+                                onClick = onRefreshDecks
+                            ) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Refresh decks",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Refresh",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                    ) {
+                        items(availableDecks.values.toList().sorted()) { deckName ->
+                            TextButton(
+                                onClick = {
+                                    textFieldValue = TextFieldValue(deckName, TextRange(deckName.length))
+                                    onDeckNameChange(deckName)
+                                    showDropdown = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = deckName,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                                )
+                            }
+                            
+                            if (deckName != availableDecks.values.sorted().last()) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    thickness = 0.5.dp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Template help section
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        TextButton(
+            onClick = { showTemplateHelp = !showTemplateHelp },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                if (showTemplateHelp) Icons.Default.ArrowDropDown else Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = if (showTemplateHelp) "Hide template help" else "Show template help"
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Template Variables ${if (showTemplateHelp) "(Hide)" else "(Show Help)"}")
+        }
+        
+        if (showTemplateHelp) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Click any variable to insert it at your cursor position:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Show template variables (simplified version)
+                    val templates = templateResolver.getAvailableTemplates()
+                    val sampleContext = SearchContext(
+                        nativeLanguage = Language.SWEDISH,
+                        foreignLanguage = Language.GERMAN,
+                        sourceLanguage = Language.GERMAN,
+                        targetLanguage = Language.SWEDISH,
+                        context = null
+                    )
+                    
+                    templates.forEach { templateInfo ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    // Insert template at cursor position
+                                    val currentSelection = textFieldValue.selection
+                                    val currentText = textFieldValue.text
+                                    
+                                    val beforeCursor = currentText.substring(0, currentSelection.start)
+                                    val afterCursor = currentText.substring(currentSelection.end)
+                                    val newText = beforeCursor + templateInfo.template + afterCursor
+                                    
+                                    // Set cursor position after the inserted template
+                                    val newCursorPosition = currentSelection.start + templateInfo.template.length
+                                    val newTextFieldValue = TextFieldValue(
+                                        text = newText,
+                                        selection = TextRange(newCursorPosition)
+                                    )
+                                    
+                                    textFieldValue = newTextFieldValue
+                                    onDeckNameChange(newText)
+                                }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = templateInfo.template,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = templateInfo.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = try {
+                                    templateResolver.resolveDeckName(templateInfo.template, sampleContext)
+                                } catch (e: Exception) {
+                                    templateInfo.example
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                        
+                        if (templateInfo != templates.last()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Show hint when no decks available
+        if (availableDecks.isEmpty() && !isLoadingDecks) {
+            Text(
+                text = "No decks found. Create decks in AnkiDroid first, then refresh.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
