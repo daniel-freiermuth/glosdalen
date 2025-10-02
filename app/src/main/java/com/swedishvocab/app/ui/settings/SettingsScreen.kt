@@ -22,7 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
@@ -593,12 +595,70 @@ private fun AnkiSettingsSection(
                     }
                 }
             } else {
-                // Intent mode limitations
-                Text(
-                    text = "Using basic intent integration. Install AnkiDroid API for advanced features like deck and note model selection.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Show permission hint if AnkiDroid is installed but API not available
+                if (uiState.isAnkiAvailable && !uiState.isUsingApiImplementation) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Settings,
+                                    contentDescription = "Settings",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Enable Advanced Features",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                            
+                            Text(
+                                text = "AnkiDroid is installed but API permissions aren't granted. To enable advanced features like deck selection and templates:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            
+                            Text(
+                                text = "1. Click on the button below for entering the app settings.\n2. Go to additional permissions.\n3. Enable access to the AnkiDroid database.\n4. Restart app.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            
+                            val context = LocalContext.current
+                            Button(
+                                onClick = {
+                                    // Open app settings
+                                    val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = android.net.Uri.fromParts("package", context.packageName, null)
+                                    }
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Open App Settings")
+                            }
+                        }
+                    }
+                } else {
+                    // Intent mode limitations (when AnkiDroid not installed)
+                    Text(
+                        text = "Using basic intent integration. Install AnkiDroid for advanced features like deck and note model selection.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
