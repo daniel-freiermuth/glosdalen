@@ -5,9 +5,14 @@ Create an Android app for German-Swedish vocabulary lookup with direct AnkiDroid
 
 ## 📱 Core Features Implemented
 - **Bidirectional Translation**: German ↔ Swedish using DeepL API
-- **Direct Anki Integration**: Create cards in AnkiDroid via Intents
+- **Advanced AnkiDroid Integration**: Dual strategy (API + Intent) with automatic fallback
+- **Template-Based Deck Naming**: Dynamic deck names with 12+ variables (language, date, etc.)
 - **User-Provided API Keys**: No server costs, user controls usage
 - **Card Type Options**: Unidirectional or bidirectional cards
+- **Professional UI**: Dropdown-style deck selection with real-time preview
+- **Cursor-Aware Editing**: Advanced text field management prevents cursor jumping
+- **Permission Guidance**: Contextual help for AnkiDroid API setup
+- **Release Automation**: Complete build, tag, and distribution pipeline
 - **Modern Material Design 3 UI**
 - **Online-Only Architecture**: No local caching for simplicity
 
@@ -67,24 +72,32 @@ app/src/main/java/com/swedishvocab/app/
 ## 🔧 Build Configuration Success
 See `BUILD_CONFIGURATION.md` for detailed build setup and troubleshooting.
 
-## 🚀 Current Status
-- ✅ **Complete Implementation**: All 13+ Kotlin files implemented
-- ✅ **Successful Build**: APK generated at `app/build/outputs/apk/debug/app-debug.apk`
+## 🚀 Current Status (Updated: October 2025)
+- ✅ **Complete Implementation**: 15+ Kotlin files with advanced AnkiDroid integration
+- ✅ **Successful Build**: APK generated with automated release system
 - ✅ **Modern Dependencies**: Latest AndroidX, Compose 2024.06.00, Java 17 target
+- ✅ **Advanced AnkiDroid Integration**: Dual API/Intent strategy with automatic fallback
+- ✅ **Template System**: Sophisticated deck naming with variable substitution
+- ✅ **Release Automation**: Makefile-based build, tag, and distribution system
+- ✅ **Production UX**: Dropdown-style deck selection with cursor-aware text editing
 - ✅ **Clean Code**: No deprecation warnings, modern API usage
-- ✅ **Ready for Testing**: 11MB APK ready for device installation
+- ✅ **Ready for Production**: Feature-complete with professional UI/UX
 
 ## 📋 Next Steps for Continuation
-1. **Device Testing**: Install APK and test with real DeepL API key
-2. **AnkiDroid Testing**: Verify card creation with actual AnkiDroid app
-3. **Potential Enhancements**: See `FUTURE_ENHANCEMENTS.md`
-4. **Production Readiness**: Consider signing keys and Play Store preparation
+1. **Release Management**: Use `make release` for automated releases
+2. **Device Testing**: Install APK and test with real DeepL API key
+3. **AnkiDroid Testing**: Verify card creation with actual AnkiDroid app
+4. **Template System**: Explore advanced template variables and patterns
+5. **Production Readiness**: Consider signing keys and Play Store preparation
 
 ## 📁 Notes Organization
 This `notes-to-the-agent/` folder contains:
-- `PROJECT_OVERVIEW.md` (this file) - High-level project summary
-- `BUILD_CONFIGURATION.md` - Critical build setup and troubleshooting
+- `PROJECT_OVERVIEW.md` (this file) - High-level project summary and current status
+- `BUILD_CONFIGURATION.md` - Critical build setup, troubleshooting, and release system
+- `ANKI_INTEGRATION_ARCHITECTURE.md` - Advanced AnkiDroid integration strategy
+- `TEMPLATE_SYSTEM.md` - Comprehensive deck naming template system
 - `TECHNICAL_DECISIONS.md` - Detailed architecture and technology choices
 - `FUTURE_ENHANCEMENTS.md` - Potential improvements and extensions
+- `README_NOTES.md` - Meta information about maintaining these notes
 
 **Important**: These notes are designed to enable project continuation even if conversation history is lost. Always check and update these files when making significant changes.
