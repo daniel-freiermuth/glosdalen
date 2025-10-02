@@ -39,7 +39,9 @@ import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.model.CardDirection
 import com.swedishvocab.app.data.repository.AnkiImplementationType
 import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
+import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
 import com.swedishvocab.app.ui.anki.AnkiSettingsViewModel
+import com.swedishvocab.app.ui.settings.components.DeckNameTemplateField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +52,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentApiKey by viewModel.currentApiKey.collectAsState("")
     val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
+    val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.ENGLISH)
     val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
     val currentEnableMultipleFormalities by viewModel.currentEnableMultipleFormalities.collectAsState(true)
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
@@ -269,7 +272,11 @@ fun SettingsScreen(
             }
             
             // AnkiDroid Integration
-            AnkiSettingsSection()
+            AnkiSettingsSection(
+                nativeLanguage = currentNativeLanguage,
+                foreignLanguage = currentForeignLanguage,
+                templateResolver = viewModel.templateResolver
+            )
             
             Spacer(modifier = Modifier.weight(1f))
             
@@ -455,7 +462,11 @@ private fun AboutSection() {
 }
 
 @Composable
-private fun AnkiSettingsSection() {
+private fun AnkiSettingsSection(
+    nativeLanguage: Language,
+    foreignLanguage: Language,
+    templateResolver: DeckNameTemplateResolver
+) {
     val ankiViewModel: AnkiSettingsViewModel = hiltViewModel()
     val uiState by ankiViewModel.uiState.collectAsState()
 
@@ -539,13 +550,12 @@ private fun AnkiSettingsSection() {
                         }
                     }
                     
-                    DeckNameField(
-                        selectedDeckName = uiState.selectedDeckName,
-                        availableDecks = uiState.availableDecks,
-                        isLoadingDecks = uiState.isLoadingDecks,
-                        isEnabled = uiState.isUsingApiImplementation,
-                        onDeckNameChange = ankiViewModel::selectDeck,
-                        onRefreshDecks = ankiViewModel::loadAvailableDecks
+                    DeckNameTemplateField(
+                        value = uiState.selectedDeckName,
+                        onValueChange = ankiViewModel::selectDeck,
+                        nativeLanguage = nativeLanguage,
+                        foreignLanguage = foreignLanguage,
+                        templateResolver = templateResolver
                     )
                 }
 

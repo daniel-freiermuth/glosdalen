@@ -6,6 +6,7 @@ import com.swedishvocab.app.data.model.*
 import com.swedishvocab.app.data.repository.VocabularyRepository
 import com.swedishvocab.app.data.repository.AnkiRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
+import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,7 +16,8 @@ import javax.inject.Inject
 class SearchViewModel @Inject constructor(
     private val vocabularyRepository: VocabularyRepository,
     private val ankiRepository: AnkiRepository,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val templateResolver: DeckNameTemplateResolver
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -209,8 +211,23 @@ class SearchViewModel @Inject constructor(
             val translation = _uiState.value.selectedTranslation ?: result.translations.firstOrNull()?.text ?: ""
             val currentNative = nativeLanguage.first()
             val currentForeign = foreignLanguage.first()
-            val deckName = defaultDeckName.first()
+            val deckTemplate = defaultDeckName.first()
             val cardDirection = defaultCardDirection.first()
+            
+            // Resolve deck name template
+            val searchContext = SearchContext(
+                nativeLanguage = currentNative,
+                foreignLanguage = currentForeign,
+                sourceLanguage = result.sourceLanguage,
+                targetLanguage = when (result.sourceLanguage) {
+                    currentNative -> currentForeign
+                    currentForeign -> currentNative
+                    else -> currentForeign
+                },
+                context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
+            )
+            
+            val deckName = templateResolver.resolveDeckName(deckTemplate, searchContext)
             
             // Determine which word is native and which is foreign
             val (nativeWord, foreignWord) = if (result.sourceLanguage == currentNative) {

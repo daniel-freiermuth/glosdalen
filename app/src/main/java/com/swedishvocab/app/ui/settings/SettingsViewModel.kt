@@ -6,6 +6,7 @@ import com.swedishvocab.app.data.model.DeepLModelType
 import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.repository.VocabularyRepository
 import com.swedishvocab.app.domain.preferences.UserPreferences
+import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
-    private val vocabularyRepository: VocabularyRepository
+    private val vocabularyRepository: VocabularyRepository,
+    val templateResolver: DeckNameTemplateResolver
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SettingsUiState())
