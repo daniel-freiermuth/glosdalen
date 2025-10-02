@@ -1,16 +1,27 @@
 package com.swedishvocab.app.ui.settings.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.swedishvocab.app.data.model.Language
 import com.swedishvocab.app.data.model.SearchContext
 import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, kotlinx.coroutines.FlowPreview::class)
 @Composable
 fun DeckNameTemplateField(
     value: String,
@@ -22,41 +33,79 @@ fun DeckNameTemplateField(
 ) {
     var showTemplateHelp by remember { mutableStateOf(false) }
     
-    // Use internal state to prevent cursor jumping
-    var internalValue by remember { mutableStateOf(value) }
+    // Use TextFieldValue for cursor position support, but minimize external interference
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     
-    // Sync internal state with external value when it changes externally
+    // Track if we're currently typing to avoid interference
+    var isUserTyping by remember { mutableStateOf(false) }
+    
+    // Only sync external changes when user is not actively typing
     LaunchedEffect(value) {
-        if (internalValue != value) {
-            internalValue = value
+        if (!isUserTyping && textFieldValue.text != value) {
+            textFieldValue = TextFieldValue(value, TextRange(value.length))
         }
     }
     
     // Separate state for preview to avoid affecting text input
     var resolvedDeckName by remember { mutableStateOf("") }
     
-    // Update preview when template or languages change
-    LaunchedEffect(internalValue, nativeLanguage, foreignLanguage) {
-        resolvedDeckName = try {
-            val sampleContext = SearchContext(
-                nativeLanguage = nativeLanguage,
-                foreignLanguage = foreignLanguage,
-                sourceLanguage = nativeLanguage,
-                targetLanguage = foreignLanguage,
-                context = null
-            )
-            templateResolver.resolveDeckName(internalValue, sampleContext)
-        } catch (e: Exception) {
-            "Invalid template"
-        }
+    // Create search context for template resolution  
+    val searchContext = remember(nativeLanguage, foreignLanguage) {
+        SearchContext(
+            nativeLanguage = nativeLanguage, 
+            foreignLanguage = foreignLanguage,
+            sourceLanguage = foreignLanguage,
+            targetLanguage = nativeLanguage,
+            context = null
+        )
+    }
+    
+    // Update preview automatically with debouncing
+    LaunchedEffect(textFieldValue.text) {
+        snapshotFlow { textFieldValue.text }
+            .debounce(300)
+            .collectLatest { debouncedValue ->
+                val newPreview = templateResolver.resolveDeckName(
+                    templateString = debouncedValue,
+                    searchContext = searchContext
+                )
+                resolvedDeckName = newPreview
+            }
+    }
+    
+    // Function to insert template (simplified - appends to end for now)
+    fun insertTemplate(template: String) {
+        val currentSelection = textFieldValue.selection
+        val currentText = textFieldValue.text
+        
+        // Insert template at cursor position
+        val beforeCursor = currentText.substring(0, currentSelection.start)
+        val afterCursor = currentText.substring(currentSelection.end)
+        val newText = beforeCursor + template + afterCursor
+        
+        // Set cursor position after the inserted template
+        val newCursorPosition = currentSelection.start + template.length
+        val newTextFieldValue = TextFieldValue(
+            text = newText,
+            selection = TextRange(newCursorPosition)
+        )
+        
+        textFieldValue = newTextFieldValue
+        onValueChange(newText)
     }
     
     Column(modifier = modifier) {
         OutlinedTextField(
-            value = internalValue,
+            value = textFieldValue,
             onValueChange = { newValue ->
-                internalValue = newValue
-                onValueChange(newValue)
+                isUserTyping = true
+                textFieldValue = newValue
+                onValueChange(newValue.text)
+                // Reset typing flag after a short delay
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(500) 
+                    isUserTyping = false
+                }
             },
             label = { Text("Deck Name Template") },
             placeholder = { Text("e.g., Vocabulary::{foreign_local}") },
@@ -83,6 +132,7 @@ fun DeckNameTemplateField(
                 templateResolver = templateResolver,
                 nativeLanguage = nativeLanguage,
                 foreignLanguage = foreignLanguage,
+                onTemplateClick = ::insertTemplate,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
@@ -94,6 +144,7 @@ private fun TemplateHelpCard(
     templateResolver: DeckNameTemplateResolver,
     nativeLanguage: Language,
     foreignLanguage: Language,
+    onTemplateClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val sampleContext = remember(nativeLanguage, foreignLanguage) {
@@ -122,14 +173,18 @@ private fun TemplateHelpCard(
             
             templates.forEach { templateInfo ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onTemplateClick(templateInfo.template) }
+                        .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = templateInfo.template,
                             style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = templateInfo.description,
@@ -145,7 +200,7 @@ private fun TemplateHelpCard(
                             templateInfo.example
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -177,13 +232,17 @@ private fun TemplateHelpCard(
             
             examples.forEach { example ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onTemplateClick(example) }
+                        .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = example,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
@@ -193,7 +252,7 @@ private fun TemplateHelpCard(
                             "Invalid"
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
