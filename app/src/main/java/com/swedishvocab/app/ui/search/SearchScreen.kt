@@ -234,6 +234,7 @@ fun SearchScreen(
                                 IconButton(
                                     onClick = {
                                         viewModel.updateSearchQuery("")
+                                        focusRequester.requestFocus()
                                     }
                                 ) {
                                     Icon(Icons.Default.Clear, contentDescription = "Clear")
