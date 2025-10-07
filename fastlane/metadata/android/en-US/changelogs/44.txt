@@ -1,0 +1,5 @@
+• Added helpful info text and usage guidance
+• Improved translation context handling
+• Enhanced AnkiDroid API integration
+• Better translation result display
+• Performance optimizations

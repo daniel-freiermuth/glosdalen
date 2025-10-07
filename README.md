@@ -1,21 +1,24 @@
 # Glosdalen
 
-A Kotlin Android app for German-Swedish vocabulary lookup with direct Anki card creation.
+A Kotlin Android app for multi-language vocabulary lookup with seamless AnkiDroid integration. Support for 30+ languages including German, Swedish, English, French, Spanish, Italian, and many more.
 
 ## Features
 
-- 🔄 **Bidirectional Translation**: German ↔ Swedish word lookup using DeepL API
-- 📚 **Anki Integration**: Create cards directly in AnkiDroid with one tap
+- 🌍 **Multi-Language Support**: High-quality bidirectional translation for 30+ languages
+- 📚 **Seamless AnkiDroid Integration**: 
+  - **Direct database access** (default): Fast, seamless integration with full deck management
+  - **Intent-based fallback**: Works even without database permissions
 - ⚙️ **Flexible Card Types**: Choose between unidirectional or bidirectional cards
-- 🔑 **User API Key**: Secure, user-provided DeepL API key with validation
+- 🔑 **Translation Service API**: Currently supports DeepL with user-provided API key
 - 🎯 **Simple UX**: Search → Translate → Create card workflow
-- 📱 **Material Design 3**: Modern, clean interface following Android guidelines
+- 📱 **Material Design 3**: Clean, intuitive interface following Android guidelines
+- 🔒 **Privacy First**: No data collection, your API key stays secure on your device
 
 ## Prerequisites
 
 - Android Studio Arctic Fox (2020.3.1) or later
 - Android SDK API 24+ (Android 7.0)
-- DeepL API key (free tier available at [deepl.com/pro-api](https://www.deepl.com/pro-api))
+- Translation service API key (currently supports DeepL - free tier available at [deepl.com/pro-api](https://www.deepl.com/pro-api))
 - AnkiDroid app installed on device (for card creation)
 
 ## Tech Stack
@@ -27,7 +30,7 @@ A Kotlin Android app for German-Swedish vocabulary lookup with direct Anki card 
 - **Networking**: Retrofit + OkHttp
 - **State Management**: StateFlow + Compose State
 - **Persistence**: DataStore (Preferences)
-- **API**: DeepL REST API
+- **Translation API**: Currently DeepL REST API
 
 ## Project Structure
 
@@ -55,8 +58,8 @@ app/src/main/java/com/swedishvocab/app/
 ### 1. Clone and Setup
 
 ```bash
-git clone <repository-url>
-cd anki-vocab-app
+git clone https://github.com/daniel-freiermuth/glosdalen.git
+cd glosdalen
 ```
 
 ### 2. Open in Android Studio
@@ -98,7 +101,7 @@ Android Studio will automatically:
 ### First Launch Setup
 
 1. **API Key Configuration**:
-   - Enter your DeepL API key
+   - Enter your translation service API key (currently DeepL)
    - App validates the key with a test translation
    - Key is stored securely in DataStore
 
@@ -108,16 +111,17 @@ Android Studio will automatically:
 
 ### Daily Usage
 
-1. **Search**: Enter German or Swedish word
-2. **Toggle Languages**: Use swap button to change direction
+1. **Search**: Enter a word in any supported language
+2. **Toggle Languages**: Use swap button to change translation direction
 3. **View Translation**: See DeepL translation result
 4. **Create Card**: Choose card type and create in AnkiDroid
 5. **Settings**: Access via gear icon to modify preferences
 
 ## Configuration
 
-### DeepL API Setup
+### Translation Service API Setup
 
+**DeepL (Currently Supported):**
 1. Visit [deepl.com/pro-api](https://www.deepl.com/pro-api)
 2. Sign up for free tier (500,000 chars/month)
 3. Copy your API key
@@ -132,11 +136,11 @@ Android Studio will automatically:
 ## Card Types
 
 ### Unidirectional Cards
-- Single card: German → Swedish
+- Single card: Source Language → Target Language
 - Good for recognition practice
 
 ### Bidirectional Cards  
-- Two cards: German → Swedish + Swedish → German
+- Two cards: Source ↔ Target in both directions
 - Better for active recall and production
 
 ## Error Handling
@@ -164,6 +168,17 @@ The app gracefully handles:
 3. **AnkiDroid Intents**: Direct integration without complex APIs
 4. **Material Design 3**: Modern, accessible interface
 5. **Compose-First**: Modern Android UI toolkit
+
+## Language Support
+
+Glosdalen currently supports all language pairs available through DeepL, including:
+
+- **Germanic**: German, English, Dutch, Danish, Swedish, Norwegian
+- **Romance**: French, Spanish, Italian, Portuguese, Romanian
+- **Slavic**: Polish, Czech, Slovak, Bulgarian, Slovenian
+- **Other**: Japanese, Chinese, Korean, Arabic, Turkish, Greek, Hungarian, Finnish, Estonian, Latvian, Lithuanian
+
+Perfect for any language learning combination you need!
 
 ## Troubleshooting
 
@@ -216,7 +231,7 @@ Potential extensions (not implemented):
 
 ## License
 
-[Add your license here]
+This project is licensed under the GNU General Public License v3.0 or later - see the [LICENSE](LICENSE) file for details.
 
 ---
 

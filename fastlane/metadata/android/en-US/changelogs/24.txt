@@ -1,0 +1,6 @@
+• Initial release with German ↔ Swedish translation
+• Direct AnkiDroid card creation with one tap
+• Support for multiple language combinations
+• Configurable DeepL API integration
+• Clean, scrollable interface with app logo
+• About section with app information

@@ -1,0 +1,5 @@
+• Enhanced user interface with better translation display
+• Improved keyboard behavior and search experience
+• Better card creation workflow with visual feedback
+• Alphabetically sorted dropdown menus
+• Various UI polish and consistency improvements

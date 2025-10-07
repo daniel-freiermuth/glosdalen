@@ -1,0 +1,5 @@
+• Official app rebranding to "Glosdalen"
+• Enhanced foreign language selection interface
+• Improved scrollable deck overview
+• Better translation consistency and styling
+• Configurable AnkiDroid communication methods

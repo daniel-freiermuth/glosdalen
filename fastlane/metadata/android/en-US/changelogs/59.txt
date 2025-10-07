@@ -1,0 +1,5 @@
+• Improved app logo and visual design
+• Enhanced color theme matching new branding
+• Better keyboard handling and user experience
+• Streamlined card creation workflow
+• Performance optimizations and bug fixes

@@ -1,0 +1,46 @@
+Glosdalen är en ordförrådsuppslagsapp som integreras sömlöst med AnkiDroid för effektiv språkinlärning.
+
+<b>Huvudfunktioner:</b>
+• Högkvalitativ dubbelriktad översättning
+• Stöd för 30+ språk inklusive tyska, svenska, engelska, franska, spanska, italienska med mera
+• Direkt Anki-kortskapande med ett tryck
+• Välj mellan enkelriktade eller dubbelriktade kort
+• Rent, intuitivt gränssnitt
+• Enkelt arbetsflöde: Sök → Översätt → Skapa kort
+
+<b>Perfekt för:</b>
+• Språkinlärare
+• Studenter och professionella som behöver snabba, exakta översättningar
+• Språkentusiaster som använder Anki för intervallrepetition
+• Alla som vill bygga upp ordförråd samtidigt som de skapar studiekort
+
+<b>Så här fungerar det:</b>
+1. Ange ett ord på vilket språk som helst som stöds
+2. Få högkvalitativa översättningar
+3. Skapa Anki-kort direkt med ett tryck
+4. Fortsätt din intervallrepetitionsinlärning i AnkiDroid
+
+<b>AnkiDroid-integration:</b>
+Två anslutningsmetoder säkerställer tillförlitligt kortskapande:
+• <b>Direkt databasåtkomst</b> (standard): Snabb, sömlös integration med fullständig kortlekshantering
+• <b>Intent-baserad reserv</b>: Fungerar även utan databasbehörigheter
+
+<b>Integritet och säkerhet:</b>
+• Ingen datainsamling eller spårning
+• Din API-nyckel förblir säker på din enhet
+• Ansluter endast till DeepL för översättningar
+• Helt öppen källkod under GPLv3-licens
+
+<b>Krav:</b>
+• AnkiDroid-app installerad för kortskapande
+• Översättningstjänst API-nyckel (stöder för närvarande DeepL - gratis nivå tillgänglig på deepl.com/pro-api)
+• Internetanslutning för översättningar
+
+<b>Språkstöd:</b>
+Stöder för närvarande alla språkpar tillgängliga genom DeepL, inklusive:
+• Germanska: tyska, engelska, nederländska, danska, svenska, norska
+• Romanska: franska, spanska, italienska, portugisiska, rumänska
+• Slaviska: polska, tjeckiska, slovakiska, bulgariska, slovenska
+• Övriga: japanska, kinesiska, koreanska, arabiska, turkiska, grekiska, ungerska, finska, estniska, lettiska, litauiska
+
+Perfekt för vilken språkinlärningskombination du behöver!

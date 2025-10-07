@@ -1,0 +1,1 @@
+Vokabelsuche mit direkter Anki-Kartenerstellung

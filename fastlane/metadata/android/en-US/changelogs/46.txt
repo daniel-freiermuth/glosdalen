@@ -1,0 +1,4 @@
+• Introduced true bidirectional Anki cards
+• Create cards in both directions with one tap
+• Enhanced language learning workflow
+• Improved semantic versioning

@@ -1,0 +1,46 @@
+Glosdalen is a vocabulary lookup app that integrates seamlessly with AnkiDroid for efficient language learning.
+
+<b>Key Features:</b>
+• High-quality bidirectional translation
+• Support for 30+ languages including German, Swedish, English, French, Spanish, Italian, and more
+• Direct Anki card creation with one tap
+• Choose between unidirectional or bidirectional cards
+• Clean, intuitive interface
+• Simple workflow: Search → Translate → Create card
+
+<b>Perfect for:</b>
+• Language learners
+• Students and professionals needing quick, accurate translations
+• Language enthusiasts using Anki for spaced repetition
+• Anyone who wants to build vocabulary while creating study cards
+
+<b>How it Works:</b>
+1. Enter a word in any supported language
+2. Get high-quality translations
+3. Create Anki cards instantly with one tap
+4. Continue your spaced repetition learning in AnkiDroid
+
+<b>AnkiDroid Integration:</b>
+Two connection methods ensure reliable card creation:
+• <b>Direct database access</b> (default): Fast, seamless integration with full deck management
+• <b>Intent-based fallback</b>: Works even without database permissions
+
+<b>Privacy & Security:</b>
+• No data collection or tracking
+• Your API key stays secure on your device
+• Only connects to DeepL for translations
+• Completely open source under GPLv3 license
+
+<b>Requirements:</b>
+• AnkiDroid app installed for card creation
+• Translation service API key (currently supports DeepL - free tier available at deepl.com/pro-api)
+• Internet connection for translations
+
+<b>Language Support:</b>
+Currently supports all language pairs available through DeepL, including:
+• Germanic: German, English, Dutch, Danish, Swedish, Norwegian
+• Romance: French, Spanish, Italian, Portuguese, Romanian
+• Slavic: Polish, Czech, Slovak, Bulgarian, Slovenian
+• Other: Japanese, Chinese, Korean, Arabic, Turkish, Greek, Hungarian, Finnish, Estonian, Latvian, Lithuanian
+
+Perfect for any language learning combination you need!

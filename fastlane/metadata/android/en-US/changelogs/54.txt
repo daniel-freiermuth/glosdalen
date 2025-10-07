@@ -1,0 +1,5 @@
+• Enhanced deck name templates with click-to-insert
+• Improved AnkiDroid database access with fallback options
+• Better deck selection and management
+• Enhanced translation workflow
+• UI improvements and bug fixes

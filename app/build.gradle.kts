@@ -1,5 +1,8 @@
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.OffsetDateTime
 
 plugins {
     id("com.android.application")
@@ -52,12 +55,23 @@ android {
             useSupportLibrary = true
         }
         
-        // Build configuration fields
+        // Build configuration fields (reproducible builds)
         val gitHash = providers.exec {
             commandLine("git", "rev-parse", "--short", "HEAD")
         }.standardOutput.asText.get().trim()
         
-        val buildDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        // Use SOURCE_DATE_EPOCH for reproducible builds, fallback to git commit date
+        val buildDate = System.getenv("SOURCE_DATE_EPOCH")?.toLongOrNull()?.let { epoch ->
+            Instant.ofEpochSecond(epoch)
+                .atZone(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        } ?: providers.exec {
+            commandLine("git", "log", "-1", "--format=%cI")
+        }.standardOutput.asText.get().trim().let { gitDate ->
+            // Parse ISO 8601 git date and format consistently
+            OffsetDateTime.parse(gitDate)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        }
         
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
@@ -70,7 +84,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            // F-Droid will handle signing
         }
     }
     compileOptions {

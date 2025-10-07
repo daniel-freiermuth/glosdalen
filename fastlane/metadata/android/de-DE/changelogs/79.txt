@@ -1,0 +1,5 @@
+• Navigation-Phantom-Klicks vom Einstellungsbildschirm behoben
+• Verbesserte Sprachbeständigkeit
+• Code-Bereinigung und Leistungsoptimierungen
+• Verbesserte Stabilität der Benutzeroberfläche
+• Bessere App-Navigationskonsistenz

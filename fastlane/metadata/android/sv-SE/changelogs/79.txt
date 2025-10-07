@@ -1,0 +1,5 @@
+• Fixade navigationsproblem från inställningsskärm
+• Förbättrad språkbeständighet
+• Kodoptimering och prestandaförbättringar
+• Förbättrad stabilitet för användargränssnitt
+• Bättre appnavigationskonsistens

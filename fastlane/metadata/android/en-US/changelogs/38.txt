@@ -1,0 +1,7 @@
+• Improved card front/back consistency for better Anki cloze support
+• Fixed native and foreign language handling
+• Added multiple translation options for supported languages
+• Improved search language updates
+• Enhanced DeepL API integration with optimized model
+• Automatic versioning system introduced
+• Clickable API link in settings

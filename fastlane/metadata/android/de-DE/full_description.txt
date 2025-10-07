@@ -1,0 +1,46 @@
+Glosdalen ist eine Vokabelsuche-App, die sich nahtlos in AnkiDroid integriert für effizientes Sprachenlernen.
+
+<b>Hauptfunktionen:</b>
+• Hochwertige bidirektionale Übersetzung
+• Unterstützung für 30+ Sprachen einschließlich Deutsch, Schwedisch, Englisch, Französisch, Spanisch, Italienisch und mehr
+• Direkte Anki-Kartenerstellung mit einem Tippen
+• Wählen zwischen unidirektionalen oder bidirektionalen Karten
+• Saubere, intuitive Benutzeroberfläche
+• Einfacher Arbeitsablauf: Suchen → Übersetzen → Karte erstellen
+
+<b>Perfekt für:</b>
+• Sprachenlerner
+• Studenten und Berufstätige, die schnelle, genaue Übersetzungen benötigen
+• Sprachenthusiasten, die Anki für Intervallwiederholung nutzen
+• Alle, die Vokabeln aufbauen möchten, während sie Lernkarten erstellen
+
+<b>So funktioniert es:</b>
+1. Geben Sie ein Wort in einer beliebigen unterstützten Sprache ein
+2. Erhalten Sie hochwertige Übersetzungen
+3. Erstellen Sie Anki-Karten sofort mit einem Tippen
+4. Setzen Sie Ihr Intervallwiederholungslernen in AnkiDroid fort
+
+<b>AnkiDroid-Integration:</b>
+Zwei Verbindungsmethoden gewährleisten zuverlässige Kartenerstellung:
+• <b>Direkter Datenbankzugriff</b> (Standard): Schnelle, nahtlose Integration mit vollständiger Stapelverwaltung
+• <b>Intent-basierte Rückfallebene</b>: Funktioniert auch ohne Datenbankberechtigungen
+
+<b>Datenschutz und Sicherheit:</b>
+• Keine Datensammlung oder Verfolgung
+• Ihr API-Schlüssel bleibt sicher auf Ihrem Gerät
+• Verbindet sich nur mit DeepL für Übersetzungen
+• Vollständig Open Source unter GPLv3-Lizenz
+
+<b>Voraussetzungen:</b>
+• AnkiDroid-App installiert für Kartenerstellung
+• Übersetzungsdienst API-Schlüssel (unterstützt derzeit DeepL - kostenlose Stufe verfügbar auf deepl.com/pro-api)
+• Internetverbindung für Übersetzungen
+
+<b>Sprachunterstützung:</b>
+Unterstützt derzeit alle über DeepL verfügbaren Sprachpaare, einschließlich:
+• Germanische Sprachen: Deutsch, Englisch, Niederländisch, Dänisch, Schwedisch, Norwegisch
+• Romanische Sprachen: Französisch, Spanisch, Italienisch, Portugiesisch, Rumänisch
+• Slawische Sprachen: Polnisch, Tschechisch, Slowakisch, Bulgarisch, Slowenisch
+• Andere: Japanisch, Chinesisch, Koreanisch, Arabisch, Türkisch, Griechisch, Ungarisch, Finnisch, Estnisch, Lettisch, Litauisch
+
+Perfekt für jede Sprachenlernkombination, die Sie brauchen!

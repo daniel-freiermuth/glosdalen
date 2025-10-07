@@ -1,0 +1,120 @@
+Categories:
+  - Science & Education
+License: GPL-3.0-or-later
+AuthorName: Daniel Freiermuth
+AuthorWebSite: https://github.com/daniel-freiermuth/glosdalen
+SourceCode: https://github.com/daniel-freiermuth/glosdalen
+IssueTracker: https://github.com/daniel-freiermuth/glosdalen/issues
+Changelog: https://github.com/daniel-freiermuth/glosdalen/releases
+
+AutoName: Glosdalen
+Summary: Multi-language vocabulary lookup with seamless AnkiDroid integration
+
+Description: |-
+    Glosdalen is a vocabulary lookup app that integrates seamlessly with AnkiDroid 
+    for efficient language learning across 30+ languages.
+
+    Key Features:
+    * High-quality bidirectional translation for 30+ languages
+    * Direct Anki card creation with one tap
+    * Choose between unidirectional or bidirectional cards
+    * Clean, intuitive Material Design 3 interface
+    * Simple workflow: Search → Translate → Create card
+
+    AnkiDroid Integration:
+    * Direct database access (default): Fast, seamless integration with full deck management
+    * Intent-based fallback: Works even without database permissions
+
+    Perfect for language learners studying any supported language pair, students and 
+    professionals needing quick translations, and language enthusiasts using Anki 
+    for spaced repetition.
+
+    Language Support: Germanic (German, English, Dutch, Danish, Swedish, Norwegian), 
+    Romance (French, Spanish, Italian, Portuguese, Romanian), Slavic (Polish, Czech, 
+    Slovak, Bulgarian, Slovenian), and many others including Japanese, Chinese, Korean, 
+    Arabic, Turkish, Greek, Hungarian, Finnish, Estonian, Latvian, Lithuanian.
+
+    Privacy & Security: No data collection or tracking. Your API key stays secure 
+    on your device. Completely open source under GPLv3 license.
+
+    Requirements: AnkiDroid app installed, translation service API key (currently 
+    supports DeepL - free tier available), internet connection.
+
+RepoType: git
+Repo: https://github.com/daniel-freiermuth/glosdalen.git
+
+Builds:
+  - versionName: '1.0.0'
+    versionCode: 24
+    commit: v1.0.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.0.1'
+    versionCode: 38
+    commit: v1.0.1
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.1.0'
+    versionCode: 44
+    commit: v1.1.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.2.0'
+    versionCode: 46
+    commit: v1.2.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.3.0'
+    versionCode: 50
+    commit: v1.3.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.4.0'
+    versionCode: 54
+    commit: v1.4.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.5.0'
+    versionCode: 59
+    commit: v1.5.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.6.0'
+    versionCode: 63
+    commit: v1.6.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.7.0'
+    versionCode: 66
+    commit: v1.7.0
+    subdir: app
+    gradle:
+      - yes
+
+  - versionName: '1.8.0'
+    versionCode: 79
+    commit: v1.8.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 1.8.0
+CurrentVersionCode: 80

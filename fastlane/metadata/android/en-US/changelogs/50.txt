@@ -1,0 +1,5 @@
+• Fixed foreign language persistence in settings
+• Improved user interface consistency
+• Enhanced translation template system
+• Better context support for translations
+• Various UI and performance improvements
