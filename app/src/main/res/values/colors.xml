@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App launcher icon background - light teal that complements the hippo logo -->
+    <color name="ic_launcher_background">#E8F5F4</color>
+</resources>
