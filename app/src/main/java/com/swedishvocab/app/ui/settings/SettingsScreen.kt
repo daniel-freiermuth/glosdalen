@@ -570,40 +570,6 @@ private fun AnkiSettingsSection(
                         templateResolver = templateResolver
                     )
                 }
-
-                // Card Direction
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Card Direction:",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    
-                    CardDirection.values().forEach { direction ->
-                        val displayName = when (direction) {
-                            CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                            CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                            CardDirection.BOTH_DIRECTIONS -> "Both Directions"
-                        }
-                        
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { ankiViewModel.selectDirection(direction) }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = uiState.selectedDirection == direction,
-                                onClick = { ankiViewModel.selectDirection(direction) }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = displayName,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
             } else {
                 // Show permission hint if AnkiDroid is installed but API not available
                 if (uiState.isAnkiAvailable && !uiState.isUsingApiImplementation) {

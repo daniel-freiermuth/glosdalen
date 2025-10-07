@@ -143,15 +143,6 @@ fun AnkiSettingsScreen(
                 )
             }
 
-            // Card Direction Selection
-            item {
-                CardDirectionSection(
-                    currentDirection = uiState.selectedDirection,
-                    isUsingApi = uiState.isUsingApiImplementation,
-                    onDirectionSelected = viewModel::selectDirection
-                )
-            }
-
             // Status Info
             item {
                 AnkiStatusSection(
@@ -296,96 +287,6 @@ private fun DeckSelectionSection(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CardDirectionSection(
-    currentDirection: CardDirection,
-    isUsingApi: Boolean,
-    onDirectionSelected: (CardDirection) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .selectableGroup()
-        ) {
-            Column {
-                Text(
-                    text = "Card Direction",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (!isUsingApi) {
-                    Text(
-                        text = "Bidirectional cards require AnkiDroid API",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            CardDirection.values().forEach { direction ->
-                val isEnabled = isUsingApi || direction != CardDirection.BOTH_DIRECTIONS
-                val alpha = if (isEnabled) 1f else 0.6f
-                
-                val displayName = when (direction) {
-                    CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                    CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                    CardDirection.BOTH_DIRECTIONS -> "Both Directions"
-                }
-                
-                val description = when (direction) {
-                    CardDirection.NATIVE_TO_FOREIGN -> "Swedish on front, English on back"
-                    CardDirection.FOREIGN_TO_NATIVE -> "English on front, Swedish on back"
-                    CardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
-                }
-                
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = (currentDirection == direction),
-                            onClick = { if (isEnabled) onDirectionSelected(direction) },
-                            enabled = isEnabled
-                        )
-                        .padding(vertical = 8.dp)
-                        .alpha(alpha),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = (currentDirection == direction),
-                        onClick = { if (isEnabled) onDirectionSelected(direction) },
-                        enabled = isEnabled
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = displayName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (isEnabled) 
-                                MaterialTheme.colorScheme.onSurface 
-                            else 
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = if (!isEnabled && direction == CardDirection.BOTH_DIRECTIONS)
-                                "Requires AnkiDroid API" 
-                            else 
-                                description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
             }

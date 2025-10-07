@@ -31,9 +31,11 @@ class SearchViewModel @Inject constructor(
     
     init {
         viewModelScope.launch {
+            val cardDirection = defaultCardDirection.first()
             _uiState.value = _uiState.value.copy(
                 isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
-                ankiImplementationType = ankiRepository.getImplementationType().name
+                ankiImplementationType = ankiRepository.getImplementationType().name,
+                selectedCardDirection = cardDirection
             )
         }
         
@@ -212,7 +214,7 @@ class SearchViewModel @Inject constructor(
             val currentNative = nativeLanguage.first()
             val currentForeign = foreignLanguage.first()
             val deckTemplate = defaultDeckName.first()
-            val cardDirection = defaultCardDirection.first()
+            val cardDirection = _uiState.value.selectedCardDirection
             
             // Resolve deck name template
             val searchContext = SearchContext(
@@ -315,6 +317,18 @@ class SearchViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(selectedTranslation = translation)
     }
     
+    fun updateCardDirection(direction: CardDirection) {
+        _uiState.value = _uiState.value.copy(
+            selectedCardDirection = direction,
+            hasCardBeenCreated = false,
+            cardCreationResult = null
+        )
+        // Also update user preferences
+        viewModelScope.launch {
+            userPreferences.setDefaultCardDirection(direction)
+        }
+    }
+    
     fun retrySearch() {
         searchWord()
     }
@@ -344,5 +358,6 @@ data class SearchUiState(
     val lastCardDirection: CardDirection? = null,
     val hasCardBeenCreated: Boolean = false,
     val contextQuery: String = "",
-    val isContextExpanded: Boolean = false
+    val isContextExpanded: Boolean = false,
+    val selectedCardDirection: CardDirection = CardDirection.NATIVE_TO_FOREIGN
 )
