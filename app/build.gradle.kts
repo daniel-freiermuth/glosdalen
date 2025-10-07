@@ -38,11 +38,11 @@ scmVersion {
 }
 
 android {
-    namespace = "com.swedishvocab.app"
+    namespace = "com.glosdalen.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.swedishvocab.app"
+        applicationId = "com.glosdalen.app"
         minSdk = 26
         targetSdk = 34
         versionCode = providers.exec {
