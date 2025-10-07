@@ -44,8 +44,10 @@ fun SwedishVocabApp() {
         composable("search") {
             SearchScreen(
                 onNavigateToSettings = {
-                    navController.navigate("settings") {
-                        launchSingleTop = true
+                    if (navController.currentDestination?.route == "search") {
+                        navController.navigate("settings") {
+                            launchSingleTop = true
+                        }
                     }
                 }
             )
@@ -54,7 +56,9 @@ fun SwedishVocabApp() {
         composable("settings") {
             SettingsScreen(
                 onNavigateBack = {
-                    navController.popBackStack()
+                    if (navController.currentDestination?.route == "settings") {
+                        navController.popBackStack()
+                    }
                 }
             )
         }
