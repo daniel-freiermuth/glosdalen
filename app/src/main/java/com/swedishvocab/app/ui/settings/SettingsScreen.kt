@@ -50,7 +50,6 @@ import com.swedishvocab.app.data.repository.AnkiImplementationType
 import com.swedishvocab.app.domain.preferences.AnkiMethodPreference
 import com.swedishvocab.app.domain.template.DeckNameTemplateResolver
 import com.swedishvocab.app.ui.anki.AnkiSettingsViewModel
-import com.swedishvocab.app.ui.settings.components.DeckNameTemplateField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
