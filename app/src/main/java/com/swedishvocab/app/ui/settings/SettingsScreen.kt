@@ -67,8 +67,8 @@ fun SettingsScreen(
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentNativeLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, Language.SWEDISH, currentDeepLModelType, currentEnableMultipleFormalities)
+    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
+        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities)
     }
     
     // Handle settings saved (only for first launch auto-navigation)
