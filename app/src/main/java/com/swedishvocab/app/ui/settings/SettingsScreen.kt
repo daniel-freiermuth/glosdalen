@@ -1058,10 +1058,10 @@ private fun DeckNameFieldWithDropdown(
                     // Show template variables (simplified version)
                     val templates = templateResolver.getAvailableTemplates()
                     val sampleContext = SearchContext(
-                        nativeLanguage = Language.SWEDISH,
-                        foreignLanguage = Language.GERMAN,
-                        sourceLanguage = Language.GERMAN,
-                        targetLanguage = Language.SWEDISH,
+                        nativeLanguage = nativeLanguage,
+                        foreignLanguage = foreignLanguage,
+                        sourceLanguage = foreignLanguage,
+                        targetLanguage = nativeLanguage,
                         context = null
                     )
                     
