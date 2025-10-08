@@ -1,0 +1,63 @@
+Categories:
+  - Science & Education
+License: GPL-3.0-or-later
+AntiFeatures:
+  - NonFreeNet
+AuthorName: Daniel Freiermuth
+WebSite: https://github.com/daniel-freiermuth/glosdalen
+SourceCode: https://github.com/daniel-freiermuth/glosdalen
+IssueTracker: https://github.com/daniel-freiermuth/glosdalen/issues
+Changelog: https://github.com/daniel-freiermuth/glosdalen/releases
+
+AutoName: Glosdalen
+Summary: Multi-language vocabulary lookup with seamless AnkiDroid integration
+
+Description: |-
+    Glosdalen is a vocabulary lookup app that integrates seamlessly with AnkiDroid 
+    for efficient language learning across 30+ languages.
+
+    Key Features:
+    * High-quality bidirectional translation for 30+ languages
+    * Direct Anki card creation with one tap
+    * Choose between unidirectional or bidirectional cards
+    * Clean, intuitive Material Design 3 interface
+    * Simple workflow: Search → Translate → Create card
+
+    AnkiDroid Integration:
+    * Direct database access (default): Fast, seamless integration with full deck management
+    * Intent-based fallback: Works even without database permissions
+
+    Perfect for language learners studying any supported language pair, students and 
+    professionals needing quick translations, and language enthusiasts using Anki 
+    for spaced repetition.
+
+    Language Support: Germanic (German, English, Dutch, Danish, Swedish, Norwegian), 
+    Romance (French, Spanish, Italian, Portuguese, Romanian), Slavic (Polish, Czech, 
+    Slovak, Bulgarian, Slovenian), and many others including Japanese, Chinese, Korean, 
+    Arabic, Turkish, Greek, Hungarian, Finnish, Estonian, Latvian, Lithuanian.
+
+    Privacy & Security: No data collection or tracking. Your API key stays secure 
+    on your device. Completely open source under GPLv3 license.
+
+    Requirements: AnkiDroid app installed, translation service API key (currently 
+    supports DeepL - free tier available), internet connection.
+
+RepoType: git
+Repo: https://github.com/daniel-freiermuth/glosdalen
+
+Builds:
+  - versionName: '1.9.0'
+    versionCode: 83
+    commit: v1.9.0
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version v%v
+UpdateCheckMode: Tags
+CurrentVersion: 1.9.0
+CurrentVersionCode: 83
+
+MaintainerNotes: |-
+    App uses git commit count for version codes. Reproducible builds supported 
+    via SOURCE_DATE_EPOCH. All versions build successfully with Gradle.
