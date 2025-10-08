@@ -1,0 +1,5 @@
+• Uppdaterat appnamespace från com.swedishvocab.app till com.glosdalen.app
+• Förbättrad navigationsstabilitet och användarupplevelse
+• Förbättrad F-Droid-kompatibilitet med reproducerbara byggen
+• Uppdaterad varumärkning och dokumentation
+• Olika prestandaoptimeringar och buggfixar

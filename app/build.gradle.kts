@@ -53,9 +53,14 @@ android {
         applicationId = "com.glosdalen.app"
         minSdk = 26
         targetSdk = 34
+        // F-Droid parseable static values (overridden by dynamic values below)
+        versionCode = 88
+        versionName = "1.9.0"
+        
+        // Dynamic versioning (takes precedence during actual builds)
         versionCode = providers.exec {
             commandLine("git", "rev-list", "--count", "HEAD")
-        }.standardOutput.asText.get().trim().toIntOrNull() ?: 1
+        }.standardOutput.asText.get().trim().toIntOrNull() ?: versionCode
         versionName = scmVersion.version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
