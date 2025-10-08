@@ -1,0 +1,5 @@
+• App-Namespace von com.swedishvocab.app zu com.glosdalen.app aktualisiert
+• Verbesserte Navigationsstabilität und Benutzererfahrung
+• Verbesserte F-Droid-Kompatibilität mit reproduzierbaren Builds
+• Aktualisiertes Branding und Dokumentation
+• Verschiedene Leistungsoptimierungen und Fehlerbehebungen
