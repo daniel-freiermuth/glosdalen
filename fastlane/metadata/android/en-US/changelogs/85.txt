@@ -1,0 +1,5 @@
+• Updated app namespace from com.swedishvocab.app to com.glosdalen.app
+• Enhanced navigation stability and user experience
+• Improved F-Droid compatibility with reproducible builds
+• Updated branding and documentation
+• Various performance optimizations and bug fixes
