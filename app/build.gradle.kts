@@ -61,6 +61,13 @@ android {
         versionCode = providers.exec {
             commandLine("git", "rev-list", "--count", "HEAD")
         }.standardOutput.asText.get().trim().toIntOrNull() ?: versionCode
+        
+        // Check if repository is dirty (has uncommitted changes)
+        val isRepoDirty = providers.exec {
+            commandLine("git", "status", "--porcelain")
+        }.standardOutput.asText.get().trim().isNotEmpty()
+        
+        // Adjust version name based on repository state
         versionName = scmVersion.version
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -68,23 +75,38 @@ android {
             useSupportLibrary = true
         }
         
-        // Build configuration fields (reproducible builds)
+        // Build configuration fields
         val gitHash = providers.exec {
             commandLine("git", "rev-parse", "--short", "HEAD")
         }.standardOutput.asText.get().trim()
         
-        // Use SOURCE_DATE_EPOCH for reproducible builds, fallback to git commit date
-        val buildDate = System.getenv("SOURCE_DATE_EPOCH")?.toLongOrNull()?.let { epoch ->
-            Instant.ofEpochSecond(epoch)
-                .atZone(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        } ?: providers.exec {
-            commandLine("git", "log", "-1", "--format=%cI")
-        }.standardOutput.asText.get().trim().let { gitDate ->
-            // Parse ISO 8601 git date and format consistently
-            OffsetDateTime.parse(gitDate)
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        }
+        // Use current time for dirty builds, git commit date for clean builds
+        val buildDate = when {
+            // SOURCE_DATE_EPOCH takes precedence (for reproducible builds)
+            System.getenv("SOURCE_DATE_EPOCH") != null -> {
+                val epoch = System.getenv("SOURCE_DATE_EPOCH").toLongOrNull()
+                epoch?.let { 
+                    Instant.ofEpochSecond(it)
+                        .atZone(ZoneOffset.UTC)
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                }
+            }
+            // Dirty repository: use current build time
+            isRepoDirty -> {
+                LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            }
+            // Clean repository: use last commit date
+            else -> {
+                providers.exec {
+                    commandLine("git", "log", "-1", "--format=%cI")
+                }.standardOutput.asText.get().trim().let { gitDate ->
+                    // Parse ISO 8601 git date and format consistently
+                    OffsetDateTime.parse(gitDate)
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                }
+            }
+        } ?: "unknown"
         
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
