@@ -580,15 +580,20 @@ private fun TranslationCard(
         ) {
             Text(
                 text = "Translation",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             
             // Translations Section
             val translations = vocabularyEntry.translations
             if (translations.isNotEmpty()) {
                 translations.forEachIndexed { index, translation ->
-                    val isSelected = selectedTranslation == translation.text
-                    val isDefault = selectedTranslation == null && index == 0
+                    val isSelected = selectedTranslation == translation.text || (selectedTranslation == null && index == 0)
+                    val textColor = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                     
                     Card(
                         modifier = Modifier
@@ -601,7 +606,6 @@ private fun TranslationCard(
                         colors = CardDefaults.cardColors(
                             containerColor = when {
                                 isSelected -> MaterialTheme.colorScheme.primaryContainer
-                                isDefault && selectedTranslation == null -> MaterialTheme.colorScheme.primaryContainer
                                 else -> MaterialTheme.colorScheme.surfaceVariant
                             }
                         )
@@ -617,7 +621,7 @@ private fun TranslationCard(
                             Text(
                                 text = "${index + 1}.",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = textColor
                             )
                             
                             // Translation text
@@ -626,23 +630,16 @@ private fun TranslationCard(
                                     text = translation.text,
                                     style = when {
                                         isSelected -> MaterialTheme.typography.titleMedium
-                                        isDefault && selectedTranslation == null -> MaterialTheme.typography.titleMedium
                                         else -> MaterialTheme.typography.bodyLarge
                                     },
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = textColor
                                 )
                                 
                                 if (isSelected) {
                                     Text(
                                         text = "Selected for Anki card",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                } else if (isDefault && selectedTranslation == null) {
-                                    Text(
-                                        text = "Will be used for Anki card",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = textColor
                                     )
                                 }
                             }
