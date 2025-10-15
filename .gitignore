@@ -123,3 +123,8 @@ hs_err_pid*
 # Backup files
 *.orig
 .gradle/buildOutputCleanup/buildOutputCleanup.lock
+
+# Keystore files for security
+*.keystore
+*.jks
+keystore.properties

@@ -3,6 +3,8 @@ import java.time.format.DateTimeFormatter
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.OffsetDateTime
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -35,6 +37,12 @@ scmVersion {
         uncommittedChanges.set(false)
     }
 
+}
+
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -77,6 +85,14 @@ android {
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -84,7 +100,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // F-Droid will handle signing
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
