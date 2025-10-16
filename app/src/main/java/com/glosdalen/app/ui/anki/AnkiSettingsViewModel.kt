@@ -2,11 +2,10 @@ package com.glosdalen.app.ui.anki
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.glosdalen.app.data.model.CardDirection
-import com.glosdalen.app.data.repository.AnkiRepository
-import com.glosdalen.app.data.repository.AnkiImplementationType
-import com.glosdalen.app.data.repository.impl.AnkiApiRepositoryImpl
-import com.glosdalen.app.data.repository.impl.AnkiRepositoryImpl
+import com.glosdalen.app.backend.anki.AnkiRepository
+import com.glosdalen.app.backend.anki.AnkiApiRepository
+import com.glosdalen.app.backend.anki.AnkiImplementationType
+import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,8 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AnkiSettingsViewModel @Inject constructor(
     private val ankiRepository: AnkiRepository,
-    private val apiRepository: AnkiApiRepositoryImpl,
-    private val ankiRepositoryImpl: AnkiRepositoryImpl,
+    private val apiRepository: AnkiApiRepository,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
 
@@ -108,10 +106,9 @@ class AnkiSettingsViewModel @Inject constructor(
             try {
                 val isAvailable = ankiRepository.isAnkiDroidAvailable()
                 val implementationType = ankiRepository.getImplementationType()
-                val supportsBatch = ankiRepository.supportsBatchOperations()
                 val usingApi = implementationType == AnkiImplementationType.API
-                val availableMethods = ankiRepositoryImpl.getAvailableMethods()
-                val bothMethodsAvailable = ankiRepositoryImpl.areBothMethodsAvailable()
+                val availableMethods = ankiRepository.getAvailableMethods()
+                val bothMethodsAvailable = ankiRepository.areBothMethodsAvailable()
                 
                 android.util.Log.d("AnkiSettingsViewModel", "Available methods: $availableMethods")
                 android.util.Log.d("AnkiSettingsViewModel", "Both methods available: $bothMethodsAvailable")
@@ -119,7 +116,6 @@ class AnkiSettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = isAvailable,
                     implementationType = implementationType.name,
-                    supportsBatchOperations = supportsBatch,
                     isUsingApiImplementation = usingApi,
                     availableMethods = availableMethods,
                     bothMethodsAvailable = bothMethodsAvailable
@@ -128,7 +124,6 @@ class AnkiSettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = false,
                     implementationType = "UNAVAILABLE",
-                    supportsBatchOperations = false,
                     isUsingApiImplementation = false,
                     availableMethods = emptyList(),
                     bothMethodsAvailable = false
@@ -150,7 +145,6 @@ data class AnkiSettingsUiState(
     val isLoadingDecks: Boolean = false,
     val isAnkiAvailable: Boolean = false,
     val implementationType: String = "UNKNOWN",
-    val supportsBatchOperations: Boolean = false,
     val isUsingApiImplementation: Boolean = false,
     val availableMethods: List<AnkiImplementationType> = emptyList(),
     val bothMethodsAvailable: Boolean = false,

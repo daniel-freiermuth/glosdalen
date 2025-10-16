@@ -2,9 +2,10 @@ package com.glosdalen.app.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.glosdalen.app.data.model.*
-import com.glosdalen.app.data.repository.VocabularyRepository
-import com.glosdalen.app.data.repository.AnkiRepository
+import com.glosdalen.app.backend.anki.AnkiCard
+import com.glosdalen.app.backend.anki.AnkiError
+import com.glosdalen.app.backend.anki.AnkiRepository
+import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel

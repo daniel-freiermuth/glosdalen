@@ -1,23 +1,23 @@
-package com.glosdalen.app.data.repository.impl
+package com.glosdalen.app.backend.anki
 
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.ichi2.anki.api.AddContentApi
-import com.glosdalen.app.data.model.AnkiCard
-import com.glosdalen.app.data.model.AnkiError
-import com.glosdalen.app.data.repository.AnkiApiRepository
-import com.glosdalen.app.data.repository.AnkiImplementationType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Repository for AnkiDroid AddContentApi implementation.
+ * Handles API-specific functionality like permissions and deck management.
+ */
 @Singleton
-class AnkiApiRepositoryImpl @Inject constructor(
+class AnkiApiRepository @Inject constructor(
     @ApplicationContext private val context: Context
-) : AnkiApiRepository {
+) : AnkiBackend {
 
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
@@ -47,14 +47,20 @@ class AnkiApiRepositoryImpl @Inject constructor(
         return@withContext packageName != null && apiAvailable
     }
 
-    override suspend fun hasApiPermission(): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Check if the API permission is granted
+     */
+    suspend fun hasApiPermission(): Boolean = withContext(Dispatchers.IO) {
         val hasPermission = ContextCompat.checkSelfPermission(context, PERMISSION_READ_WRITE_DATABASE) == 
                 PackageManager.PERMISSION_GRANTED
         android.util.Log.d("AnkiApiRepository", "API permission check: $hasPermission")
         return@withContext hasPermission
     }
 
-    override suspend fun requestApiPermission(): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Request API permission from the user
+     */
+    suspend fun requestApiPermission(): Boolean = withContext(Dispatchers.IO) {
         // Permission request is handled automatically by AddContentApi when needed
         // This method indicates whether permission will be requested
         !hasApiPermission()
@@ -79,7 +85,10 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun ensureDeckExists(deckName: String): Result<Long> = withContext(Dispatchers.IO) {
+    /**
+     * Ensure the required deck exists, create if necessary
+     */
+    suspend fun ensureDeckExists(deckName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: return@withContext Result.failure(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
@@ -105,7 +114,10 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun ensureModelExists(modelName: String): Result<Long> = withContext(Dispatchers.IO) {
+    /**
+     * Ensure the required note type/model exists, create if necessary
+     */
+    suspend fun ensureModelExists(modelName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: return@withContext Result.failure(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
@@ -140,7 +152,10 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getOrCreateBasicModel(): Result<Long> {
+    /**
+     * Get or create the basic two-field model for vocabulary cards
+     */
+    suspend fun getOrCreateBasicModel(): Result<Long> {
         if (cachedModelId != null) {
             return Result.success(cachedModelId!!)
         }
@@ -150,52 +165,9 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createCard(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            val api = getApi() ?: return@withContext Result.failure(
-                AnkiError.ApiNotAvailable("AnkiDroid API not available")
-            )
-
-            // Ensure deck exists
-            val deckResult = if (cachedDeckId != null) {
-                Result.success(cachedDeckId!!)
-            } else {
-                ensureDeckExists(card.deckName ?: DEFAULT_DECK_NAME)
-            }
-
-            val deckId = deckResult.getOrElse { 
-                return@withContext Result.failure(it)
-            }
-            
-            if (cachedDeckId == null) cachedDeckId = deckId
-
-            // Ensure model exists - use the model specified in the card
-            val modelResult = ensureModelExists(card.modelName)
-            val modelId = modelResult.getOrElse { 
-                return@withContext Result.failure(it)
-            }
-
-            // Prepare note fields - AnkiDroid API expects array of strings
-            val fieldValues = arrayOf(
-                card.fields["Front"] ?: "",
-                card.fields["Back"] ?: ""
-            )
-
-            // Create the note - tags parameter expects a Set<String>
-            val noteId = api.addNote(modelId, deckId, fieldValues, card.tags.toSet())
-            
-            if (noteId != null) {
-                android.util.Log.d("AnkiApiRepository", "Card created successfully with ID: $noteId, Deck: ${card.deckName ?: DEFAULT_DECK_NAME}, Fields: ${fieldValues.joinToString()}")
-                Result.success(Unit)
-            } else {
-                android.util.Log.e("AnkiApiRepository", "Failed to create card - addNote returned null")
-                Result.failure(AnkiError.CardCreationFailed("Failed to create card via API"))
-            }
-        } catch (e: SecurityException) {
-            Result.failure(AnkiError.PermissionDenied("Permission denied: ${e.message}"))
-        } catch (e: Exception) {
-            Result.failure(AnkiError.ApiError("API error: ${e.message}"))
-        }
+    override suspend fun createCard(card: AnkiCard): Result<Unit> {
+        // Delegate to batch implementation for consistency and efficiency
+        return createCards(listOf(card))
     }
 
     override suspend fun createCards(cards: List<AnkiCard>): Result<Unit> = withContext(Dispatchers.IO) {
@@ -246,9 +218,10 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun supportsBatchOperations(): Boolean = true
-
-    override suspend fun getAvailableDecks(): Result<Map<Long, String>> = withContext(Dispatchers.IO) {
+    /**
+     * Get list of available decks in AnkiDroid
+     */
+    suspend fun getAvailableDecks(): Result<Map<Long, String>> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: return@withContext Result.failure(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
@@ -261,7 +234,10 @@ class AnkiApiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAvailableModels(): Result<Map<Long, String>> = withContext(Dispatchers.IO) {
+    /**
+     * Get list of available note types/models in AnkiDroid
+     */
+    suspend fun getAvailableModels(): Result<Map<Long, String>> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: return@withContext Result.failure(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
