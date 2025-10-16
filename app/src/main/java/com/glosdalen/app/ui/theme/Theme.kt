@@ -85,7 +85,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun SwedishVocabAppTheme(
+fun GlosdalenTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
