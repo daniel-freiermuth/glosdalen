@@ -1,5 +1,5 @@
 /*
- * Glosdalen - German-Swedish vocabulary lookup with Anki integration
+ * Glosdalen - Vocabulary lookup with Anki integration
  * Copyright (C) 2025 Glosdalen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.glosdalen.app.ui.search.SearchScreen
 import com.glosdalen.app.ui.settings.SettingsScreen
-import com.glosdalen.app.ui.theme.SwedishVocabAppTheme
+import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -39,12 +39,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SwedishVocabAppTheme {
+            GlosdalenTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SwedishVocabApp()
+                    GlosdalenApp()
                 }
             }
         }
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SwedishVocabApp() {
+fun GlosdalenApp() {
     val navController = rememberNavController()
     
     NavHost(
