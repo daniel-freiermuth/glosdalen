@@ -42,11 +42,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.style.TextAlign
 import com.glosdalen.app.BuildConfig
-import com.glosdalen.app.data.model.DeepLModelType
-import com.glosdalen.app.data.model.Language
-import com.glosdalen.app.data.model.CardDirection
-import com.glosdalen.app.data.model.SearchContext
-import com.glosdalen.app.data.repository.AnkiImplementationType
+import com.glosdalen.app.backend.anki.AnkiImplementationType
+import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.ui.anki.AnkiSettingsViewModel

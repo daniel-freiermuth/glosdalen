@@ -48,7 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.glosdalen.app.R
-import com.glosdalen.app.data.model.*
+import com.glosdalen.app.backend.anki.CardDirection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

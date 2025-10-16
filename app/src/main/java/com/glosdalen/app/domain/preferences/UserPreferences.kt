@@ -5,11 +5,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import com.glosdalen.app.data.model.CardType
-import com.glosdalen.app.data.model.CardDirection
-import com.glosdalen.app.data.model.DeepLModelType
-import com.glosdalen.app.data.model.Language
-import com.glosdalen.app.data.repository.AnkiImplementationType
+import com.glosdalen.app.backend.anki.AnkiImplementationType
+import com.glosdalen.app.backend.anki.CardDirection
+import com.glosdalen.app.backend.anki.CardType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

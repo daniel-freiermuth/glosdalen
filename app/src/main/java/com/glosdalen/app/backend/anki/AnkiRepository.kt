@@ -1,12 +1,8 @@
-package com.glosdalen.app.data.repository.impl
+package com.glosdalen.app.backend.anki
 
 import android.content.Context
 import android.util.Log
 import com.ichi2.anki.api.AddContentApi
-import com.glosdalen.app.data.model.AnkiCard
-import com.glosdalen.app.data.model.AnkiError
-import com.glosdalen.app.data.repository.AnkiImplementationType
-import com.glosdalen.app.data.repository.AnkiRepository
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import kotlinx.coroutines.flow.first
@@ -17,22 +13,26 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Repository for AnkiDroid integration.
+ * Coordinates between API and Intent-based implementations.
+ */
 @Singleton
-class AnkiRepositoryImpl @Inject constructor(
+class AnkiRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val apiRepository: AnkiApiRepositoryImpl,
-    private val intentRepository: AnkiIntentRepositoryImpl,
+    private val apiRepository: AnkiApiRepository,
+    private val intentRepository: AnkiIntentRepository,
     private val userPreferences: UserPreferences
-) : AnkiRepository {
+) {
 
     companion object {
-        private const val TAG = "AnkiRepositoryImpl"
+        private const val TAG = "AnkiRepository"
     }
 
     /**
      * Determine the best available AnkiDroid integration method based on user preference
      */
-    private suspend fun getBestAvailableRepository(): AnkiRepository = withContext(Dispatchers.IO) {
+    private suspend fun getBestAvailableRepository(): AnkiBackend = withContext(Dispatchers.IO) {
         val userPreference = userPreferences.getPreferredAnkiMethod().first()
         Log.d(TAG, "User preference: $userPreference")
         
@@ -55,7 +55,7 @@ class AnkiRepositoryImpl @Inject constructor(
         }
     }
     
-    private suspend fun tryApiFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiRepository {
+    private suspend fun tryApiFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiBackend {
         if (apiAvailable) {
             Log.d(TAG, "Trying API implementation...")
             val hasPermission = apiRepository.hasApiPermission()
@@ -86,7 +86,7 @@ class AnkiRepositoryImpl @Inject constructor(
         throw AnkiError.AnkiDroidNotInstalled
     }
     
-    private suspend fun tryIntentFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiRepository {
+    private suspend fun tryIntentFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiBackend {
         if (intentAvailable) {
             Log.d(TAG, "Using intent implementation (user preference)")
             return intentRepository
@@ -108,7 +108,10 @@ class AnkiRepositoryImpl @Inject constructor(
         throw AnkiError.AnkiDroidNotInstalled
     }
 
-    override suspend fun isAnkiDroidAvailable(): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Check if AnkiDroid is available for use
+     */
+    suspend fun isAnkiDroidAvailable(): Boolean = withContext(Dispatchers.IO) {
         try {
             getBestAvailableRepository()
             return@withContext true
@@ -120,15 +123,12 @@ class AnkiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createCard(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
+    /**
+     * Create a single Anki card
+     */
+    suspend fun createCard(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val repository = getBestAvailableRepository()
-            val result = repository.createCard(card)
-            
-            Log.d(TAG, "Card creation ${if (result.isSuccess) "successful" else "failed"} " +
-                      "using ${repository.getImplementationType()} implementation")
-            
-            result
+            getBestAvailableRepository().createCard(card)
         } catch (e: AnkiError) {
             Log.e(TAG, "AnkiDroid integration error", e)
             Result.failure(e)
@@ -138,16 +138,12 @@ class AnkiRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createCards(cards: List<AnkiCard>): Result<Unit> = withContext(Dispatchers.IO) {
+    /**
+     * Create multiple Anki cards in batch (when supported)
+     */
+    suspend fun createCards(cards: List<AnkiCard>): Result<Unit> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val repository = getBestAvailableRepository()
-            val result = repository.createCards(cards)
-            
-            Log.d(TAG, "Batch card creation ${if (result.isSuccess) "successful" else "failed"} " +
-                      "using ${repository.getImplementationType()} implementation " +
-                      "(${cards.size} cards, batch supported: ${repository.supportsBatchOperations()})")
-            
-            result
+            getBestAvailableRepository().createCards(cards)
         } catch (e: AnkiError) {
             Log.e(TAG, "AnkiDroid integration error during batch creation", e)
             Result.failure(e)
@@ -157,20 +153,16 @@ class AnkiRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun supportsBatchOperations(): Boolean {
-        // Return true if we might use the API (which supports batch), false otherwise
-        // This is a best-guess since we can't easily check async here
-        return AddContentApi.getAnkiDroidPackageName(context) != null
-    }
-
-    override fun getImplementationType(): AnkiImplementationType {
+    /**
+     * Get the current implementation type for debugging/logging
+     */
+    fun getImplementationType(): AnkiImplementationType {
         return runBlocking {
             try {
-                val repository = getBestAvailableRepository()
-                repository.getImplementationType()
+                getBestAvailableRepository().getImplementationType()
             } catch (e: Exception) {
                 Log.w(TAG, "Error determining implementation type", e)
-                AnkiImplementationType.INTENT
+                AnkiImplementationType.UNAVAILABLE
             }
         }
     }
@@ -187,8 +179,7 @@ class AnkiRepositoryImpl @Inject constructor(
      */
     suspend fun refreshAvailability(): AnkiImplementationType = withContext(Dispatchers.IO) {
         return@withContext try {
-            val repository = getBestAvailableRepository()
-            repository.getImplementationType()
+            getBestAvailableRepository().getImplementationType()
         } catch (e: Exception) {
             Log.w(TAG, "Error refreshing availability", e)
             AnkiImplementationType.UNAVAILABLE
@@ -220,4 +211,13 @@ class AnkiRepositoryImpl @Inject constructor(
         
         return@withContext methods
     }
+}
+
+/**
+ * Types of AnkiDroid integration implementations
+ */
+enum class AnkiImplementationType {
+    API,        // Using AddContentApi 
+    INTENT,     // Using ACTION_SEND intent
+    UNAVAILABLE // AnkiDroid not available
 }

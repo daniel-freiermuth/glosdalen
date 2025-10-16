@@ -1,23 +1,23 @@
-package com.glosdalen.app.data.repository.impl
+package com.glosdalen.app.backend.anki
 
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import com.glosdalen.app.data.model.AnkiCard
-import com.glosdalen.app.data.model.AnkiError
-import com.glosdalen.app.data.repository.AnkiImplementationType
-import com.glosdalen.app.data.repository.AnkiIntentRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Repository for AnkiDroid intent-based implementation.
+ * Handles ACTION_SEND intent functionality.
+ */
 @Singleton
-class AnkiIntentRepositoryImpl @Inject constructor(
+class AnkiIntentRepository @Inject constructor(
     @ApplicationContext private val context: Context
-) : AnkiIntentRepository {
+) : AnkiBackend {
 
     companion object {
         private const val ANKIDROID_PACKAGE = "com.ichi2.anki"
@@ -55,7 +55,10 @@ class AnkiIntentRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun canHandleActionSend(): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Check if AnkiDroid can handle ACTION_SEND intents
+     */
+    suspend fun canHandleActionSend(): Boolean = withContext(Dispatchers.IO) {
         try {
             val intent = Intent(ACTION_SEND).apply {
                 type = TYPE_TEXT_PLAIN
@@ -72,7 +75,10 @@ class AnkiIntentRepositoryImpl @Inject constructor(
         return createCardViaIntent(card)
     }
 
-    override suspend fun createCardViaIntent(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
+    /**
+     * Create card using ACTION_SEND intent with subject/text fields
+     */
+    suspend fun createCardViaIntent(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
         if (!isAnkiDroidAvailable()) {
             return@withContext Result.failure(AnkiError.AnkiDroidNotInstalled)
         }
@@ -111,7 +117,10 @@ class AnkiIntentRepositoryImpl @Inject constructor(
         Result.success(Unit)
     }
 
-    override suspend fun getInstallAnkiDroidIntent(): Intent? = withContext(Dispatchers.IO) {
+    /**
+     * Get intent for installing AnkiDroid from Play Store
+     */
+    suspend fun getInstallAnkiDroidIntent(): Intent? = withContext(Dispatchers.IO) {
         return@withContext try {
             Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse("market://details?id=$ANKIDROID_PACKAGE")
@@ -121,8 +130,6 @@ class AnkiIntentRepositoryImpl @Inject constructor(
             null
         }
     }
-
-    override fun supportsBatchOperations(): Boolean = false
 
     override fun getImplementationType(): AnkiImplementationType = AnkiImplementationType.INTENT
 }
