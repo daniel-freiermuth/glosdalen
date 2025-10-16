@@ -1,4 +1,4 @@
-package com.glosdalen.app.data.network
+package com.glosdalen.app.backend.deepl
 
 import retrofit2.http.Body
 import retrofit2.http.Header

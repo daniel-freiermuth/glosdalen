@@ -2,9 +2,9 @@ package com.glosdalen.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.glosdalen.app.data.model.DeepLModelType
-import com.glosdalen.app.data.model.Language
-import com.glosdalen.app.data.repository.VocabularyRepository
+import com.glosdalen.app.backend.deepl.DeepLModelType
+import com.glosdalen.app.backend.deepl.DeepLRepository
+import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
-    private val vocabularyRepository: VocabularyRepository,
+    private val vocabularyRepository: DeepLRepository,
     val templateResolver: DeckNameTemplateResolver
 ) : ViewModel() {
     

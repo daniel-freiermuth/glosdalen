@@ -45,6 +45,9 @@ import com.glosdalen.app.BuildConfig
 import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.AnkiMethodPreference
+import com.glosdalen.app.backend.deepl.DeepLModelType
+import com.glosdalen.app.backend.deepl.Language
+import com.glosdalen.app.backend.deepl.SearchContext
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
 

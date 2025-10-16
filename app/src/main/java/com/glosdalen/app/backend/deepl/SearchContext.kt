@@ -1,4 +1,4 @@
-package com.glosdalen.app.data.model
+package com.glosdalen.app.backend.deepl
 
 data class SearchContext(
     val nativeLanguage: Language,

@@ -9,6 +9,8 @@ import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.backend.anki.CardType
 import kotlinx.coroutines.flow.Flow
+import com.glosdalen.app.backend.deepl.DeepLModelType
+import com.glosdalen.app.backend.deepl.Language
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
