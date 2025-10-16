@@ -247,6 +247,7 @@ class SearchViewModel @Inject constructor(
                 CardDirection.NATIVE_TO_FOREIGN -> {
                     listOf(
                         AnkiCard(
+                            modelName = "Basic",
                             fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign")
@@ -256,6 +257,7 @@ class SearchViewModel @Inject constructor(
                 CardDirection.FOREIGN_TO_NATIVE -> {
                     listOf(
                         AnkiCard(
+                            modelName = "Basic",
                             fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native")
