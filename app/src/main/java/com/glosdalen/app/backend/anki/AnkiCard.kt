@@ -1,10 +1,10 @@
 package com.glosdalen.app.backend.anki
 
 data class AnkiCard(
-    val modelName: String = "Basic",
+    val modelName: String,
     val fields: Map<String, String>,
     val tags: List<String> = emptyList(),
-    val deckName: String? = null
+    val deckName: String,
 )
 
 enum class CardType {

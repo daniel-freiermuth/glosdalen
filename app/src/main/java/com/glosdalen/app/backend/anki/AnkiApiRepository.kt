@@ -22,7 +22,6 @@ class AnkiApiRepository @Inject constructor(
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
         private const val APP_MODEL_NAME = "Glosdalen Basic"
-        private const val DEFAULT_DECK_NAME = "Glosdalen"
     }
 
     private var cachedApi: AddContentApi? = null
@@ -90,13 +89,16 @@ class AnkiApiRepository @Inject constructor(
      */
     suspend fun ensureDeckExists(deckName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val api = getApi() ?: return@withContext Result.failure(
-                AnkiError.ApiNotAvailable("AnkiDroid API not available")
-            )
+            val api = getApi() ?: run {
+                android.util.Log.e("AnkiApiRepository", "Failed to get API instance")
+                return@withContext Result.failure(
+                    AnkiError.ApiNotAvailable("AnkiDroid API not available")
+                )
+            }
 
-            // Check if deck already exists
+            // Check if deck already exists (case-insensitive, as AnkiDroid treats deck names)
             val decks = api.deckList
-            val existingDeck = decks.entries.find { it.value == deckName }
+            val existingDeck = decks.entries.find { it.value.equals(deckName, ignoreCase = true) }
             
             if (existingDeck != null) {
                 Result.success(existingDeck.key)
@@ -106,10 +108,12 @@ class AnkiApiRepository @Inject constructor(
                 if (deckId != null) {
                     Result.success(deckId)
                 } else {
+                    android.util.Log.e("AnkiApiRepository", "Failed to create deck '$deckName' - API returned null")
                     Result.failure(AnkiError.DeckCreationFailed("Failed to create deck: $deckName"))
                 }
             }
         } catch (e: Exception) {
+            android.util.Log.e("AnkiApiRepository", "Exception in ensureDeckExists for '$deckName': ${e.message}", e)
             Result.failure(AnkiError.ApiError("Error managing deck: ${e.message}"))
         }
     }
@@ -119,9 +123,12 @@ class AnkiApiRepository @Inject constructor(
      */
     suspend fun ensureModelExists(modelName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val api = getApi() ?: return@withContext Result.failure(
-                AnkiError.ApiNotAvailable("AnkiDroid API not available")
-            )
+            val api = getApi() ?: run {
+                android.util.Log.e("AnkiApiRepository", "Failed to get API instance")
+                return@withContext Result.failure(
+                    AnkiError.ApiNotAvailable("AnkiDroid API not available")
+                )
+            }
 
             // Check if model already exists
             val models = api.modelList
@@ -134,6 +141,7 @@ class AnkiApiRepository @Inject constructor(
                 when (modelName) {
                     "Basic (and reversed card)" -> {
                         // This should be a built-in model - if not found, it's an error
+                        android.util.Log.e("AnkiApiRepository", "Built-in model '$modelName' not found in AnkiDroid")
                         Result.failure(AnkiError.ModelCreationFailed("Built-in model '$modelName' not found. Please ensure AnkiDroid is properly set up."))
                     }
                     else -> {
@@ -142,12 +150,14 @@ class AnkiApiRepository @Inject constructor(
                         if (modelId != null) {
                             Result.success(modelId)
                         } else {
+                            android.util.Log.e("AnkiApiRepository", "Failed to create model '$modelName' - API returned null")
                             Result.failure(AnkiError.ModelCreationFailed("Failed to create model: $modelName"))
                         }
                     }
                 }
             }
         } catch (e: Exception) {
+            android.util.Log.e("AnkiApiRepository", "Exception in ensureModelExists for '$modelName': ${e.message}", e)
             Result.failure(AnkiError.ApiError("Error managing model: ${e.message}"))
         }
     }
@@ -178,7 +188,7 @@ class AnkiApiRepository @Inject constructor(
 
             // Group cards by deck and model for batch operations  
             val cardsByDeckAndModel = cards.groupBy { 
-                Pair(it.deckName ?: DEFAULT_DECK_NAME, it.modelName) 
+                Pair(it.deckName, it.modelName) 
             }
             
             for ((deckModelPair, deckCards) in cardsByDeckAndModel) {
