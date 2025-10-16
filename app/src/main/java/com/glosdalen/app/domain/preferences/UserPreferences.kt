@@ -25,7 +25,6 @@ class UserPreferences @Inject constructor(
         private val DEFAULT_DECK_NAME = stringPreferencesKey("default_deck_name")
         private val DEFAULT_CARD_TYPE = stringPreferencesKey("default_card_type")
         private val DEFAULT_CARD_DIRECTION = stringPreferencesKey("default_card_direction")
-        private val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
         private val FOREIGN_LANGUAGE = stringPreferencesKey("foreign_language")
         private val DEEPL_MODEL_TYPE = stringPreferencesKey("deepl_model_type")
@@ -80,18 +79,6 @@ class UserPreferences @Inject constructor(
     suspend fun setDefaultCardDirection(direction: CardDirection) {
         dataStore.edit { preferences ->
             preferences[DEFAULT_CARD_DIRECTION] = direction.name
-        }
-    }
-    
-    fun isFirstLaunch(): Flow<Boolean> {
-        return dataStore.data.map { preferences ->
-            preferences[IS_FIRST_LAUNCH] ?: true
-        }
-    }
-    
-    suspend fun setFirstLaunchCompleted() {
-        dataStore.edit { preferences ->
-            preferences[IS_FIRST_LAUNCH] = false
         }
     }
     

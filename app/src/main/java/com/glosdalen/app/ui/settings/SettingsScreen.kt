@@ -63,7 +63,6 @@ fun SettingsScreen(
     val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.ENGLISH)
     val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
     val currentEnableMultipleFormalities by viewModel.currentEnableMultipleFormalities.collectAsState(true)
-    val isFirstLaunch by viewModel.isFirstLaunch.collectAsState(true)
     
     // Initialize with current settings
     LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
@@ -74,10 +73,6 @@ fun SettingsScreen(
     LaunchedEffect(uiState.settingsSaved) {
         if (uiState.settingsSaved) {
             viewModel.clearSettingsSaved()
-            // Only auto-navigate on first launch, manual navigation handles other cases
-            if (isFirstLaunch) {
-                onNavigateBack()
-            }
         }
     }
     
@@ -88,16 +83,14 @@ fun SettingsScreen(
         TopAppBar(
             title = { Text("Settings") },
             navigationIcon = {
-                if (!isFirstLaunch) {
-                    IconButton(
-                        onClick = {
-                            // Save settings first, then navigate back
-                            viewModel.saveSettings()
-                            onNavigateBack()
-                        }
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                IconButton(
+                    onClick = {
+                        // Save settings first, then navigate back
+                        viewModel.saveSettings()
+                        onNavigateBack()
                     }
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
         )
@@ -109,27 +102,6 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (isFirstLaunch) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Welcome!",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "Please configure your settings to get started.",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            }
-            
             // DeepL API Configuration Section
             DeepLSettingsSection(
                 uiState = uiState,
@@ -156,16 +128,6 @@ fun SettingsScreen(
             
             // About section
             AboutSection()
-            
-            // Auto-save when API key is validated or on first launch when API key is provided
-            if (isFirstLaunch && uiState.apiKeyValidated) {
-                Button(
-                    onClick = viewModel::saveSettings,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Get Started")
-                }
-            }
         }
     }
 }
