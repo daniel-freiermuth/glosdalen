@@ -27,7 +27,6 @@ class SettingsViewModel @Inject constructor(
     val currentForeignLanguage = userPreferences.getForeignLanguage()
     val currentDeepLModelType = userPreferences.getDeepLModelType()
     val currentEnableMultipleFormalities = userPreferences.getEnableMultipleFormalities()
-    val isFirstLaunch = userPreferences.isFirstLaunch()
     
     fun updateApiKey(apiKey: String) {
         _uiState.value = _uiState.value.copy(apiKey = apiKey)
@@ -90,7 +89,6 @@ class SettingsViewModel @Inject constructor(
             userPreferences.setForeignLanguage(_uiState.value.foreignLanguage)
             userPreferences.setDeepLModelType(_uiState.value.deepLModelType)
             userPreferences.setEnableMultipleFormalities(_uiState.value.enableMultipleFormalities)
-            userPreferences.setFirstLaunchCompleted()
             _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
     }
