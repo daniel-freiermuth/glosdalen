@@ -1,6 +1,6 @@
 package com.glosdalen.app.domain.template
 
-import com.glosdalen.app.data.model.SearchContext
+import com.glosdalen.app.backend.deepl.SearchContext
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields

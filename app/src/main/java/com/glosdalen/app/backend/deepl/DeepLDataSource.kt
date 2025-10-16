@@ -1,7 +1,5 @@
-package com.glosdalen.app.data.datasource
+package com.glosdalen.app.backend.deepl
 
-import com.glosdalen.app.data.model.*
-import com.glosdalen.app.data.network.*
 import kotlinx.coroutines.flow.first
 import retrofit2.HttpException
 import java.io.IOException
@@ -12,9 +10,9 @@ import javax.inject.Singleton
 class DeepLDataSource @Inject constructor(
     private val apiService: DeepLApiService,
     private val userPreferences: com.glosdalen.app.domain.preferences.UserPreferences
-) : VocabularyDataSource {
+) {
     
-    override val supportedLanguagePairs = run {
+    val supportedLanguagePairs = run {
         val languages = Language.values().toList()
         val pairs = mutableSetOf<Pair<Language, Language>>()
         
@@ -29,9 +27,7 @@ class DeepLDataSource @Inject constructor(
         pairs.toSet()
     }
     
-    override val dataSource = DataSource.DEEPL
-    
-    override suspend fun translate(
+    suspend fun translate(
         word: String,
         sourceLanguage: Language,
         targetLanguage: Language,
@@ -118,7 +114,6 @@ class DeepLDataSource @Inject constructor(
                 sourceLanguage = sourceLanguage,
                 targetLanguage = targetLanguage,
                 translations = allTranslations,
-                metadata = VocabularyMetadata(source = DataSource.DEEPL)
             )
             
             Result.success(vocabularyEntry)

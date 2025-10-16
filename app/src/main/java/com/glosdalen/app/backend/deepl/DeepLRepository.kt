@@ -1,15 +1,13 @@
-package com.glosdalen.app.data.repository
+package com.glosdalen.app.backend.deepl
 
-import com.glosdalen.app.data.datasource.VocabularyDataSource
-import com.glosdalen.app.data.model.*
 import com.glosdalen.app.domain.preferences.UserPreferences
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class VocabularyRepository @Inject constructor(
-    private val deepLDataSource: VocabularyDataSource,
+class DeepLRepository @Inject constructor(
+    private val deepLDataSource: DeepLDataSource,
     private val userPreferences: UserPreferences
 ) {
     
@@ -32,7 +30,7 @@ class VocabularyRepository @Inject constructor(
     suspend fun validateApiKey(apiKey: String): Result<Unit> {
         return try {
             // Test with a simple translation using default model type
-            val result = deepLDataSource.translate("test", Language.GERMAN, Language.SWEDISH, apiKey, DeepLModelType.DEFAULT)
+            val result = deepLDataSource.translate("test", Language.GERMAN, Language.SWEDISH, apiKey, DeepLModelType.DEFAULT, null)
             if (result.isSuccess) {
                 Result.success(Unit)
             } else {

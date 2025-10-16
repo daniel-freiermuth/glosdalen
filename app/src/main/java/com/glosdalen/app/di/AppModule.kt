@@ -4,10 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import com.glosdalen.app.data.datasource.DeepLDataSource
-import com.glosdalen.app.data.datasource.VocabularyDataSource
-import com.glosdalen.app.data.network.DeepLApiService
-import dagger.Binds
+import com.glosdalen.app.backend.deepl.DeepLApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,14 +53,4 @@ object AppModule {
     fun provideDeepLApiService(retrofit: Retrofit): DeepLApiService {
         return retrofit.create(DeepLApiService::class.java)
     }
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class DataSourceModule {
-    
-    @Binds
-    abstract fun bindVocabularyDataSource(
-        deepLDataSource: DeepLDataSource
-    ): VocabularyDataSource
 }

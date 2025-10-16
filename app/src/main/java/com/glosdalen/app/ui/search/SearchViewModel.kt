@@ -7,6 +7,7 @@ import com.glosdalen.app.backend.anki.AnkiError
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.UserPreferences
+import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val vocabularyRepository: VocabularyRepository,
+    private val vocabularyRepository: DeepLRepository,
     private val ankiRepository: AnkiRepository,
     private val userPreferences: UserPreferences,
     private val templateResolver: DeckNameTemplateResolver
