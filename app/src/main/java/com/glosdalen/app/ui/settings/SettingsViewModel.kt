@@ -89,7 +89,6 @@ class SettingsViewModel @Inject constructor(
             userPreferences.setForeignLanguage(_uiState.value.foreignLanguage)
             userPreferences.setDeepLModelType(_uiState.value.deepLModelType)
             userPreferences.setEnableMultipleFormalities(_uiState.value.enableMultipleFormalities)
-            _uiState.value = _uiState.value.copy(settingsSaved = true)
         }
     }
     
@@ -98,10 +97,6 @@ class SettingsViewModel @Inject constructor(
             apiKeyValidated = false,
             apiKeyError = null
         )
-    }
-    
-    fun clearSettingsSaved() {
-        _uiState.value = _uiState.value.copy(settingsSaved = false)
     }
     
     fun initializeFromCurrentSettings(apiKey: String, nativeLanguage: Language, foreignLanguage: Language, deepLModelType: DeepLModelType, enableMultipleFormalities: Boolean) {
@@ -124,5 +119,4 @@ data class SettingsUiState(
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,
-    val settingsSaved: Boolean = false
 )

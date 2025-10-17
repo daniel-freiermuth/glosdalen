@@ -107,6 +107,8 @@ fun DeepLSettingsSection(
                         append("deepl.com/pro-api")
                     }
                 }
+
+                append(".")
             }
             
             Text(

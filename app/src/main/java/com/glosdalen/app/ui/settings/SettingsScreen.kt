@@ -70,13 +70,6 @@ fun SettingsScreen(
         viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities)
     }
     
-    // Handle settings saved (only for first launch auto-navigation)
-    LaunchedEffect(uiState.settingsSaved) {
-        if (uiState.settingsSaved) {
-            viewModel.clearSettingsSaved()
-        }
-    }
-    
     // Handle Android's native back button/gesture - save settings before navigating back
     BackHandler {
         viewModel.saveSettings()
