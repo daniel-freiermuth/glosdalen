@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -74,6 +75,12 @@ fun SettingsScreen(
         if (uiState.settingsSaved) {
             viewModel.clearSettingsSaved()
         }
+    }
+    
+    // Handle Android's native back button/gesture - save settings before navigating back
+    BackHandler {
+        viewModel.saveSettings()
+        onNavigateBack()
     }
     
     Column(
