@@ -1,4 +1,4 @@
-package com.glosdalen.app.ui.search
+package com.glosdalen.app.ui.search.deepl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,15 +15,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchViewModel @Inject constructor(
-    private val vocabularyRepository: DeepLRepository,
+class DeepLSearchViewModel @Inject constructor(
+    private val deepLRepository: DeepLRepository,
     private val ankiRepository: AnkiRepository,
     private val userPreferences: UserPreferences,
     private val templateResolver: DeckNameTemplateResolver
 ) : ViewModel() {
     
-    private val _uiState = MutableStateFlow(SearchUiState())
-    val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(DeepLUiState())
+    val uiState: StateFlow<DeepLUiState> = _uiState.asStateFlow()
     
     val deepLApiKey = userPreferences.getDeepLApiKey()
     val nativeLanguage = userPreferences.getNativeLanguage()
@@ -177,7 +177,7 @@ class SearchViewModel @Inject constructor(
             val currentForeign = foreignLanguage.first()
             val modelType = userPreferences.getDeepLModelType().first()
             
-            val result = vocabularyRepository.lookupWord(
+            val result = deepLRepository.lookupWord(
                 word = query,
                 sourceLanguage = _uiState.value.sourceLanguage,
                 targetLanguage = when (_uiState.value.sourceLanguage) {
@@ -347,7 +347,7 @@ class SearchViewModel @Inject constructor(
     }
 }
 
-data class SearchUiState(
+data class DeepLUiState(
     val searchQuery: String = "",
     val sourceLanguage: Language = Language.GERMAN,
     val isLoading: Boolean = false,

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.glosdalen.app.ui.search
+package com.glosdalen.app.ui.search.deepl
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Refresh
@@ -50,12 +51,14 @@ import androidx.compose.runtime.setValue
 import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.R
 import com.glosdalen.app.backend.anki.CardDirection
+import com.glosdalen.app.ui.search.deepl.DeepLSearchViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(
+fun DeepLSearchScreen(
+    onOpenDrawer: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: SearchViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
+    viewModel: DeepLSearchViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val apiKey by viewModel.deepLApiKey.collectAsState("")
@@ -136,11 +139,16 @@ fun SearchScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logo + App Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Menu button for drawer
+                IconButton(onClick = onOpenDrawer) {
+                    Icon(Icons.Default.Menu, contentDescription = "Open menu")
+                }
+                
+                // Logo + App Name
                 Image(
                     painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "Glosdalen Logo",

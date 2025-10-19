@@ -21,18 +21,26 @@ package com.glosdalen.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.glosdalen.app.ui.search.SearchScreen
+import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
 import com.glosdalen.app.ui.settings.SettingsScreen
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -54,31 +62,106 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GlosdalenApp() {
     val navController = rememberNavController()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     
-    NavHost(
-        navController = navController,
-        startDestination = "search"
-    ) {
-        composable("search") {
-            SearchScreen(
-                onNavigateToSettings = {
-                    if (navController.currentDestination?.route == "search") {
-                        navController.navigate("settings") {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                AppDrawerContent(
+                    currentRoute = navController.currentBackStackEntry?.destination?.route,
+                    onNavigate = { route ->
+                        scope.launch { drawerState.close() }
+                        navController.navigate(route) {
+                            // Pop up to start destination to avoid building large back stack
+                            popUpTo("deepl-search") {
+                                saveState = true
+                            }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     }
-                }
-            )
+                )
+            }
         }
-        
-        composable("settings") {
-            SettingsScreen(
-                onNavigateBack = {
-                    if (navController.currentDestination?.route == "settings") {
-                        navController.popBackStack()
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = "deepl-search"
+        ) {
+            composable("deepl-search") {
+                DeepLSearchScreen(
+                    onOpenDrawer = { scope.launch { drawerState.open() } },
+                    onNavigateToSettings = {
+                        if (navController.currentDestination?.route == "deepl-search") {
+                            navController.navigate("settings") {
+                                launchSingleTop = true
+                            }
+                        }
                     }
-                }
-            )
+                )
+            }
+            
+            composable("settings") {
+                SettingsScreen(
+                    onNavigateBack = {
+                        if (navController.currentDestination?.route == "settings") {
+                            navController.popBackStack()
+                        }
+                    }
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun AppDrawerContent(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // App title
+        Text(
+            text = "Glosdalen",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        
+        HorizontalDivider()
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Search providers section
+        Text(
+            text = "Search",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Default.Search, contentDescription = null) },
+            label = { Text("DeepL") },
+            selected = currentRoute == "deepl-search",
+            onClick = { onNavigate("deepl-search") },
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+        
+        // Placeholder for future search providers
+        // NavigationDrawerItem(
+        //     icon = { Icon(Icons.Default.Translate, contentDescription = null) },
+        //     label = { Text("Google Translate") },
+        //     selected = currentRoute == "google-search",
+        //     onClick = { onNavigate("google-search") },
+        //     modifier = Modifier.padding(horizontal = 12.dp),
+        //     badge = { Text("Soon", style = MaterialTheme.typography.labelSmall) }
+        // )
     }
 }
