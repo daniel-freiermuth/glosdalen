@@ -70,6 +70,9 @@ android {
             }.standardOutput.asText.get().trim().isNotEmpty()
         }
         
+        // Adjust version name based on repository state
+        versionName = versionName + if (isRepoDirty) "-DIRTY" else ""
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
