@@ -74,8 +74,8 @@ fun GlosdalenApp() {
                     onNavigate = { route ->
                         scope.launch { drawerState.close() }
                         navController.navigate(route) {
-                            // Pop up to start destination to avoid building large back stack
-                            popUpTo("deepl-search") {
+                            // Clear back stack and navigate to the selected item
+                            popUpTo(0) {
                                 saveState = true
                             }
                             launchSingleTop = true
