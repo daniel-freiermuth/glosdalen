@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.domain.preferences.UserPreferences
+import com.glosdalen.app.libs.copilot.CopilotChat
+import com.glosdalen.app.libs.copilot.CopilotException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -16,13 +18,14 @@ data class CopilotChatUiState(
     val isContextExpanded: Boolean = false,
     val response: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isAuthenticated: Boolean = false
 )
 
 @HiltViewModel
 class CopilotChatViewModel @Inject constructor(
-    private val userPreferences: UserPreferences
-    // TODO: Add Copilot Chat repository when backend is ready
+    private val userPreferences: UserPreferences,
+    private val copilot: CopilotChat
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(CopilotChatUiState())
@@ -32,6 +35,12 @@ class CopilotChatViewModel @Inject constructor(
     val foreignLanguage = userPreferences.getForeignLanguage()
     
     init {
+        // Check authentication status
+        viewModelScope.launch {
+            val isAuth = copilot.isAuthenticated()
+            _uiState.update { it.copy(isAuthenticated = isAuth) }
+        }
+        
         // React to language preference changes and update source language accordingly
         viewModelScope.launch {
             combine(nativeLanguage, foreignLanguage) { native, foreign ->
@@ -127,27 +136,69 @@ class CopilotChatViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
-                // TODO: Implement actual Copilot Chat API call
-                // For now, just simulate a response
-                kotlinx.coroutines.delay(1000)
-                
-                val contextInfo = if (_uiState.value.contextQuery.isNotBlank()) {
-                    "\n\nContext provided: \"${_uiState.value.contextQuery}\""
-                } else {
-                    ""
+                // Check authentication first
+                if (!copilot.isAuthenticated()) {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false,
+                            error = "Please sign in to GitHub Copilot in Settings"
+                        )
+                    }
+                    return@launch
                 }
                 
-                val mockResponse = "This is a placeholder response for: \"$query\"\n\n" +
-                    "Source language: ${_uiState.value.sourceLanguage.displayName}" +
-                    contextInfo + "\n\n" +
-                    "The Copilot Chat backend integration is pending implementation."
-                
-                _uiState.update { 
-                    it.copy(
-                        response = mockResponse,
-                        isLoading = false
-                    )
+                // Get target language for the prompt
+                val native = nativeLanguage.first()
+                val foreign = foreignLanguage.first()
+                val targetLanguage = when (_uiState.value.sourceLanguage) {
+                    native -> foreign
+                    foreign -> native
+                    else -> foreign
                 }
+                
+                // Build the prompt for translation/vocabulary assistance
+                val prompt = buildPrompt(
+                    query = query,
+                    sourceLanguage = _uiState.value.sourceLanguage,
+                    targetLanguage = targetLanguage,
+                    context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
+                )
+                
+                // Send to Copilot
+                val result = copilot.chat(prompt)
+                
+                result.fold(
+                    onSuccess = { response ->
+                        _uiState.update { 
+                            it.copy(
+                                response = response,
+                                isLoading = false
+                            )
+                        }
+                    },
+                    onFailure = { error ->
+                        val errorMessage = when (error) {
+                            is CopilotException.AuthException.InvalidToken ->
+                                "Please sign in to GitHub Copilot in Settings"
+                            is CopilotException.AuthException.TokenExpired ->
+                                "Session expired. Please sign in again in Settings"
+                            is CopilotException.NetworkException.NoConnection ->
+                                "No internet connection. Please check your network."
+                            is CopilotException.NetworkException.Timeout ->
+                                "Request timed out. Please try again."
+                            is CopilotException.NetworkException.RateLimited ->
+                                "Rate limited. Please try again later."
+                            else -> error.message ?: "Failed to get response from Copilot"
+                        }
+                        
+                        _uiState.update { 
+                            it.copy(
+                                isLoading = false,
+                                error = errorMessage
+                            )
+                        }
+                    }
+                )
             } catch (e: Exception) {
                 _uiState.update { 
                     it.copy(
@@ -156,6 +207,35 @@ class CopilotChatViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+    
+    private fun buildPrompt(
+        query: String,
+        sourceLanguage: Language,
+        targetLanguage: Language,
+        context: String? = null
+    ): String {
+        return buildString {
+            appendLine("You are a language learning assistant helping with ${sourceLanguage.displayName} to ${targetLanguage.displayName} vocabulary.")
+            appendLine()
+            appendLine("User query: $query")
+            appendLine("Source language: ${sourceLanguage.displayName}")
+            appendLine("Target language: ${targetLanguage.displayName}")
+            
+            if (context != null) {
+                appendLine()
+                appendLine("Additional context: $context")
+            }
+            
+            appendLine()
+            appendLine("Please provide:")
+            appendLine("1. Translation(s) of the word or phrase")
+            appendLine("2. Example sentences in both languages")
+            appendLine("3. Any relevant grammar notes or usage tips")
+            appendLine("4. Common collocations or related vocabulary")
+            appendLine()
+            appendLine("Keep the response concise and practical for language learning.")
         }
     }
     
