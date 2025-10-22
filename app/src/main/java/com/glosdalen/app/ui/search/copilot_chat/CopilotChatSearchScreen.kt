@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,6 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.glosdalen.app.R
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.backend.deepl.Language
 
 @Composable
@@ -356,28 +359,153 @@ fun CopilotChatSearchScreen(
         }
         
         // Response Display
-        if (uiState.response.isNotEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+        uiState.parsedResponse?.let { parsed ->
+            // Direct Answer Section
+            if (parsed.directAnswer.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
                 ) {
-                    Text(
-                        text = "Response:",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.response,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Answer",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = parsed.directAnswer,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            
+            // Flashcard Section (if both sides are present)
+            if (parsed.frontSide.isNotBlank() && parsed.backSide.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Proposed Flashcard",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        
+                        // Front Side
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Front:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text(
+                                    text = parsed.frontSide,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
+                        
+                        // Back Side
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "Back:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text(
+                                    text = parsed.backSide,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(12.dp)
+                                )
+                            }
+                        }
+                        
+                        // Create Card Button
+                        CreateCardButton(
+                            selectedCardDirection = uiState.selectedCardDirection,
+                            isCreatingCard = uiState.isCreatingCard,
+                            isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
+                            hasCardBeenCreated = uiState.hasCardBeenCreated,
+                            onCreateCard = viewModel::createAnkiCard,
+                            onCardDirectionChange = viewModel::updateCardDirection
+                        )
+                    }
+                }
+            }
+            
+            // Additional Info Section (expandable)
+            if (parsed.additionalInfo.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.toggleAdditionalInfo() }
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Additional Information",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Icon(
+                                imageVector = if (uiState.isAdditionalInfoExpanded) {
+                                    Icons.Default.KeyboardArrowUp
+                                } else {
+                                    Icons.Default.KeyboardArrowDown
+                                },
+                                contentDescription = if (uiState.isAdditionalInfoExpanded) "Collapse" else "Expand"
+                            )
+                        }
+                        
+                        AnimatedVisibility(visible = uiState.isAdditionalInfoExpanded) {
+                            Column(
+                                modifier = Modifier.padding(top = 12.dp)
+                            ) {
+                                Text(
+                                    text = parsed.additionalInfo,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
                 }
             }
             
             // Clear button
-            Button(
+            OutlinedButton(
                 onClick = { viewModel.clearResponse() },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -442,5 +570,108 @@ private fun ForeignLanguageDropdown(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CreateCardButton(
+    selectedCardDirection: CardDirection,
+    isCreatingCard: Boolean,
+    isAnkiDroidAvailable: Boolean,
+    hasCardBeenCreated: Boolean,
+    onCreateCard: () -> Unit,
+    onCardDirectionChange: (CardDirection) -> Unit
+) {
+    var showDropdown by remember { mutableStateOf(false) }
+    
+    val cardDirectionText = when (selectedCardDirection) {
+        CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+        CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+        CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+    }
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(1.dp)
+    ) {
+        // Main create card button
+        Button(
+            onClick = { onCreateCard() },
+            modifier = Modifier.weight(1f),
+            enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
+            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+        ) {
+            if (isCreatingCard) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text("Creating...")
+                }
+            } else if (hasCardBeenCreated) {
+                Text("Card Created ✓")
+            } else {
+                Text("Add to Anki ($cardDirectionText)")
+            }
+        }
+        
+        // Dropdown button
+        Box {
+            Button(
+                onClick = { showDropdown = true },
+                enabled = !isCreatingCard && !hasCardBeenCreated,
+                modifier = Modifier.width(48.dp),
+                shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 8.dp, bottomEnd = 8.dp),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Card direction options"
+                )
+            }
+            
+            DropdownMenu(
+                expanded = showDropdown,
+                onDismissRequest = { showDropdown = false }
+            ) {
+                CardDirection.values().forEach { direction ->
+                    DropdownMenuItem(
+                        text = {
+                            val text = when (direction) {
+                                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                            }
+                            Text(
+                                text = text,
+                                color = if (direction == selectedCardDirection) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
+                            )
+                        },
+                        onClick = {
+                            onCardDirectionChange(direction)
+                            showDropdown = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+    
+    if (!isAnkiDroidAvailable) {
+        Text(
+            text = "⚠️ AnkiDroid not available",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
