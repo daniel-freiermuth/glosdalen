@@ -40,7 +40,7 @@ class CopilotChatManager @Inject constructor(
     suspend fun sendMessage(
         message: String,
         modelId: String? = null,
-        maxTokens: Int = 150,
+        maxTokens: Int = 500,
         temperature: Double = 0.1
     ): Result<String> {
         val request = ChatRequest(

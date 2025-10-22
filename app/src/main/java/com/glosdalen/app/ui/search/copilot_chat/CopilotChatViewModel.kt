@@ -161,6 +161,8 @@ class CopilotChatViewModel @Inject constructor(
                     query = query,
                     sourceLanguage = _uiState.value.sourceLanguage,
                     targetLanguage = targetLanguage,
+                    nativeLanguage = native,
+                    foreignLanguage = foreign,
                     context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
                 )
                 
@@ -214,28 +216,54 @@ class CopilotChatViewModel @Inject constructor(
         query: String,
         sourceLanguage: Language,
         targetLanguage: Language,
+        nativeLanguage: Language,
+        foreignLanguage: Language,
         context: String? = null
     ): String {
         return buildString {
-            appendLine("You are a language learning assistant helping with ${sourceLanguage.displayName} to ${targetLanguage.displayName} vocabulary.")
+            appendLine("You are a helpful language learning assistant specializing in translation and learning.")
             appendLine()
-            appendLine("User query: $query")
-            appendLine("Source language: ${sourceLanguage.displayName}")
-            appendLine("Target language: ${targetLanguage.displayName}")
+            appendLine("The users native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
             
+            // User-provided general instructions: ${context.generalInstructions}
             if (context != null) {
                 appendLine()
-                appendLine("Additional context: $context")
+                appendLine("Specific context for this query: $context")
             }
             
             appendLine()
+            appendLine("User query (${sourceLanguage.displayName}): \" $query \"")
+            
+            appendLine()
             appendLine("Please provide:")
-            appendLine("1. Translation(s) of the word or phrase")
-            appendLine("2. Example sentences in both languages")
-            appendLine("3. Any relevant grammar notes or usage tips")
-            appendLine("4. Common collocations or related vocabulary")
+            appendLine("- Direct translation if applicable")
+            appendLine("- Grammar explanations when relevant")
+            appendLine("- Usage examples")
+            appendLine("- Cultural context when helpful")
+            appendLine("- Alternative expressions")
+            appendLine("- Common collocations or related vocabulary")
             appendLine()
             appendLine("Keep the response concise and practical for language learning.")
+            appendLine()
+            appendLine("Please answer in four sections (H1, separated by `--`).")
+            appendLine("It is important that you follow the structure exactly.")
+            appendLine("- A section \"Answer\",")
+            appendLine("- a section \"Front side\",")
+            appendLine("- a section \"Back side\",")
+            appendLine("- a section \"Explanation / Remarks / Extra\" with a concise explanation or interesting remarks if useful.")
+            appendLine()
+            appendLine()
+            appendLine()
+            appendLine("Feel very free to keep the last section empty.")
+            appendLine("")
+            appendLine("Keep your answer concise.")
+            appendLine("")
+            appendLine("Remember that you're part of an app for quick lookups.")
+            appendLine("If applicable, the foreign word shall be on the front side.")
+            appendLine("")
+            appendLine("It is not in the spirit of flash cards to have the foreign word on the same side as a native.")
+            appendLine("")
+            appendLine("Prefer idiomatic expressions over word-by-word translations.")
         }
     }
     
