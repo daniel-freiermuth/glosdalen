@@ -66,7 +66,8 @@ fun SettingsScreen(
             MainSettingsScreen(
                 onNavigateBack = onNavigateBack,
                 onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
-                onNavigateToAnki = { currentPage = SettingsPage.Anki }
+                onNavigateToAnki = { currentPage = SettingsPage.Anki },
+                onNavigateToCopilot = { currentPage = SettingsPage.Copilot }
             )
         }
         SettingsPage.DeepL -> {
@@ -79,13 +80,19 @@ fun SettingsScreen(
                 onNavigateBack = { currentPage = SettingsPage.Main }
             )
         }
+        SettingsPage.Copilot -> {
+            CopilotSettingsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Main }
+            )
+        }
     }
 }
 
 private enum class SettingsPage {
     Main,
     DeepL,
-    Anki
+    Anki,
+    Copilot
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,6 +101,7 @@ private fun MainSettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDeepL: () -> Unit,
     onNavigateToAnki: () -> Unit,
+    onNavigateToCopilot: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -136,11 +144,18 @@ private fun MainSettingsScreen(
                 onClick = onNavigateToDeepL
             )
             
-            // Anki Settings Navigation Card
+            // AnkiDroid Settings Navigation Card
             SettingsNavigationCard(
                 title = "AnkiDroid",
                 description = "Integration method, deck selection, and card templates",
                 onClick = onNavigateToAnki
+            )
+            
+            // GitHub Copilot Settings Navigation Card
+            SettingsNavigationCard(
+                title = "GitHub Copilot",
+                description = "AI-powered translation suggestions and assistance",
+                onClick = onNavigateToCopilot
             )
             
             Spacer(modifier = Modifier.weight(1f))
