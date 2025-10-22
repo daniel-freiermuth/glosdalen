@@ -25,7 +25,7 @@ import com.glosdalen.app.backend.deepl.Language
 
 @Composable
 fun DeepLSettingsSection(
-    uiState: SettingsUiState,
+    uiState: DeepLSettingsUiState,
     onApiKeyChange: (String) -> Unit,
     onValidateApiKey: () -> Unit,
     onModelTypeChange: (DeepLModelType) -> Unit,

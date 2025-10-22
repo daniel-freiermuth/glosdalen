@@ -55,24 +55,51 @@ import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    onNavigateBack: () -> Unit
+) {
+    // Internal navigation state for sub-pages
+    var currentPage by remember { mutableStateOf<SettingsPage>(SettingsPage.Main) }
+    
+    // Each page gets its own ViewModel instance to ensure fresh state
+    when (currentPage) {
+        SettingsPage.Main -> {
+            MainSettingsScreen(
+                onNavigateBack = onNavigateBack,
+                onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
+                onNavigateToAnki = { currentPage = SettingsPage.Anki }
+            )
+        }
+        SettingsPage.DeepL -> {
+            DeepLSettingsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Main }
+            )
+        }
+        SettingsPage.Anki -> {
+            AnkiSettingsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Main }
+            )
+        }
+    }
+}
+
+private enum class SettingsPage {
+    Main,
+    DeepL,
+    Anki
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainSettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToDeepL: () -> Unit,
+    onNavigateToAnki: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val currentApiKey by viewModel.currentApiKey.collectAsState("")
-    val currentNativeLanguage by viewModel.currentNativeLanguage.collectAsState(Language.GERMAN)
-    val currentForeignLanguage by viewModel.currentForeignLanguage.collectAsState(Language.ENGLISH)
-    val currentDeepLModelType by viewModel.currentDeepLModelType.collectAsState(DeepLModelType.QUALITY_OPTIMIZED)
-    val currentEnableMultipleFormalities by viewModel.currentEnableMultipleFormalities.collectAsState(true)
     
-    // Initialize with current settings
-    LaunchedEffect(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities) {
-        viewModel.initializeFromCurrentSettings(currentApiKey, currentNativeLanguage, currentForeignLanguage, currentDeepLModelType, currentEnableMultipleFormalities)
-    }
-    
-    // Handle Android's native back button/gesture - save settings before navigating back
+    // Handle Android's native back button/gesture
     BackHandler {
-        viewModel.saveSettings()
         onNavigateBack()
     }
     
@@ -83,13 +110,7 @@ fun SettingsScreen(
         TopAppBar(
             title = { Text("Settings") },
             navigationIcon = {
-                IconButton(
-                    onClick = {
-                        // Save settings first, then navigate back
-                        viewModel.saveSettings()
-                        onNavigateBack()
-                    }
-                ) {
+                IconButton(onClick = onNavigateBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
             }
@@ -102,32 +123,73 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // DeepL API Configuration Section
-            DeepLSettingsSection(
-                uiState = uiState,
-                onApiKeyChange = viewModel::updateApiKey,
-                onValidateApiKey = viewModel::validateAndSaveApiKey,
-                onModelTypeChange = viewModel::updateDeepLModelType,
-                onEnableMultipleFormalitiesChange = viewModel::updateEnableMultipleFormalities
-            )
-            
-            // Language Configuration Section
+            // Language Configuration Section (General Setting)
             LanguageConfigurationSection(
                 selectedLanguage = uiState.nativeLanguage,
                 onLanguageSelected = viewModel::updateNativeLanguage
             )
             
-            // AnkiDroid Integration
-            AnkiSettingsSection(
-                nativeLanguage = currentNativeLanguage,
-                foreignLanguage = currentForeignLanguage,
-                templateResolver = viewModel.templateResolver
+            // DeepL Settings Navigation Card
+            SettingsNavigationCard(
+                title = "DeepL",
+                description = "API key and translation quality settings",
+                onClick = onNavigateToDeepL
+            )
+            
+            // Anki Settings Navigation Card
+            SettingsNavigationCard(
+                title = "AnkiDroid",
+                description = "Integration method, deck selection, and card templates",
+                onClick = onNavigateToAnki
             )
             
             Spacer(modifier = Modifier.weight(1f))
             
             // About section
             AboutSection()
+        }
+    }
+}
+
+@Composable
+private fun SettingsNavigationCard(
+    title: String,
+    description: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                Icons.Default.Settings,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
