@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -65,12 +67,16 @@ fun GlosdalenApp() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     
+    // Observe current route as state
+    val currentRoute by navController.currentBackStackEntryFlow
+        .collectAsState(initial = navController.currentBackStackEntry)
+    
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 AppDrawerContent(
-                    currentRoute = navController.currentBackStackEntry?.destination?.route,
+                    currentRoute = currentRoute?.destination?.route,
                     onNavigate = { route ->
                         scope.launch { drawerState.close() }
                         navController.navigate(route) {
