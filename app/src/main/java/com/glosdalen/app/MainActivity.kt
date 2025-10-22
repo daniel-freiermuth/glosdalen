@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
+import com.glosdalen.app.ui.search.copilot_chat.CopilotChatSearchScreen
 import com.glosdalen.app.ui.settings.SettingsScreen
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -109,6 +111,19 @@ fun GlosdalenApp() {
                 )
             }
             
+            composable("copilot-chat") {
+                CopilotChatSearchScreen(
+                    onOpenDrawer = { scope.launch { drawerState.open() } },
+                    onNavigateToSettings = {
+                        if (navController.currentDestination?.route == "copilot-chat") {
+                            navController.navigate("settings") {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                )
+            }
+            
             composable("settings") {
                 SettingsScreen(
                     onNavigateBack = {
@@ -157,6 +172,14 @@ private fun AppDrawerContent(
             label = { Text("DeepL") },
             selected = currentRoute == "deepl-search",
             onClick = { onNavigate("deepl-search") },
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+        
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+            label = { Text("Copilot Chat") },
+            selected = currentRoute == "copilot-chat",
+            onClick = { onNavigate("copilot-chat") },
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
