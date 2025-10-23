@@ -302,8 +302,8 @@ fun CopilotChatSearchScreen(
             }
         }
         
-        // Send Button (shown when there's a query but no response/error)
-        if (uiState.query.isNotEmpty() && !uiState.isLoading && uiState.response.isEmpty() && uiState.error == null) {
+        // Send Button
+        if (uiState.query.isNotEmpty() && !uiState.isLoading && uiState.error == null) {
             Button(
                 onClick = {
                     focusManager.clearFocus()
@@ -317,7 +317,7 @@ fun CopilotChatSearchScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Send \"${uiState.query}\"")
+                Text(if (uiState.response.isEmpty()) "Send \"${uiState.query}\"" else "Re-query \"${uiState.query}\"")
             }
         }
         

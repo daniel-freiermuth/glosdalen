@@ -86,7 +86,15 @@ class CopilotChatViewModel @Inject constructor(
     }
     
     fun updateQuery(query: String) {
-        _uiState.update { it.copy(query = query) }
+        _uiState.update { 
+            it.copy(
+                query = query,
+                response = "",
+                parsedResponse = null,
+                error = null,
+                hasCardBeenCreated = false
+            ) 
+        }
     }
     
     fun updateSourceLanguage(language: Language) {
