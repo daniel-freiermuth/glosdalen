@@ -190,8 +190,16 @@ class CopilotChatViewModel @Inject constructor(
                     context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
                 )
                 
+                // Get selected model (null means auto)
+                val selectedModel = userPreferences.getCopilotSelectedModel().first()
+                val modelId = if (selectedModel == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                    null // Let the library choose
+                } else {
+                    selectedModel
+                }
+                
                 // Send to Copilot
-                val result = copilot.chat(prompt)
+                val result = copilot.chat(prompt, modelId)
                 
                 result.fold(
                     onSuccess = { response ->

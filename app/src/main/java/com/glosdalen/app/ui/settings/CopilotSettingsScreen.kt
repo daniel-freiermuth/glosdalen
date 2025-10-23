@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -35,6 +36,7 @@ fun CopilotSettingsScreen(
     viewModel: CopilotSettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedModelId by viewModel.selectedModel.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     
     // Automatically resume polling when app comes back to foreground
@@ -105,6 +107,15 @@ fun CopilotSettingsScreen(
                     AuthenticatedSection(
                         onLogout = viewModel::logout,
                         onRefresh = viewModel::checkAuthenticationStatus
+                    )
+                    
+                    // Model Selection Section
+                    ModelSelectionSection(
+                        availableModels = uiState.availableModels,
+                        selectedModelId = selectedModelId,
+                        isLoading = uiState.isLoadingModels,
+                        onModelSelect = viewModel::selectModel,
+                        onRefreshModels = viewModel::loadModels
                     )
                 }
                 
@@ -441,6 +452,192 @@ private fun CopilotInfoSection() {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun ModelSelectionSection(
+    availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel>,
+    selectedModelId: String,
+    isLoading: Boolean,
+    onModelSelect: (String) -> Unit,
+    onRefreshModels: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "AI Model",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    IconButton(onClick = onRefreshModels) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh models",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+            
+            Text(
+                text = "Select which AI model to use for vocabulary assistance",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            // Model Dropdown
+            Box {
+                OutlinedButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading && availableModels.isNotEmpty()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            val modelName = when (selectedModelId) {
+                                com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL -> "Auto (Recommended)"
+                                else -> availableModels.find { it.id == selectedModelId }?.getDisplayName() ?: selectedModelId
+                            }
+                            
+                            Text(
+                                text = modelName,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            
+                            if (selectedModelId != com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                                val model = availableModels.find { it.id == selectedModelId }
+                                model?.let {
+                                    Text(
+                                        text = "${it.vendor} • ${it.getCostIndicator()}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = "Automatically select the best available model",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Select model"
+                        )
+                    }
+                }
+                
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    // Auto option
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Auto (Recommended)",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = if (selectedModelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        }
+                                    )
+                                    if (selectedModelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "Let the system choose the best model",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        onClick = {
+                            onModelSelect(com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL)
+                            expanded = false
+                        }
+                    )
+                    
+                    if (availableModels.isNotEmpty()) {
+                        HorizontalDivider()
+                    }
+                    
+                    // Available models
+                    availableModels.forEach { model ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = model.getDisplayName(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = if (model.id == selectedModelId) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
+                                        )
+                                        if (model.id == selectedModelId) {
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = "Selected",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = "${model.vendor} • ${model.getCostIndicator()}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onModelSelect(model.id)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

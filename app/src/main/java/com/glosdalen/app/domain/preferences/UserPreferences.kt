@@ -21,7 +21,8 @@ import javax.inject.Singleton
 class UserPreferences @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val deepLPreferences: DeepLPreferences,
-    private val ankiPreferences: AnkiPreferences
+    private val ankiPreferences: AnkiPreferences,
+    private val copilotPreferences: CopilotPreferences
 ) {
     companion object {
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
@@ -77,4 +78,8 @@ class UserPreferences @Inject constructor(
     
     fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> = ankiPreferences.getPreferredAnkiMethod()
     suspend fun setPreferredAnkiMethod(method: AnkiMethodPreference) = ankiPreferences.setPreferredAnkiMethod(method)
+    
+    // Copilot-related preferences
+    fun getCopilotSelectedModel(): Flow<String> = copilotPreferences.getSelectedModel()
+    suspend fun setCopilotSelectedModel(modelId: String) = copilotPreferences.setSelectedModel(modelId)
 }

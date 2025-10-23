@@ -2,9 +2,12 @@ package com.glosdalen.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.glosdalen.app.domain.preferences.CopilotPreferences
+import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.AuthResult
 import com.glosdalen.app.libs.copilot.CopilotException
+import com.glosdalen.app.libs.copilot.models.CopilotModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -13,14 +16,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CopilotSettingsViewModel @Inject constructor(
-    private val copilot: CopilotChat
+    private val copilot: CopilotChat,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
+    
+    val selectedModel = userPreferences.getCopilotSelectedModel()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.AUTO_MODEL)
     
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = _uiState.asStateFlow()
     
     init {
         checkAuthenticationStatus()
+        loadModels()
     }
     
     fun checkAuthenticationStatus() {
@@ -31,12 +39,46 @@ class CopilotSettingsViewModel @Inject constructor(
                     isAuthenticated = isAuthenticated,
                     authState = if (isAuthenticated) AuthState.Authenticated else AuthState.NotAuthenticated
                 )}
+                
+                // Load models if authenticated
+                if (isAuthenticated) {
+                    loadModels()
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     authState = AuthState.NotAuthenticated,
                     errorMessage = "Failed to check authentication: ${e.message}"
                 )}
             }
+        }
+    }
+    
+    fun loadModels() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingModels = true) }
+            
+            val result = copilot.getModels()
+            
+            result.fold(
+                onSuccess = { models ->
+                    _uiState.update { it.copy(
+                        availableModels = models,
+                        isLoadingModels = false
+                    )}
+                },
+                onFailure = { error ->
+                    _uiState.update { it.copy(
+                        isLoadingModels = false,
+                        errorMessage = "Failed to load models: ${error.message}"
+                    )}
+                }
+            )
+        }
+    }
+    
+    fun selectModel(modelId: String) {
+        viewModelScope.launch {
+            userPreferences.setCopilotSelectedModel(modelId)
         }
     }
     
@@ -208,7 +250,9 @@ data class CopilotSettingsUiState(
     val isAuthenticated: Boolean = false,
     val authState: AuthState = AuthState.NotAuthenticated,
     val deviceCode: AuthResult.DeviceCodeRequired? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val availableModels: List<CopilotModel> = emptyList(),
+    val isLoadingModels: Boolean = false
 )
 
 sealed class AuthState {
