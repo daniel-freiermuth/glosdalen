@@ -1,23 +1,20 @@
 # Glosdalen - Android Project
 
 ## Project Overview
-Kotlin Android app for German-Swedish vocabulary lookup with DeepL API integration and AnkiDroid card creation.
+Kotlin Android app for vocabulary lookup with API integration and AnkiDroid card creation.
+Read the notes-to-the-agent.
 
 ## Tech Stack
 - Kotlin + Jetpack Compose UI
 - MVVM Architecture with Repository pattern  
 - Hilt for dependency injection
-- Retrofit for DeepL API calls
-- AnkiDroid Intent integration
 
 ## Key Features
-- Bidirectional German ↔ Swedish translation
 - Direct Anki card creation (uni/bidirectional)
-- User-provided DeepL API key with validation
 - Online-only, no caching
 
 ## Development Guidelines
-- Use strong typing with sealed classes and Result types
+- Use strong typing
 - Implement proper error handling with user-friendly messages
-- Follow Material Design 3 guidelines
+- Follow Material Design 3 _guidelines_
 - Write testable code with dependency injection
