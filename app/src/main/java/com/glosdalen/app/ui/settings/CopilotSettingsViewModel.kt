@@ -150,7 +150,17 @@ class CopilotSettingsViewModel @Inject constructor(
     
     private fun pollForCompletion() {
         viewModelScope.launch {
-            _uiState.update { it.copy(authState = AuthState.Polling) }
+            // Update state to show polling indicator while keeping device code visible
+            _uiState.update { currentState ->
+                val waitingState = currentState.authState as? AuthState.WaitingForUser
+                if (waitingState != null) {
+                    currentState.copy(
+                        authState = waitingState.copy(isPolling = true)
+                    )
+                } else {
+                    currentState
+                }
+            }
             
             val result = copilot.completeAuthentication()
             
@@ -195,7 +205,8 @@ class CopilotSettingsViewModel @Inject constructor(
                         authState = if (shouldKeepDeviceCode) AuthState.WaitingForUser(
                             userCode = it.deviceCode?.userCode ?: "",
                             verificationUri = it.deviceCode?.verificationUri ?: "",
-                            expiresIn = it.deviceCode?.expiresIn ?: 0
+                            expiresIn = it.deviceCode?.expiresIn ?: 0,
+                            isPolling = false
                         ) else AuthState.Error,
                         errorMessage = when (error) {
                             is CopilotException.NetworkException.NoConnection ->
@@ -261,9 +272,9 @@ sealed class AuthState {
     data class WaitingForUser(
         val userCode: String,
         val verificationUri: String,
-        val expiresIn: Int
+        val expiresIn: Int,
+        val isPolling: Boolean = false
     ) : AuthState()
-    object Polling : AuthState()
     object Authenticated : AuthState()
     object Error : AuthState()
 }

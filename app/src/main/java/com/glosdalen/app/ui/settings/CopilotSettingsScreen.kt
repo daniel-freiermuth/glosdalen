@@ -94,13 +94,10 @@ fun CopilotSettingsScreen(
                         userCode = state.userCode,
                         verificationUri = state.verificationUri,
                         expiresIn = state.expiresIn,
+                        isPolling = state.isPolling,
                         onCancel = viewModel::cancelAuthentication,
                         onOpenGitHub = viewModel::startPolling
                     )
-                }
-                
-                is AuthState.Polling -> {
-                    LoadingSection(message = "Waiting for authorization...")
                 }
                 
                 is AuthState.Authenticated -> {
@@ -170,6 +167,7 @@ private fun DeviceCodeSection(
     userCode: String,
     verificationUri: String,
     expiresIn: Int,
+    isPolling: Boolean = false,
     onCancel: () -> Unit,
     onOpenGitHub: () -> Unit
 ) {
@@ -253,6 +251,30 @@ private fun DeviceCodeSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Open GitHub")
+            }
+            
+            // Show polling indicator when waiting for authorization
+            if (isPolling) {
+                HorizontalDivider()
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Waiting for authorization...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             
             HorizontalDivider()
