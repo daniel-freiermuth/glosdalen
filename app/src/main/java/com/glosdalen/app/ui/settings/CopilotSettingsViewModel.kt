@@ -26,6 +26,9 @@ class CopilotSettingsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = _uiState.asStateFlow()
     
+    // Track polling job to prevent concurrent polling
+    private var pollingJob: kotlinx.coroutines.Job? = null
+    
     init {
         checkAuthenticationStatus()
         loadModels()
@@ -128,10 +131,18 @@ class CopilotSettingsViewModel @Inject constructor(
     }
     
     fun onAppResumed() {
-        // When app returns to foreground, automatically resume polling if we have a device code
+        // When app returns to foreground, check if polling should resume
         val currentState = _uiState.value
-        if (currentState.deviceCode != null && currentState.authState is AuthState.WaitingForUser) {
-            // Clear any previous error message and resume polling
+        
+        // Only restart polling if:
+        // 1. We have a device code
+        // 2. We're in WaitingForUser state with isPolling = false (polling stopped)
+        // 3. No active polling job is running
+        if (currentState.deviceCode != null && 
+            currentState.authState is AuthState.WaitingForUser &&
+            !(currentState.authState as AuthState.WaitingForUser).isPolling &&
+            pollingJob?.isActive != true) {
+            
             _uiState.update { it.copy(errorMessage = null) }
             pollForCompletion()
         }
@@ -149,7 +160,12 @@ class CopilotSettingsViewModel @Inject constructor(
     }
     
     private fun pollForCompletion() {
-        viewModelScope.launch {
+        // Prevent starting multiple concurrent polling operations
+        if (pollingJob?.isActive == true) {
+            return
+        }
+        
+        pollingJob = viewModelScope.launch {
             // Update state to show polling indicator while keeping device code visible
             _uiState.update { currentState ->
                 val waitingState = currentState.authState as? AuthState.WaitingForUser
@@ -174,6 +190,8 @@ class CopilotSettingsViewModel @Inject constructor(
                                 errorMessage = null,
                                 deviceCode = null
                             )}
+                            // Load models after successful authentication
+                            loadModels()
                         }
                         is AuthResult.Failed -> {
                             _uiState.update { it.copy(
@@ -249,6 +267,10 @@ class CopilotSettingsViewModel @Inject constructor(
     }
     
     fun cancelAuthentication() {
+        // Cancel any active polling
+        pollingJob?.cancel()
+        pollingJob = null
+        
         _uiState.update { it.copy(
             authState = AuthState.NotAuthenticated,
             deviceCode = null,
