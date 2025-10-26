@@ -4,6 +4,7 @@ import com.glosdalen.app.libs.copilot.*
 import com.glosdalen.app.libs.copilot.auth.CopilotTokenManager
 import com.glosdalen.app.libs.copilot.network.CopilotApiService
 import com.glosdalen.app.libs.copilot.storage.CopilotStorage
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 class CopilotModelManager @Inject constructor(
     private val copilotApiService: CopilotApiService,
     private val tokenManager: CopilotTokenManager,
-    private val storage: CopilotStorage
+    private val storage: CopilotStorage,
+    private val timeProvider: TimeProvider
 ) {
 
     private var cachedModels: List<CopilotModel>? = null
@@ -33,33 +35,33 @@ class CopilotModelManager @Inject constructor(
      * Get all available models (cached or fresh from API)
      */
     suspend fun getAvailableModels(forceRefresh: Boolean = false): Result<List<CopilotModel>> {
-        val startTotal = System.currentTimeMillis()
+        val startTotal = timeProvider.currentTimeMillis()
         return modelMutex.withLock {
-            val startCache = System.currentTimeMillis()
+            val startCache = timeProvider.currentTimeMillis()
             android.util.Log.d("CopilotModelManager", "getAvailableModels: Checking in-memory cache...")
             if (!forceRefresh && cachedModels != null) {
-                android.util.Log.d("CopilotModelManager", "getAvailableModels: In-memory cache hit in ${System.currentTimeMillis() - startCache}ms")
-                android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${System.currentTimeMillis() - startTotal}ms")
+                android.util.Log.d("CopilotModelManager", "getAvailableModels: In-memory cache hit in ${timeProvider.currentTimeMillis() - startCache}ms")
+                android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${timeProvider.currentTimeMillis() - startTotal}ms")
                 return@withLock Result.success(cachedModels!!)
             }
 
             android.util.Log.d("CopilotModelManager", "getAvailableModels: Checking persistent cache...")
-            val startPersistent = System.currentTimeMillis()
+            val startPersistent = timeProvider.currentTimeMillis()
             if (!forceRefresh) {
                 val cachedData = storage.loadModelCache()
-                if (cachedData != null && cachedData.isValid()) {
+                if (cachedData != null && cachedData.isValid(timeProvider)) {
                     cachedModels = cachedData.models
-                    android.util.Log.d("CopilotModelManager", "getAvailableModels: Persistent cache hit in ${System.currentTimeMillis() - startPersistent}ms")
-                    android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${System.currentTimeMillis() - startTotal}ms")
+                    android.util.Log.d("CopilotModelManager", "getAvailableModels: Persistent cache hit in ${timeProvider.currentTimeMillis() - startPersistent}ms")
+                    android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${timeProvider.currentTimeMillis() - startTotal}ms")
                     return@withLock Result.success(cachedModels!!)
                 }
             }
 
             android.util.Log.d("CopilotModelManager", "getAvailableModels: Fetching from API...")
-            val startApi = System.currentTimeMillis()
+            val startApi = timeProvider.currentTimeMillis()
             val result = discoverModelsFromAPI()
-            android.util.Log.d("CopilotModelManager", "getAvailableModels: API fetch took ${System.currentTimeMillis() - startApi}ms")
-            android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${System.currentTimeMillis() - startTotal}ms")
+            android.util.Log.d("CopilotModelManager", "getAvailableModels: API fetch took ${timeProvider.currentTimeMillis() - startApi}ms")
+            android.util.Log.d("CopilotModelManager", "getAvailableModels: Total time ${timeProvider.currentTimeMillis() - startTotal}ms")
             result
         }
     }
@@ -160,13 +162,13 @@ class CopilotModelManager @Inject constructor(
     // ================================
 
     private suspend fun discoverModelsFromAPI(): Result<List<CopilotModel>> {
-        val start = System.currentTimeMillis()
+        val start = timeProvider.currentTimeMillis()
         android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Starting API model discovery...")
         return try {
-            val startToken = System.currentTimeMillis()
+            val startToken = timeProvider.currentTimeMillis()
             android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Getting authorization token...")
             val authResult = tokenManager.getAuthorizationHeader()
-            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Token retrieval took ${System.currentTimeMillis() - startToken}ms")
+            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Token retrieval took ${timeProvider.currentTimeMillis() - startToken}ms")
             if (authResult.isFailure) {
                 android.util.Log.e("CopilotModelManager", "discoverModelsFromAPI: Token retrieval failed")
                 return Result.failure(authResult.exceptionOrNull()!!)
@@ -174,24 +176,24 @@ class CopilotModelManager @Inject constructor(
 
             val authHeader = authResult.getOrThrow()
 
-            val startApiCall = System.currentTimeMillis()
+            val startApiCall = timeProvider.currentTimeMillis()
             android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Calling models API...")
             val response = copilotApiService.getModels(authorization = authHeader)
-            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: API call took ${System.currentTimeMillis() - startApiCall}ms")
+            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: API call took ${timeProvider.currentTimeMillis() - startApiCall}ms")
 
             if (response.isSuccessful && response.body() != null) {
                 val modelsResponse = response.body()!!
-                val startProcessing = System.currentTimeMillis()
+                val startProcessing = timeProvider.currentTimeMillis()
                 android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Processing models...")
                 try {
                     val processedModels = processRawModels(modelsResponse.data)
-                    android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Model processing took ${System.currentTimeMillis() - startProcessing}ms")
+                    android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Model processing took ${timeProvider.currentTimeMillis() - startProcessing}ms")
 
                     // Cache the results
                     cachedModels = processedModels
                     storage.saveModelCache(processedModels)
 
-                    android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${System.currentTimeMillis() - start}ms")
+                    android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${timeProvider.currentTimeMillis() - start}ms")
                     Result.success(processedModels)
                 } catch (processingException: Exception) {
                     android.util.Log.e("CopilotModelManager", "Model processing failed", processingException)
@@ -200,7 +202,7 @@ class CopilotModelManager @Inject constructor(
             } else {
                 val errorCode = response.code()
                 android.util.Log.e("CopilotModelManager", "API error code: $errorCode")
-                android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${System.currentTimeMillis() - start}ms")
+                android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${timeProvider.currentTimeMillis() - start}ms")
                 when (errorCode) {
                     401 -> Result.failure(CopilotException.NetworkException.Unauthorized())
                     403 -> Result.failure(CopilotException.AuthException.AccessDenied())
@@ -210,7 +212,7 @@ class CopilotModelManager @Inject constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("CopilotModelManager", "General exception in discoverModelsFromAPI", e)
-            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${System.currentTimeMillis() - start}ms")
+            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Total time ${timeProvider.currentTimeMillis() - start}ms")
             Result.failure(CopilotException.ModelException.ModelDiscoveryFailed(e))
         }
     }

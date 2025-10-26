@@ -4,6 +4,7 @@ import com.glosdalen.app.libs.copilot.*
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.*
 import com.glosdalen.app.libs.copilot.storage.CopilotStorage
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -22,7 +23,8 @@ import javax.inject.Singleton
 class CopilotTokenManager @Inject constructor(
     private val githubApiService: GitHubApiService,
     private val authManager: CopilotAuthManager,
-    private val storage: CopilotStorage
+    private val storage: CopilotStorage,
+    private val timeProvider: TimeProvider
 ) {
 
     private var currentCopilotToken: CopilotToken? = null
@@ -178,7 +180,7 @@ class CopilotTokenManager @Inject constructor(
 
     private fun isTokenValid(token: CopilotToken): Boolean {
         val expiresAt = token.expiresAt ?: return true // No expiration means valid
-        val currentTime = System.currentTimeMillis()
+        val currentTime = timeProvider.currentTimeMillis()
         // Convert expiresAt from seconds to milliseconds to match System.currentTimeMillis()
         val expiresAtMillis = expiresAt * 1000L
         return currentTime < (expiresAtMillis - EXPIRATION_BUFFER_MS)
@@ -203,7 +205,7 @@ class CopilotTokenManager @Inject constructor(
      */
     fun getTimeUntilExpiration(token: CopilotToken): Long? {
         val expiresAt = token.expiresAt ?: return null
-        val currentTime = System.currentTimeMillis()
+        val currentTime = timeProvider.currentTimeMillis()
         // Convert expiresAt from seconds to milliseconds
         val expiresAtMillis = expiresAt * 1000L
         return maxOf(0, expiresAtMillis - currentTime)
@@ -235,22 +237,22 @@ object TokenValidator {
     /**
      * Check if token is close to expiration
      */
-    fun isTokenNearExpiration(token: CopilotToken, bufferMs: Long = 5 * 60 * 1000L): Boolean {
+    fun isTokenNearExpiration(token: CopilotToken, timeProvider: TimeProvider, bufferMs: Long = 5 * 60 * 1000L): Boolean {
         val expiresAt = token.expiresAt ?: return false
-        val currentTime = System.currentTimeMillis()
+        val currentTime = timeProvider.currentTimeMillis()
         return currentTime > (expiresAt - bufferMs)
     }
 
     /**
      * Get human-readable expiration status
      */
-    fun getExpirationStatus(token: CopilotToken): String {
+    fun getExpirationStatus(token: CopilotToken, timeProvider: TimeProvider): String {
         val expiresAt = token.expiresAt ?: return "No expiration"
-        val currentTime = System.currentTimeMillis()
+        val currentTime = timeProvider.currentTimeMillis()
         
         return when {
             currentTime > expiresAt -> "Expired"
-            isTokenNearExpiration(token) -> "Expires soon"
+            isTokenNearExpiration(token, timeProvider) -> "Expires soon"
             else -> {
                 val remainingMs = expiresAt - currentTime
                 val remainingMinutes = remainingMs / (60 * 1000)

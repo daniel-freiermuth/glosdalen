@@ -4,6 +4,7 @@ import com.glosdalen.app.libs.copilot.*
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.*
 import com.glosdalen.app.libs.copilot.storage.CopilotStorage
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
@@ -22,7 +23,8 @@ import java.sql.ResultSet
 @Singleton
 class CopilotAuthManager @Inject constructor(
     private val oauthApiService: GitHubOAuthApiService,
-    private val storage: CopilotStorage
+    private val storage: CopilotStorage,
+    private val timeProvider: TimeProvider
 ) {
 
     private var currentOAuthToken: OAuthToken? = null
@@ -51,7 +53,7 @@ class CopilotAuthManager @Inject constructor(
                     verificationUri = deviceCode.verificationUri,
                     expiresIn = deviceCode.expiresIn,
                     interval = deviceCode.interval,
-                    createdAt = System.currentTimeMillis()
+                    createdAt = timeProvider.currentTimeMillis()
                 )
                 
                 this.deviceCodeData = deviceCodeData
@@ -83,7 +85,7 @@ class CopilotAuthManager @Inject constructor(
             ?: return CopilotException.AuthException.InvalidDeviceCode().asFailure()
 
         // Check if device code has expired
-        val elapsedTime = System.currentTimeMillis() - deviceData.createdAt
+        val elapsedTime = timeProvider.currentTimeMillis() - deviceData.createdAt
         if (elapsedTime > deviceData.expiresIn * 1000) {
             return CopilotException.AuthException.DeviceCodeExpired().asFailure()
         }
@@ -243,7 +245,7 @@ class CopilotAuthManager @Inject constructor(
 
     private fun isTokenExpired(token: OAuthToken): Boolean {
         val expiresAt = token.expiresAt ?: return false
-        return System.currentTimeMillis() > expiresAt
+        return timeProvider.currentTimeMillis() > expiresAt
     }
 
     private fun parseErrorResponse(errorBody: String?): String {
@@ -268,13 +270,13 @@ data class DeviceCodeData(
     val interval: Int,
     val createdAt: Long
 ) {
-    fun isExpired(): Boolean {
-        val elapsedTime = System.currentTimeMillis() - createdAt
+    fun isExpired(timeProvider: TimeProvider): Boolean {
+        val elapsedTime = timeProvider.currentTimeMillis() - createdAt
         return elapsedTime > expiresIn * 1000
     }
     
-    fun getRemainingTime(): Long {
-        val elapsedTime = System.currentTimeMillis() - createdAt
+    fun getRemainingTime(timeProvider: TimeProvider): Long {
+        val elapsedTime = timeProvider.currentTimeMillis() - createdAt
         val remainingMs = (expiresIn * 1000) - elapsedTime
         return maxOf(0, remainingMs / 1000) // Return remaining seconds
     }

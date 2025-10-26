@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
 import com.glosdalen.app.libs.copilot.models.*
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -19,7 +20,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class CopilotStorage @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val timeProvider: TimeProvider
 ) {
 
     private val json = Json {
@@ -60,7 +62,7 @@ class CopilotStorage @Inject constructor(
             val tokenJson = json.encodeToString(token)
             encryptedPrefs.edit()
                 .putString(KEY_OAUTH_TOKEN, tokenJson)
-                .putLong(KEY_OAUTH_TOKEN_SAVED_AT, System.currentTimeMillis())
+                .putLong(KEY_OAUTH_TOKEN_SAVED_AT, timeProvider.currentTimeMillis())
                 .apply()
         } catch (e: Exception) {
             throw StorageException.SaveFailed(KEY_OAUTH_TOKEN, e)
@@ -89,7 +91,7 @@ class CopilotStorage @Inject constructor(
             val tokenJson = json.encodeToString(token)
             encryptedPrefs.edit()
                 .putString(KEY_COPILOT_TOKEN, tokenJson)
-                .putLong(KEY_COPILOT_TOKEN_SAVED_AT, System.currentTimeMillis())
+                .putLong(KEY_COPILOT_TOKEN_SAVED_AT, timeProvider.currentTimeMillis())
                 .apply()
         } catch (e: Exception) {
             throw StorageException.SaveFailed(KEY_COPILOT_TOKEN, e)
@@ -118,7 +120,7 @@ class CopilotStorage @Inject constructor(
             val modelsJson = json.encodeToString(models)
             regularPrefs.edit()
                 .putString(KEY_MODELS_CACHE, modelsJson)
-                .putLong(KEY_MODELS_CACHE_TIMESTAMP, System.currentTimeMillis())
+                .putLong(KEY_MODELS_CACHE_TIMESTAMP, timeProvider.currentTimeMillis())
                 .apply()
         } catch (e: Exception) {
             throw StorageException.SaveFailed(KEY_MODELS_CACHE, e)
@@ -145,7 +147,7 @@ class CopilotStorage @Inject constructor(
         val timestamp = regularPrefs.getLong(KEY_MODELS_CACHE_TIMESTAMP, 0)
         if (timestamp == 0L) return@withContext false
         
-        val age = System.currentTimeMillis() - timestamp
+        val age = timeProvider.currentTimeMillis() - timestamp
         return@withContext age < maxAgeMs
     }
 
@@ -231,17 +233,17 @@ class CopilotStorage @Inject constructor(
 
         val oauthTokenAge = if (hasOAuthToken) {
             val savedAt = encryptedPrefs.getLong(KEY_OAUTH_TOKEN_SAVED_AT, 0)
-            if (savedAt > 0) System.currentTimeMillis() - savedAt else null
+            if (savedAt > 0) timeProvider.currentTimeMillis() - savedAt else null
         } else null
 
         val copilotTokenAge = if (hasCopilotToken) {
             val savedAt = encryptedPrefs.getLong(KEY_COPILOT_TOKEN_SAVED_AT, 0)
-            if (savedAt > 0) System.currentTimeMillis() - savedAt else null
+            if (savedAt > 0) timeProvider.currentTimeMillis() - savedAt else null
         } else null
 
         val modelCacheAge = if (hasModelCache) {
             val timestamp = regularPrefs.getLong(KEY_MODELS_CACHE_TIMESTAMP, 0)
-            if (timestamp > 0) System.currentTimeMillis() - timestamp else null
+            if (timestamp > 0) timeProvider.currentTimeMillis() - timestamp else null
         } else null
 
         StorageInfo(
@@ -284,8 +286,8 @@ data class CachedModels(
     val models: List<CopilotModel>,
     val cachedAt: Long
 ) {
-    fun isValid(maxAgeMs: Long = 60 * 60 * 1000L): Boolean {
-        val age = System.currentTimeMillis() - cachedAt
+    fun isValid(timeProvider: TimeProvider, maxAgeMs: Long = 60 * 60 * 1000L): Boolean {
+        val age = timeProvider.currentTimeMillis() - cachedAt
         return age < maxAgeMs
     }
 }

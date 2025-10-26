@@ -6,6 +6,7 @@ import com.glosdalen.app.libs.copilot.chat.*
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.*
 import com.glosdalen.app.libs.copilot.storage.*
+import com.glosdalen.app.libs.copilot.util.*
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Retrofit
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -28,10 +29,11 @@ class CopilotChat private constructor(
 ) {
 
     // Core managers (lazy initialization)
-    private val storage by lazy { CopilotStorage(context) }
-    private val authManager by lazy { CopilotAuthManager(oauthApiService, storage) }
-    private val tokenManager by lazy { CopilotTokenManager(githubApiService, authManager, storage) }
-    private val modelManager by lazy { CopilotModelManager(copilotApiService, tokenManager, storage) }
+    private val timeProvider by lazy { SystemTimeProvider() }
+    private val storage by lazy { CopilotStorage(context, timeProvider) }
+    private val authManager by lazy { CopilotAuthManager(oauthApiService, storage, timeProvider) }
+    private val tokenManager by lazy { CopilotTokenManager(githubApiService, authManager, storage, timeProvider) }
+    private val modelManager by lazy { CopilotModelManager(copilotApiService, tokenManager, storage, timeProvider) }
     private val chatManager by lazy { CopilotChatManager(copilotApiService, tokenManager, modelManager) }
 
     // Network services (lazy initialization)
