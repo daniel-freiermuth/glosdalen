@@ -165,10 +165,17 @@ class CopilotAuthManager @Inject constructor(
                     
                     when (result.exceptionOrNull()) {
                         is CopilotException.AuthException.AuthorizationPending -> {
-                            // Continue polling
+                            // User hasn't authorized yet - continue polling
                             delay(deviceData.interval * 1000L)
                         }
-                        else -> return@withTimeout result
+                        is CopilotException.NetworkException -> {
+                            // Network error - wait and retry instead of failing immediately
+                            delay(deviceData.interval * 1000L)
+                        }
+                        else -> {
+                            // Terminal error (access denied, expired, etc.) - stop polling
+                            return@withTimeout result
+                        }
                     }
                 }
                 @Suppress("UNREACHABLE_CODE")
