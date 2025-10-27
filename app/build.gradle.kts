@@ -130,6 +130,15 @@ android {
     }
 }
 
+// Disable baseline generation until
+// https://gist.github.com/obfusk/61046e09cee352ae6dd109911534b12e
+// is fixed.
+tasks.whenTaskAdded {
+    if (name.contains("ArtProfile")) {
+        enabled = false
+    }
+}
+
 dependencies {
     // AnkiDroid API
     implementation("com.github.ankidroid:Anki-Android:api-v1.1.0")
