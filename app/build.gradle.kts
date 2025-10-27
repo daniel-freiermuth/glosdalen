@@ -9,6 +9,7 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("pl.allegro.tech.build.axion-release")
@@ -110,17 +111,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=false"
-        )
     }
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
     }
     packaging {
         resources {
@@ -133,6 +127,10 @@ android {
             it.useJUnitPlatform()
         }
     }
+}
+
+composeCompiler {
+    includeSourceInformation = false
 }
 
 // Disable baseline generation until
