@@ -78,6 +78,7 @@ android {
         }.standardOutput.asText.get().trim().let { gitDate ->
             // Parse ISO 8601 git date and format consistently
             OffsetDateTime.parse(gitDate)
+                .atZoneSameInstant(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         }
         
