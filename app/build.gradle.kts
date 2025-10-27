@@ -104,6 +104,16 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
         }
+        // Disable dependency metadata for F-Droid compatibility
+        all {
+            enableAndroidTestCoverage = false
+        }
+    }
+    
+    dependenciesInfo {
+        // Disable dependency metadata block for F-Droid
+        includeInApk = false
+        includeInBundle = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
