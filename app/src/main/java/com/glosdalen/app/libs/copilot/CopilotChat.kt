@@ -250,10 +250,8 @@ class CopilotChat private constructor(
             .build()
     }
 
-    private fun createJsonConverter() = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-    }.asConverterFactory("application/json".toMediaType())
+    private fun createJsonConverter() = 
+        json.asConverterFactory("application/json".toMediaType())
 
     // ================================
     // Builder Pattern
@@ -294,6 +292,12 @@ class CopilotChat private constructor(
     }
 
     companion object {
+        // Shared Json instance to avoid redundant creation (performance optimization)
+        private val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
+        
         /**
          * Create a new builder
          */
