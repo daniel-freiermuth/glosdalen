@@ -27,7 +27,12 @@ class CopilotSettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.DEFAULT_INSTRUCTIONS)
     
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
-    val uiState: StateFlow<CopilotSettingsUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<CopilotSettingsUiState> = combine(
+        _uiState,
+        userPreferences.getCopilotTemperature()
+    ) { state, temperature ->
+        state.copy(temperature = temperature)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotSettingsUiState())
     
     // Track polling job to prevent concurrent polling
     private var pollingJob: kotlinx.coroutines.Job? = null
@@ -97,6 +102,12 @@ class CopilotSettingsViewModel @Inject constructor(
     fun resetToDefaultInstructions() {
         viewModelScope.launch {
             userPreferences.setCopilotGeneralInstructions(CopilotPreferences.DEFAULT_INSTRUCTIONS)
+        }
+    }
+    
+    fun updateTemperature(temperature: Float) {
+        viewModelScope.launch {
+            userPreferences.setCopilotTemperature(temperature)
         }
     }
     
@@ -300,7 +311,8 @@ data class CopilotSettingsUiState(
     val deviceCode: AuthResult.DeviceCodeRequired? = null,
     val errorMessage: String? = null,
     val availableModels: List<CopilotModel> = emptyList(),
-    val isLoadingModels: Boolean = false
+    val isLoadingModels: Boolean = false,
+    val temperature: Float = CopilotPreferences.DEFAULT_TEMPERATURE
 )
 
 sealed class AuthState {

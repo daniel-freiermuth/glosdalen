@@ -41,13 +41,13 @@ class CopilotChatManager @Inject constructor(
         message: String,
         modelId: String? = null,
         maxTokens: Int = 500,
-        temperature: Double = 0.1
+        temperature: Float? = null
     ): Result<String> {
         val request = ChatRequest(
             messages = listOf(Message(role = "user", content = message)),
             model = modelId ?: getDefaultModel(),
             maxTokens = maxTokens,
-            temperature = temperature,
+            temperature = (temperature ?: 0.1f).toDouble(),
             stream = false
         )
 
@@ -127,7 +127,7 @@ class CopilotChatManager @Inject constructor(
         message: String,
         modelId: String? = null,
         maxTokens: Int = 150,
-        temperature: Double = 0.1
+        temperature: Float = 0.7f
     ): Flow<String> = flow {
         // This would be implemented when streaming is needed
         // For now, fall back to regular request

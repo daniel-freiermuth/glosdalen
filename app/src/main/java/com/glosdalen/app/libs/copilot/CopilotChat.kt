@@ -96,9 +96,14 @@ class CopilotChat private constructor(
      */
     suspend fun chat(
         message: String,
-        modelId: String? = null
+        modelId: String? = null,
+        temperature: Float? = null
     ): Result<String> {
-        return chatManager.sendMessage(message, modelId)
+        return chatManager.sendMessage(
+            message = message,
+            modelId = modelId,
+            temperature = temperature
+        )
     }
 
     /**

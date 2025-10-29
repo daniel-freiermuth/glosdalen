@@ -85,4 +85,7 @@ class UserPreferences @Inject constructor(
     
     fun getCopilotGeneralInstructions(): Flow<String> = copilotPreferences.getGeneralInstructions()
     suspend fun setCopilotGeneralInstructions(instructions: String) = copilotPreferences.setGeneralInstructions(instructions)
+    
+    fun getCopilotTemperature(): Flow<Float> = copilotPreferences.getTemperature()
+    suspend fun setCopilotTemperature(temperature: Float) = copilotPreferences.setTemperature(temperature)
 }

@@ -40,7 +40,8 @@ data class CopilotChatUiState(
     val selectedCardDirection: CardDirection = CardDirection.FOREIGN_TO_NATIVE,
     val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
     val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
-    val isLoadingModels: Boolean = false
+    val isLoadingModels: Boolean = false,
+    val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE
 )
 
 @HiltViewModel
@@ -63,10 +64,12 @@ class CopilotChatViewModel @Inject constructor(
             val isAuth = copilot.isAuthenticated()
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
             val selectedModel = userPreferences.getCopilotSelectedModel().first()
+            val temperature = userPreferences.getCopilotTemperature().first()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
-                selectedModelId = selectedModel
+                selectedModelId = selectedModel,
+                temperature = temperature
             ) }
             
             // Load models if authenticated
@@ -220,8 +223,11 @@ class CopilotChatViewModel @Inject constructor(
                     selectedModel
                 }
                 
+                // Get temperature setting
+                val temperature = userPreferences.getCopilotTemperature().first()
+                
                 // Send to Copilot
-                val result = copilot.chat(prompt, modelId)
+                val result = copilot.chat(prompt, modelId, temperature)
                 
                 result.fold(
                     onSuccess = { response ->

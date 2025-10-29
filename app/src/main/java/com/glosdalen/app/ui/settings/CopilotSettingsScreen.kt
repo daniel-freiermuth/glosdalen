@@ -41,6 +41,7 @@ fun CopilotSettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val selectedModelId by viewModel.selectedModel.collectAsState()
     val generalInstructions by viewModel.generalInstructions.collectAsState()
+    val temperature = uiState.temperature
     val lifecycleOwner = LocalLifecycleOwner.current
     
     // Automatically resume polling when app comes back to foreground
@@ -115,6 +116,12 @@ fun CopilotSettingsScreen(
                         instructions = generalInstructions,
                         onInstructionsChange = viewModel::updateGeneralInstructions,
                         onResetToDefault = viewModel::resetToDefaultInstructions
+                    )
+                    
+                    // Temperature Section
+                    TemperatureSection(
+                        temperature = temperature,
+                        onTemperatureChange = viewModel::updateTemperature
                     )
                     
                     // Model Selection Section
@@ -557,6 +564,80 @@ private fun GeneralInstructionsSection(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TemperatureSection(
+    temperature: Float,
+    onTemperatureChange: (Float) -> Unit
+) {
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Temperature",
+                style = MaterialTheme.typography.titleMedium
+            )
+            
+            Text(
+                text = "Controls randomness in AI responses. Lower values (0.0) produce deterministic, focused answers. Higher values (1.0) produce creative, varied responses.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "0.0",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                
+                Slider(
+                    value = temperature,
+                    onValueChange = onTemperatureChange,
+                    modifier = Modifier.weight(1f),
+                    valueRange = 0f..1f,
+                    steps = 9 // Creates 11 total positions (0.0, 0.1, 0.2, ... 1.0)
+                )
+                
+                Text(
+                    text = "1.0",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            
+            Text(
+                text = "Current: %.1f".format(temperature),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            
+            Text(
+                text = when {
+                    temperature < 0.3f -> "Very focused and deterministic"
+                    temperature < 0.6f -> "Balanced with slight variation"
+                    temperature < 0.8f -> "Creative with good consistency (recommended)"
+                    else -> "Highly creative and varied"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
