@@ -67,7 +67,8 @@ fun SettingsScreen(
                 onNavigateBack = onNavigateBack,
                 onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
                 onNavigateToAnki = { currentPage = SettingsPage.Anki },
-                onNavigateToCopilot = { currentPage = SettingsPage.Copilot }
+                onNavigateToCopilot = { currentPage = SettingsPage.Copilot },
+                onNavigateToLanguageInstructions = { currentPage = SettingsPage.LanguageInstructions }
             )
         }
         SettingsPage.DeepL -> {
@@ -85,6 +86,11 @@ fun SettingsScreen(
                 onNavigateBack = { currentPage = SettingsPage.Main }
             )
         }
+        SettingsPage.LanguageInstructions -> {
+            LanguageInstructionsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Main }
+            )
+        }
     }
 }
 
@@ -92,7 +98,8 @@ private enum class SettingsPage {
     Main,
     DeepL,
     Anki,
-    Copilot
+    Copilot,
+    LanguageInstructions
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,6 +109,7 @@ private fun MainSettingsScreen(
     onNavigateToDeepL: () -> Unit,
     onNavigateToAnki: () -> Unit,
     onNavigateToCopilot: () -> Unit,
+    onNavigateToLanguageInstructions: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -156,6 +164,13 @@ private fun MainSettingsScreen(
                 title = "GitHub Copilot",
                 description = "AI-powered translation suggestions and assistance",
                 onClick = onNavigateToCopilot
+            )
+            
+            // Language Instructions Navigation Card
+            SettingsNavigationCard(
+                title = "Language Instructions",
+                description = "Per-language specific guidance for Copilot",
+                onClick = onNavigateToLanguageInstructions
             )
             
             Spacer(modifier = Modifier.weight(1f))

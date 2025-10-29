@@ -22,7 +22,8 @@ class UserPreferences @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val deepLPreferences: DeepLPreferences,
     private val ankiPreferences: AnkiPreferences,
-    private val copilotPreferences: CopilotPreferences
+    private val copilotPreferences: CopilotPreferences,
+    private val languageInstructionsPreferences: LanguageInstructionsPreferences
 ) {
     companion object {
         private val NATIVE_LANGUAGE = stringPreferencesKey("native_language")
@@ -88,4 +89,11 @@ class UserPreferences @Inject constructor(
     
     fun getCopilotTemperature(): Flow<Float> = copilotPreferences.getTemperature()
     suspend fun setCopilotTemperature(temperature: Float) = copilotPreferences.setTemperature(temperature)
+    
+    // Language-specific instructions
+    fun getLanguageInstructions(language: Language): Flow<String> = languageInstructionsPreferences.getInstructions(language)
+    suspend fun setLanguageInstructions(language: Language, instructions: String) = languageInstructionsPreferences.setInstructions(language, instructions)
+    fun getAllLanguageInstructions(): Flow<Map<Language, String>> = languageInstructionsPreferences.getAllInstructions()
+    fun getDefaultLanguageInstructions(language: Language): String = languageInstructionsPreferences.getDefaultInstructions(language)
+    fun hasCustomLanguageInstructions(language: Language): Flow<Boolean> = languageInstructionsPreferences.hasCustomInstructions(language)
 }

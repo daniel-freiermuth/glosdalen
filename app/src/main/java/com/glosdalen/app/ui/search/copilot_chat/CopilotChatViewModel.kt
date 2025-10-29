@@ -232,6 +232,9 @@ class CopilotChatViewModel @Inject constructor(
                 // Get general instructions
                 val generalInstructions = userPreferences.getCopilotGeneralInstructions().first()
                 
+                // Get language-specific instructions for the foreign language
+                val languageInstructions = userPreferences.getLanguageInstructions(foreign).first()
+                
                 // Build the prompt for translation/vocabulary assistance
                 val prompt = buildPrompt(
                     query = query,
@@ -240,7 +243,8 @@ class CopilotChatViewModel @Inject constructor(
                     nativeLanguage = native,
                     foreignLanguage = foreign,
                     context = _uiState.value.contextQuery.takeIf { it.isNotBlank() },
-                    generalInstructions = generalInstructions
+                    generalInstructions = generalInstructions,
+                    languageInstructions = languageInstructions
                 )
                 
                 // Get selected model (null means auto)
@@ -309,7 +313,8 @@ class CopilotChatViewModel @Inject constructor(
         nativeLanguage: Language,
         foreignLanguage: Language,
         context: String? = null,
-        generalInstructions: String
+        generalInstructions: String,
+        languageInstructions: String = ""
     ): String {
         return buildString {
             appendLine("You are a helpful language learning assistant specializing in translation and learning.")
@@ -320,6 +325,11 @@ class CopilotChatViewModel @Inject constructor(
             if (generalInstructions.isNotBlank()) {
                 appendLine()
                 appendLine("General instructions from the user: $generalInstructions")
+            }
+            
+            if (languageInstructions.isNotBlank()) {
+                appendLine()
+                appendLine("Language-specific instructions for ${foreignLanguage.displayName}: $languageInstructions")
             }
             
             if (context != null) {
