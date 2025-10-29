@@ -265,12 +265,12 @@ fun CopilotChatSearchScreen(
                     ) {
                         Icon(
                             imageVector = if (uiState.isContextExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = if (uiState.isContextExpanded) "Hide context" else "Show context",
+                            contentDescription = if (uiState.isContextExpanded) "Delete context" else "Show context",
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (uiState.isContextExpanded) "Hide Context" else "Add Context for Better Response",
+                            text = if (uiState.isContextExpanded) "Delete Context" else "Add Context for Better Response",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -317,7 +317,7 @@ fun CopilotChatSearchScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(if (uiState.response.isEmpty()) "Send \"${uiState.query}\"" else "Re-query \"${uiState.query}\"")
+                Text(if (uiState.response.isEmpty()) "Send" else "Re-query")
             }
         }
         
