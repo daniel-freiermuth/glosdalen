@@ -51,7 +51,7 @@ fun <T> SplitButton(
             onClick = onMainClick,
             modifier = Modifier.weight(1f),
             enabled = enabled,
-            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 0.dp, bottomEnd = 0.dp)
+            shape = RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50, topEndPercent = 0, bottomEndPercent = 0)
         ) {
             mainButtonContent()
         }
@@ -62,7 +62,7 @@ fun <T> SplitButton(
                 onClick = { showDropdown = true },
                 enabled = enabled,
                 modifier = Modifier.width(48.dp),
-                shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 8.dp, bottomEnd = 8.dp),
+                shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 50, bottomEndPercent = 50),
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Icon(
