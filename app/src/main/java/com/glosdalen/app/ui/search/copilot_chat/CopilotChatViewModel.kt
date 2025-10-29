@@ -16,10 +16,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class FlashCard(
+    val frontSide: String,
+    val backSide: String
+)
+
 data class ParsedCopilotResponse(
     val directAnswer: String,
-    val frontSide: String,
-    val backSide: String,
+    val cards: List<FlashCard>,
     val additionalInfo: String
 )
 
@@ -35,7 +39,7 @@ data class CopilotChatUiState(
     val isAuthenticated: Boolean = false,
     val isAdditionalInfoExpanded: Boolean = false,
     val isCreatingCard: Boolean = false,
-    val hasCardBeenCreated: Boolean = false,
+    val createdCardIndices: Set<Int> = emptySet(), // Track which cards have been created
     val isAnkiDroidAvailable: Boolean = false,
     val selectedCardDirection: CardDirection = CardDirection.FOREIGN_TO_NATIVE,
     val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
@@ -105,7 +109,7 @@ class CopilotChatViewModel @Inject constructor(
                 response = "",
                 parsedResponse = null,
                 error = null,
-                hasCardBeenCreated = false
+                createdCardIndices = emptySet()
             ) 
         }
     }
@@ -285,7 +289,7 @@ class CopilotChatViewModel @Inject constructor(
     ): String {
         return buildString {
             appendLine("You are a helpful language learning assistant specializing in translation and learning.")
-            appendLine("Along with your answer, you can provide one flash card")
+            appendLine("Along with your answer, you can propose zero or more flashcards (as many as you think would be useful).")
             appendLine()
             appendLine("The users native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
             
@@ -304,21 +308,25 @@ class CopilotChatViewModel @Inject constructor(
             appendLine("Target language for translation: ${targetLanguage.displayName}")
             
             appendLine()
-            appendLine("Please answer in four sections separated by '---' (markdown horizontal rule):")
-            appendLine("It is important that you follow the structure exactly.")
+            appendLine("Please structure your response as follows:")
             appendLine()
             appendLine("# Answer")
             appendLine("(Your direct answer here)")
             appendLine()
             appendLine("---")
             appendLine()
-            appendLine("# Front side")
-            appendLine("(Flash card front content)")
+            appendLine("# Flashcards")
+            appendLine("(Optional: Propose 0 or more flashcards. Each card should have this structure:)")
             appendLine()
-            appendLine("---")
+            appendLine("## Card 1")
+            appendLine("**Front:** (front side content)")
+            appendLine("**Back:** (back side content)")
             appendLine()
-            appendLine("# Back side")
-            appendLine("(Flash card back content)")
+            appendLine("## Card 2")
+            appendLine("**Front:** (front side content)")
+            appendLine("**Back:** (back side content)")
+            appendLine()
+            appendLine("(Add as many cards as you think would be helpful, or none if not applicable)")
             appendLine()
             appendLine("---")
             appendLine()
@@ -333,7 +341,7 @@ class CopilotChatViewModel @Inject constructor(
             parsedResponse = null, 
             error = null, 
             isAdditionalInfoExpanded = false,
-            hasCardBeenCreated = false
+            createdCardIndices = emptySet()
         ) }
     }
     
@@ -344,7 +352,7 @@ class CopilotChatViewModel @Inject constructor(
     fun updateCardDirection(direction: CardDirection) {
         _uiState.update { it.copy(
             selectedCardDirection = direction,
-            hasCardBeenCreated = false
+            createdCardIndices = emptySet() // Reset created cards when direction changes
         ) }
     }
     
@@ -378,9 +386,16 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun createAnkiCard() {
+    fun createAnkiCard(cardIndex: Int) {
         val parsed = _uiState.value.parsedResponse ?: return
-        if (parsed.frontSide.isBlank() || parsed.backSide.isBlank()) {
+        
+        if (cardIndex < 0 || cardIndex >= parsed.cards.size) {
+            _uiState.update { it.copy(error = "Invalid card index") }
+            return
+        }
+        
+        val card = parsed.cards[cardIndex]
+        if (card.frontSide.isBlank() || card.backSide.isBlank()) {
             _uiState.update { it.copy(error = "Cannot create card: missing front or back side") }
             return
         }
@@ -413,7 +428,7 @@ class CopilotChatViewModel @Inject constructor(
                     listOf(
                         AnkiCard(
                             modelName = "Basic",
-                            fields = mapOf("Front" to parsed.frontSide, "Back" to parsed.backSide),
+                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code)
                         )
@@ -423,7 +438,7 @@ class CopilotChatViewModel @Inject constructor(
                     listOf(
                         AnkiCard(
                             modelName = "Basic (and reversed card)",
-                            fields = mapOf("Front" to parsed.frontSide, "Back" to parsed.backSide),
+                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code, "bidirectional")
                         )
@@ -438,7 +453,7 @@ class CopilotChatViewModel @Inject constructor(
                     _uiState.update { 
                         it.copy(
                             isCreatingCard = false,
-                            hasCardBeenCreated = true
+                            createdCardIndices = it.createdCardIndices + cardIndex
                         )
                     }
                 },
@@ -459,12 +474,11 @@ class CopilotChatViewModel @Inject constructor(
             // Split by --- separator (markdown horizontal rule)
             val sections = response.split("---").map { it.trim() }
             
-            if (sections.size < 4) {
+            if (sections.isEmpty()) {
                 // Fallback: return the whole response as direct answer
                 return ParsedCopilotResponse(
                     directAnswer = response,
-                    frontSide = "",
-                    backSide = "",
+                    cards = emptyList(),
                     additionalInfo = ""
                 )
             }
@@ -485,18 +499,58 @@ class CopilotChatViewModel @Inject constructor(
                 }
             }
             
+            // Parse flashcards from the middle section
+            fun parseFlashcards(section: String): List<FlashCard> {
+                val cards = mutableListOf<FlashCard>()
+                val lines = section.lines()
+                
+                var currentFront: String? = null
+                var currentBack: String? = null
+                
+                for (line in lines) {
+                    val trimmed = line.trim()
+                    
+                    // Look for Front: or **Front:** pattern
+                    if (trimmed.startsWith("**Front:**", ignoreCase = true) || 
+                        trimmed.startsWith("Front:", ignoreCase = true)) {
+                        // Save previous card if complete
+                        if (currentFront != null && currentBack != null) {
+                            cards.add(FlashCard(currentFront, currentBack))
+                        }
+                        currentFront = trimmed.substringAfter(":", "").trim()
+                            .removePrefix("*").removeSuffix("*").trim()
+                        currentBack = null
+                    }
+                    // Look for Back: or **Back:** pattern
+                    else if (trimmed.startsWith("**Back:**", ignoreCase = true) || 
+                             trimmed.startsWith("Back:", ignoreCase = true)) {
+                        currentBack = trimmed.substringAfter(":", "").trim()
+                            .removePrefix("*").removeSuffix("*").trim()
+                    }
+                }
+                
+                // Save last card if complete
+                if (currentFront != null && currentBack != null) {
+                    cards.add(FlashCard(currentFront, currentBack))
+                }
+                
+                return cards
+            }
+            
+            val directAnswer = extractContent(sections.getOrElse(0) { "" }, "Answer")
+            val flashcardsSection = if (sections.size > 1) sections[1] else ""
+            val additionalInfo = if (sections.size > 2) extractContent(sections[2], "Explanation") else ""
+            
             return ParsedCopilotResponse(
-                directAnswer = extractContent(sections[0], "Answer"),
-                frontSide = extractContent(sections[1], "Front"),
-                backSide = extractContent(sections[2], "Back"),
-                additionalInfo = extractContent(sections[3], "Explanation")
+                directAnswer = directAnswer,
+                cards = parseFlashcards(flashcardsSection),
+                additionalInfo = additionalInfo
             )
         } catch (e: Exception) {
             // Fallback on parsing error
             return ParsedCopilotResponse(
                 directAnswer = response,
-                frontSide = "",
-                backSide = "",
+                cards = emptyList(),
                 additionalInfo = ""
             )
         }

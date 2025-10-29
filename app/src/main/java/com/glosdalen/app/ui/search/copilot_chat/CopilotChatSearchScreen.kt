@@ -474,74 +474,95 @@ fun CopilotChatSearchScreen(
                 }
             }
             
-            // Flashcard Section (if both sides are present)
-            if (parsed.frontSide.isNotBlank() && parsed.backSide.isNotBlank()) {
+            // Flashcards Section
+            if (parsed.cards.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = "Proposed Flashcard",
+                            text = "Proposed Flashcards (${parsed.cards.size})",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                         
-                        // Front Side
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Front:",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        parsed.cards.forEachIndexed { index, card ->
                             Card(
+                                modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                                 )
                             ) {
-                                Text(
-                                    text = parsed.frontSide,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(12.dp)
-                                )
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Card ${index + 1}",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    
+                                    // Front Side
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Front:",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                            )
+                                        ) {
+                                            Text(
+                                                text = card.frontSide,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.padding(12.dp)
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Back Side
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Back:",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Card(
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                            )
+                                        ) {
+                                            Text(
+                                                text = card.backSide,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier.padding(12.dp)
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Create Card Button for this specific card
+                                    CreateCardButton(
+                                        selectedCardDirection = uiState.selectedCardDirection,
+                                        isCreatingCard = uiState.isCreatingCard,
+                                        isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
+                                        hasCardBeenCreated = index in uiState.createdCardIndices,
+                                        onCreateCard = { viewModel.createAnkiCard(index) },
+                                        onCardDirectionChange = viewModel::updateCardDirection
+                                    )
+                                }
                             }
                         }
-                        
-                        // Back Side
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Back:",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
-                                Text(
-                                    text = parsed.backSide,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(12.dp)
-                                )
-                            }
-                        }
-                        
-                        // Create Card Button
-                        CreateCardButton(
-                            selectedCardDirection = uiState.selectedCardDirection,
-                            isCreatingCard = uiState.isCreatingCard,
-                            isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
-                            hasCardBeenCreated = uiState.hasCardBeenCreated,
-                            onCreateCard = viewModel::createAnkiCard,
-                            onCardDirectionChange = viewModel::updateCardDirection
-                        )
                     }
                 }
             }
