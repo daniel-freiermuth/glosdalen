@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.glosdalen.app.domain.preferences.CopilotPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +40,7 @@ fun CopilotSettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedModelId by viewModel.selectedModel.collectAsState()
+    val generalInstructions by viewModel.generalInstructions.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     
     // Automatically resume polling when app comes back to foreground
@@ -104,6 +108,13 @@ fun CopilotSettingsScreen(
                     AuthenticatedSection(
                         onLogout = viewModel::logout,
                         onRefresh = viewModel::checkAuthenticationStatus
+                    )
+                    
+                    // General Instructions Section
+                    GeneralInstructionsSection(
+                        instructions = generalInstructions,
+                        onInstructionsChange = viewModel::updateGeneralInstructions,
+                        onResetToDefault = viewModel::resetToDefaultInstructions
                     )
                     
                     // Model Selection Section
@@ -473,6 +484,79 @@ private fun CopilotInfoSection() {
                 text = "GitHub Copilot uses AI to provide intelligent suggestions and help with vocabulary translation. You need a GitHub account with Copilot access to use this feature.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun GeneralInstructionsSection(
+    instructions: String,
+    onInstructionsChange: (String) -> Unit,
+    onResetToDefault: () -> Unit
+) {
+    var textFieldValue by remember(instructions) { 
+        mutableStateOf(TextFieldValue(text = instructions, selection = TextRange(instructions.length)))
+    }
+    
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "General Instructions",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                TextButton(onClick = {
+                    val defaultText = CopilotPreferences.DEFAULT_INSTRUCTIONS
+                    val currentText = textFieldValue.text
+                    val newText = if (currentText.isBlank()) {
+                        defaultText
+                    } else {
+                        "$currentText\n\n$defaultText"
+                    }
+                    textFieldValue = TextFieldValue(
+                        text = newText,
+                        selection = TextRange(newText.length)
+                    )
+                    onInstructionsChange(newText)
+                }) {
+                    Text("Add Default")
+                }
+            }
+            
+            Text(
+                text = "Provide general instructions that will be included in every Copilot query. This helps tailor responses to your learning style and preferences.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            OutlinedTextField(
+                value = textFieldValue,
+                onValueChange = { 
+                    textFieldValue = it
+                    onInstructionsChange(it.text)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Instructions") },
+                placeholder = { Text("E.g., \"Focus on formal usage\" or \"Include example sentences\"") },
+                minLines = 3,
+                maxLines = 6,
+                supportingText = {
+                    Text(
+                        text = "These instructions will guide how Copilot responds to your translation queries.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             )
         }
     }

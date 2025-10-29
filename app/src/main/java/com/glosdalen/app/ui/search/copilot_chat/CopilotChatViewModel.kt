@@ -188,6 +188,9 @@ class CopilotChatViewModel @Inject constructor(
                     else -> foreign
                 }
                 
+                // Get general instructions
+                val generalInstructions = userPreferences.getCopilotGeneralInstructions().first()
+                
                 // Build the prompt for translation/vocabulary assistance
                 val prompt = buildPrompt(
                     query = query,
@@ -195,7 +198,8 @@ class CopilotChatViewModel @Inject constructor(
                     targetLanguage = targetLanguage,
                     nativeLanguage = native,
                     foreignLanguage = foreign,
-                    context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
+                    context = _uiState.value.contextQuery.takeIf { it.isNotBlank() },
+                    generalInstructions = generalInstructions
                 )
                 
                 // Get selected model (null means auto)
@@ -260,12 +264,19 @@ class CopilotChatViewModel @Inject constructor(
         targetLanguage: Language,
         nativeLanguage: Language,
         foreignLanguage: Language,
-        context: String? = null
+        context: String? = null,
+        generalInstructions: String
     ): String {
         return buildString {
             appendLine("You are a helpful language learning assistant specializing in translation and learning.")
+            appendLine("Along with your answer, you can provide one flash card")
             appendLine()
             appendLine("The users native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
+            
+            if (generalInstructions.isNotBlank()) {
+                appendLine()
+                appendLine("General instructions from the user: $generalInstructions")
+            }
             
             if (context != null) {
                 appendLine()
@@ -276,16 +287,6 @@ class CopilotChatViewModel @Inject constructor(
             appendLine("User query (${sourceLanguage.displayName}): \" $query \"")
             appendLine("Target language for translation: ${targetLanguage.displayName}")
             
-            appendLine()
-            appendLine("Please provide:")
-            appendLine("- Direct translation if applicable")
-            appendLine("- Grammar explanations when relevant")
-            appendLine("- Usage examples")
-            appendLine("- Cultural context when helpful")
-            appendLine("- Alternative expressions")
-            appendLine("- Common collocations or related vocabulary")
-            appendLine()
-            appendLine("Keep responses concise and practical for language learning - this is for quick lookups.")
             appendLine()
             appendLine("Please answer in four sections separated by '---' (markdown horizontal rule):")
             appendLine("It is important that you follow the structure exactly.")
@@ -307,10 +308,6 @@ class CopilotChatViewModel @Inject constructor(
             appendLine()
             appendLine("# Explanation / Remarks / Extra")
             appendLine("(Optional: concise explanation or interesting remarks - feel free to keep this section empty)")
-            appendLine()
-            appendLine("Note: If applicable, the foreign word shall be on the front side.")
-            appendLine("It is not in the spirit of flash cards to have the foreign word on the same side as a native.")
-            appendLine("Prefer idiomatic expressions over word-by-word translations.")
         }
     }
     

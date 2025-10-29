@@ -16,7 +16,21 @@ class CopilotPreferences @Inject constructor(
     
     companion object {
         private val COPILOT_SELECTED_MODEL = stringPreferencesKey("copilot_selected_model")
+        private val COPILOT_GENERAL_INSTRUCTIONS = stringPreferencesKey("copilot_general_instructions")
         const val AUTO_MODEL = "auto" // Special value for automatic model selection
+        const val DEFAULT_INSTRUCTIONS = """Please provide:
+  - Direct translation if applicable
+  - Grammar explanations when relevant
+  - Usage examples
+  - Cultural context when helpful
+  - Alternative expressions
+  - Common collocations or related vocabulary
+            
+Keep responses concise and practical for language learning - this is for quick lookups.
+
+Note: If applicable, the foreign word shall be on the front side.
+It is not in the spirit of flash cards to have the foreign word on the same side as a native.
+Prefer idiomatic expressions over word-by-word translations."""
     }
     
     /**
@@ -36,6 +50,25 @@ class CopilotPreferences @Inject constructor(
     suspend fun setSelectedModel(modelId: String) {
         dataStore.edit { preferences ->
             preferences[COPILOT_SELECTED_MODEL] = modelId
+        }
+    }
+    
+    /**
+     * Get the general instructions for Copilot queries.
+     * Returns default instructions if none are set.
+     */
+    fun getGeneralInstructions(): Flow<String> {
+        return dataStore.data.map { preferences ->
+            preferences[COPILOT_GENERAL_INSTRUCTIONS] ?: DEFAULT_INSTRUCTIONS
+        }
+    }
+    
+    /**
+     * Set the general instructions for Copilot queries.
+     */
+    suspend fun setGeneralInstructions(instructions: String) {
+        dataStore.edit { preferences ->
+            preferences[COPILOT_GENERAL_INSTRUCTIONS] = instructions
         }
     }
 }

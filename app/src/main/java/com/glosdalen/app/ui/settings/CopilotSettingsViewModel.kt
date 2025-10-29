@@ -23,6 +23,9 @@ class CopilotSettingsViewModel @Inject constructor(
     val selectedModel = userPreferences.getCopilotSelectedModel()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.AUTO_MODEL)
     
+    val generalInstructions = userPreferences.getCopilotGeneralInstructions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.DEFAULT_INSTRUCTIONS)
+    
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = _uiState.asStateFlow()
     
@@ -82,6 +85,18 @@ class CopilotSettingsViewModel @Inject constructor(
     fun selectModel(modelId: String) {
         viewModelScope.launch {
             userPreferences.setCopilotSelectedModel(modelId)
+        }
+    }
+    
+    fun updateGeneralInstructions(instructions: String) {
+        viewModelScope.launch {
+            userPreferences.setCopilotGeneralInstructions(instructions)
+        }
+    }
+    
+    fun resetToDefaultInstructions() {
+        viewModelScope.launch {
+            userPreferences.setCopilotGeneralInstructions(CopilotPreferences.DEFAULT_INSTRUCTIONS)
         }
     }
     

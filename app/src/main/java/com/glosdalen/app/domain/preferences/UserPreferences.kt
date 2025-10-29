@@ -82,4 +82,7 @@ class UserPreferences @Inject constructor(
     // Copilot-related preferences
     fun getCopilotSelectedModel(): Flow<String> = copilotPreferences.getSelectedModel()
     suspend fun setCopilotSelectedModel(modelId: String) = copilotPreferences.setSelectedModel(modelId)
+    
+    fun getCopilotGeneralInstructions(): Flow<String> = copilotPreferences.getGeneralInstructions()
+    suspend fun setCopilotGeneralInstructions(instructions: String) = copilotPreferences.setGeneralInstructions(instructions)
 }
