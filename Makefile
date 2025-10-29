@@ -123,8 +123,21 @@ sync-apks:
 		echo "❌ APKs directory or Nextcloud directory not found"; \
 	fi
 
+shifted:
+	gource --output-custom-log gource.log
+	sed -i "s/Daniel Freiermuth/Daniel/g" gource.log
+	# awk -F'|' '{ $$1 += 0; print $$0 }' OFS='|' gource.log > shifted.log
+
+show-film: shifted
+	gource shifted.log --log-format custom --auto-skip-seconds 1 --max-file-lag 1
+
+.PHONY: film
+save-film: shifted
+	gource shifted.log --log-format custom -o - --auto-skip-seconds 1 --max-file-lag 1 | ffmpeg -y -f image2pipe -vcodec ppm -i - -vcodec libx265 -preset slow -crf 23 gource.mp4
+
 # Verify release readiness
 .PHONY: verify-release
 verify-release:
 	@echo "🔍 Verifying release readiness..."
 	./gradlew verifyRelease
+File: makefile
