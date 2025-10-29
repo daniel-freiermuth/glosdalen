@@ -303,23 +303,78 @@ fun CopilotChatSearchScreen(
             }
         }
         
-        // Send Button
+        // Send Button with Model Selection
         if (uiState.query.isNotEmpty() && !uiState.isLoading && uiState.error == null) {
-            Button(
-                onClick = {
+            // Prepare model dropdown items
+            val modelItems = buildList {
+                add(com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL)
+                addAll(uiState.availableModels.map { it.id })
+            }
+            
+            SplitButton(
+                mainButtonContent = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (uiState.response.isEmpty()) "Send" else "Re-query")
+                },
+                dropdownItems = modelItems,
+                selectedItem = uiState.selectedModelId,
+                enabled = true,
+                onMainClick = {
                     focusManager.clearFocus()
                     viewModel.sendQuery()
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (uiState.response.isEmpty()) "Send" else "Re-query")
-            }
+                onItemSelect = { modelId ->
+                    viewModel.selectModel(modelId)
+                },
+                itemLabel = { modelId ->
+                    if (modelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                        "Auto (Recommended)"
+                    } else {
+                        uiState.availableModels.find { it.id == modelId }?.getDisplayName() ?: modelId
+                    }
+                },
+                dropdownButtonContentDescription = "Select AI model",
+                itemContent = { modelId ->
+                    Column {
+                        val displayName = if (modelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                            "Auto (Recommended)"
+                        } else {
+                            uiState.availableModels.find { it.id == modelId }?.getDisplayName() ?: modelId
+                        }
+                        
+                        Text(
+                            text = displayName,
+                            color = if (modelId == uiState.selectedModelId) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                        )
+                        
+                        // Show additional info for specific models
+                        if (modelId != com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                            uiState.availableModels.find { it.id == modelId }?.let { model ->
+                                Text(
+                                    text = "${model.vendor} • ${model.getCostIndicator()}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "Automatically select best model",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            )
         }
         
         // Loading Indicator

@@ -37,7 +37,10 @@ data class CopilotChatUiState(
     val isCreatingCard: Boolean = false,
     val hasCardBeenCreated: Boolean = false,
     val isAnkiDroidAvailable: Boolean = false,
-    val selectedCardDirection: CardDirection = CardDirection.FOREIGN_TO_NATIVE
+    val selectedCardDirection: CardDirection = CardDirection.FOREIGN_TO_NATIVE,
+    val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
+    val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
+    val isLoadingModels: Boolean = false
 )
 
 @HiltViewModel
@@ -59,10 +62,17 @@ class CopilotChatViewModel @Inject constructor(
         viewModelScope.launch {
             val isAuth = copilot.isAuthenticated()
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
+            val selectedModel = userPreferences.getCopilotSelectedModel().first()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
-                isAnkiDroidAvailable = ankiAvailable
+                isAnkiDroidAvailable = ankiAvailable,
+                selectedModelId = selectedModel
             ) }
+            
+            // Load models if authenticated
+            if (isAuth) {
+                loadModels()
+            }
         }
         
         // React to language preference changes and update source language accordingly
@@ -330,6 +340,36 @@ class CopilotChatViewModel @Inject constructor(
             selectedCardDirection = direction,
             hasCardBeenCreated = false
         ) }
+    }
+    
+    fun loadModels() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingModels = true) }
+            
+            val result = copilot.getModels()
+            
+            result.fold(
+                onSuccess = { models ->
+                    _uiState.update { it.copy(
+                        availableModels = models,
+                        isLoadingModels = false
+                    )}
+                },
+                onFailure = { error ->
+                    _uiState.update { it.copy(
+                        isLoadingModels = false,
+                        error = "Failed to load models: ${error.message}"
+                    )}
+                }
+            )
+        }
+    }
+    
+    fun selectModel(modelId: String) {
+        viewModelScope.launch {
+            userPreferences.setCopilotSelectedModel(modelId)
+            _uiState.update { it.copy(selectedModelId = modelId) }
+        }
     }
     
     fun createAnkiCard() {
