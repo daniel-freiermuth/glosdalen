@@ -551,6 +551,25 @@ fun CopilotChatSearchScreen(
                                         }
                                     }
                                     
+                                    // Note (if provided)
+                                    if (card.note.isNotBlank()) {
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "Note:",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = card.note,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                            )
+                                        }
+                                    }
+                                    
                                     // Create Card Button for this specific card
                                     CreateCardButton(
                                         selectedCardDirection = uiState.selectedCardDirection,

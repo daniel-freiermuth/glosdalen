@@ -14,11 +14,35 @@ import com.glosdalen.app.libs.copilot.CopilotException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
+/**
+ * JSON response structure from the LLM
+ */
+@Serializable
+data class CopilotJsonResponse(
+    val answer: String,
+    val flashcards: List<FlashCardJson> = emptyList(),
+    val explanation: String = ""
+)
+
+@Serializable
+data class FlashCardJson(
+    val front: String,
+    val back: String,
+    val note: String = ""
+)
+
+/**
+ * Internal representation used by the UI
+ */
 data class FlashCard(
     val frontSide: String,
-    val backSide: String
+    val backSide: String,
+    val note: String = ""
 )
 
 data class ParsedCopilotResponse(
@@ -289,9 +313,9 @@ class CopilotChatViewModel @Inject constructor(
     ): String {
         return buildString {
             appendLine("You are a helpful language learning assistant specializing in translation and learning.")
-            appendLine("Along with your answer, you can propose zero or more flashcards (as many as you think would be useful).")
+            appendLine("You must respond with valid JSON only, following the exact schema provided below.")
             appendLine()
-            appendLine("The users native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
+            appendLine("The user's native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
             
             if (generalInstructions.isNotBlank()) {
                 appendLine()
@@ -304,34 +328,31 @@ class CopilotChatViewModel @Inject constructor(
             }
             
             appendLine()
-            appendLine("User query (${sourceLanguage.displayName}): \" $query \"")
+            appendLine("User query (${sourceLanguage.displayName}): \"$query\"")
             appendLine("Target language for translation: ${targetLanguage.displayName}")
             
             appendLine()
-            appendLine("Please structure your response as follows:")
+            appendLine("Response format - You MUST respond with valid JSON matching this exact schema:")
+            appendLine("""
+                {
+                  "answer": "Your direct answer to the user's query",
+                  "flashcards": [
+                    {
+                      "front": "Front side of the flashcard",
+                      "back": "Back side of the flashcard",
+                      "note": "Optional note about this card (can be empty string)"
+                    }
+                  ],
+                  "explanation": "Optional additional explanation or interesting remarks (can be empty string)"
+                }
+            """.trimIndent())
             appendLine()
-            appendLine("# Answer")
-            appendLine("(Your direct answer here)")
-            appendLine()
-            appendLine("---")
-            appendLine()
-            appendLine("# Flashcards")
-            appendLine("(Optional: Propose 0 or more flashcards. Each card should have this structure:)")
-            appendLine()
-            appendLine("## Card 1")
-            appendLine("**Front:** (front side content)")
-            appendLine("**Back:** (back side content)")
-            appendLine()
-            appendLine("## Card 2")
-            appendLine("**Front:** (front side content)")
-            appendLine("**Back:** (back side content)")
-            appendLine()
-            appendLine("(Add as many cards as you think would be helpful, or none if not applicable)")
-            appendLine()
-            appendLine("---")
-            appendLine()
-            appendLine("# Explanation / Remarks / Extra")
-            appendLine("(Optional: concise explanation or interesting remarks - feel free to keep this section empty)")
+            appendLine("Important:")
+            appendLine("- The 'flashcards' array can contain 0 or more cards (as many as you think would be helpful)")
+            appendLine("- Each flashcard must have 'front' and 'back' fields")
+            appendLine("- The 'note' field in flashcards is optional (use empty string if not needed)")
+            appendLine("- The 'explanation' field is optional (use empty string if not needed)")
+            appendLine("- Respond with ONLY the JSON object, no additional text before or after")
         }
     }
     
@@ -470,89 +491,83 @@ class CopilotChatViewModel @Inject constructor(
     }
     
     private fun parseResponse(response: String): ParsedCopilotResponse? {
-        try {
-            // Split by --- separator (markdown horizontal rule)
-            val sections = response.split("---").map { it.trim() }
-            
-            if (sections.isEmpty()) {
-                // Fallback: return the whole response as direct answer
-                return ParsedCopilotResponse(
-                    directAnswer = response,
-                    cards = emptyList(),
-                    additionalInfo = ""
-                )
+        return try {
+            // Configure JSON parser to be lenient
+            val json = Json { 
+                ignoreUnknownKeys = true
+                isLenient = true
             }
             
-            // Extract content after section headers
-            fun extractContent(section: String, header: String): String {
-                val lines = section.lines()
-                val headerLine = lines.indexOfFirst { 
-                    it.trim().startsWith("#") && it.contains(header, ignoreCase = true)
-                }
-                
-                return if (headerLine != -1 && headerLine < lines.size - 1) {
-                    lines.subList(headerLine + 1, lines.size)
-                        .joinToString("\n")
-                        .trim()
-                } else {
-                    section.trim()
-                }
-            }
+            // Try to extract JSON from the response (in case LLM added extra text)
+            val jsonContent = extractJsonFromResponse(response)
             
-            // Parse flashcards from the middle section
-            fun parseFlashcards(section: String): List<FlashCard> {
-                val cards = mutableListOf<FlashCard>()
-                val lines = section.lines()
-                
-                var currentFront: String? = null
-                var currentBack: String? = null
-                
-                for (line in lines) {
-                    val trimmed = line.trim()
-                    
-                    // Look for Front: or **Front:** pattern
-                    if (trimmed.startsWith("**Front:**", ignoreCase = true) || 
-                        trimmed.startsWith("Front:", ignoreCase = true)) {
-                        // Save previous card if complete
-                        if (currentFront != null && currentBack != null) {
-                            cards.add(FlashCard(currentFront, currentBack))
-                        }
-                        currentFront = trimmed.substringAfter(":", "").trim()
-                            .removePrefix("*").removeSuffix("*").trim()
-                        currentBack = null
-                    }
-                    // Look for Back: or **Back:** pattern
-                    else if (trimmed.startsWith("**Back:**", ignoreCase = true) || 
-                             trimmed.startsWith("Back:", ignoreCase = true)) {
-                        currentBack = trimmed.substringAfter(":", "").trim()
-                            .removePrefix("*").removeSuffix("*").trim()
-                    }
-                }
-                
-                // Save last card if complete
-                if (currentFront != null && currentBack != null) {
-                    cards.add(FlashCard(currentFront, currentBack))
-                }
-                
-                return cards
-            }
+            // Parse JSON response
+            val copilotResponse = json.decodeFromString<CopilotJsonResponse>(jsonContent)
             
-            val directAnswer = extractContent(sections.getOrElse(0) { "" }, "Answer")
-            val flashcardsSection = if (sections.size > 1) sections[1] else ""
-            val additionalInfo = if (sections.size > 2) extractContent(sections[2], "Explanation") else ""
-            
-            return ParsedCopilotResponse(
-                directAnswer = directAnswer,
-                cards = parseFlashcards(flashcardsSection),
-                additionalInfo = additionalInfo
+            // Convert to internal representation
+            ParsedCopilotResponse(
+                directAnswer = copilotResponse.answer,
+                cards = copilotResponse.flashcards.map { flashcard ->
+                    FlashCard(
+                        frontSide = flashcard.front,
+                        backSide = flashcard.back,
+                        note = flashcard.note
+                    )
+                },
+                additionalInfo = copilotResponse.explanation
             )
         } catch (e: Exception) {
-            // Fallback on parsing error
-            return ParsedCopilotResponse(
-                directAnswer = response,
+            // Robust fallback: if JSON parsing fails, return response as-is
+            // This ensures the user still sees something even if the LLM doesn't follow format
+            ParsedCopilotResponse(
+                directAnswer = "Error parsing response: ${e.message}\n\nRaw response:\n$response",
                 cards = emptyList(),
                 additionalInfo = ""
             )
         }
+    }
+    
+    /**
+     * Extract JSON content from response, handling cases where LLM adds extra text
+     */
+    private fun extractJsonFromResponse(response: String): String {
+        val trimmed = response.trim()
+        
+        // If response starts with {, assume it's pure JSON
+        if (trimmed.startsWith("{")) {
+            // Find the matching closing brace
+            var braceCount = 0
+            var endIndex = -1
+            for (i in trimmed.indices) {
+                when (trimmed[i]) {
+                    '{' -> braceCount++
+                    '}' -> {
+                        braceCount--
+                        if (braceCount == 0) {
+                            endIndex = i
+                            break
+                        }
+                    }
+                }
+            }
+            return if (endIndex != -1) trimmed.substring(0, endIndex + 1) else trimmed
+        }
+        
+        // Try to find JSON block in code fence
+        val jsonBlockRegex = "```(?:json)?\\s*\\n(\\{[\\s\\S]*?\\})\\s*\\n```".toRegex()
+        val match = jsonBlockRegex.find(trimmed)
+        if (match != null) {
+            return match.groupValues[1]
+        }
+        
+        // Try to find any JSON object
+        val jsonObjectRegex = "(\\{[\\s\\S]*\\})".toRegex()
+        val objectMatch = jsonObjectRegex.find(trimmed)
+        if (objectMatch != null) {
+            return objectMatch.groupValues[1]
+        }
+        
+        // Return as-is and let JSON parser fail
+        return trimmed
     }
 }
