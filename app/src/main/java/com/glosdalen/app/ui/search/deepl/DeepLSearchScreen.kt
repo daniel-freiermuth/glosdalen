@@ -9,6 +9,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import com.glosdalen.app.ui.components.SplitButton
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -456,27 +457,14 @@ private fun CreateCardButtonWithDropdown(
     onCreateCard: () -> Unit,
     onCardDirectionChange: (CardDirection) -> Unit
 ) {
-    var showDropdown by remember { mutableStateOf(false) }
-    
     val cardDirectionText = when (selectedCardDirection) {
         CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
         CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
         CardDirection.BOTH_DIRECTIONS -> "Both Directions"
     }
     
-    // Proper split button with two distinct clickable areas
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(1.dp)
-    ) {
-        // Main create card button (left side)
-        Button(
-            onClick = { onCreateCard() },
-            modifier = Modifier.weight(1f),
-            enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
-            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 0.dp, bottomEnd = 0.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
+    SplitButton(
+        mainButtonContent = {
             if (isCreatingCard) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -493,78 +481,59 @@ private fun CreateCardButtonWithDropdown(
             } else {
                 Text("Create Card ($cardDirectionText)")
             }
-        }
-        
-        // Dropdown button (right side)
-        Box {
-            Button(
-                onClick = { showDropdown = true },
-                enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
-                shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                modifier = Modifier.widthIn(min = 48.dp)
-            ) {
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = "Choose card direction",
-                    modifier = Modifier.size(18.dp)
-                )
+        },
+        dropdownItems = CardDirection.values().toList(),
+        selectedItem = selectedCardDirection,
+        enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
+        onMainClick = onCreateCard,
+        onItemSelect = onCardDirectionChange,
+        itemLabel = { direction ->
+            when (direction) {
+                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+            }
+        },
+        dropdownButtonContentDescription = "Choose card direction",
+        isItemEnabled = { direction ->
+            ankiImplementationType == "API" || direction != CardDirection.BOTH_DIRECTIONS
+        },
+        itemContent = { direction ->
+            val isEnabled = ankiImplementationType == "API" || direction != CardDirection.BOTH_DIRECTIONS
+            val displayName = when (direction) {
+                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+            }
+            val description = when (direction) {
+                CardDirection.NATIVE_TO_FOREIGN -> "German on front, Swedish on back"
+                CardDirection.FOREIGN_TO_NATIVE -> "Swedish on front, German on back"
+                CardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
             }
             
-            // Dropdown menu
-            DropdownMenu(
-                expanded = showDropdown,
-                onDismissRequest = { showDropdown = false }
-            ) {
-                CardDirection.values().forEach { direction ->
-                    val isEnabled = ankiImplementationType == "API" || direction != CardDirection.BOTH_DIRECTIONS
-                    val displayName = when (direction) {
-                        CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                        CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                        CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+            Column {
+                Text(
+                    text = displayName,
+                    color = if (direction == selectedCardDirection) {
+                        MaterialTheme.colorScheme.primary
+                    } else if (isEnabled) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     }
-                    val description = when (direction) {
-                        CardDirection.NATIVE_TO_FOREIGN -> "German on front, Swedish on back"
-                        CardDirection.FOREIGN_TO_NATIVE -> "Swedish on front, German on back"
-                        CardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
-                    }
-                    
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(
-                                    text = displayName,
-                                    color = if (direction == selectedCardDirection) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else if (isEnabled) {
-                                        MaterialTheme.colorScheme.onSurface
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-                                )
-                                Text(
-                                    text = if (!isEnabled && direction == CardDirection.BOTH_DIRECTIONS) {
-                                        "Requires AnkiDroid API"
-                                    } else {
-                                        description
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        onClick = {
-                            if (isEnabled) {
-                                onCardDirectionChange(direction)
-                                showDropdown = false
-                            }
-                        },
-                        enabled = isEnabled
-                    )
-                }
+                )
+                Text(
+                    text = if (!isEnabled && direction == CardDirection.BOTH_DIRECTIONS) {
+                        "Requires AnkiDroid API"
+                    } else {
+                        description
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-    }
+    )
 }
 
 @Composable

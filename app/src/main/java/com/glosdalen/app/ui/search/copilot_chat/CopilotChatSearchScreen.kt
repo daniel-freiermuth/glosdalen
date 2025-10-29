@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import com.glosdalen.app.ui.components.SplitButton
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -613,96 +614,55 @@ private fun CreateCardButton(
     onCreateCard: () -> Unit,
     onCardDirectionChange: (CardDirection) -> Unit
 ) {
-    var showDropdown by remember { mutableStateOf(false) }
-    
     val cardDirectionText = when (selectedCardDirection) {
         CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
         CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
         CardDirection.BOTH_DIRECTIONS -> "Both Directions"
     }
     
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(1.dp)
-    ) {
-        // Main create card button
-        Button(
-            onClick = { onCreateCard() },
-            modifier = Modifier.weight(1f),
+    Column {
+        SplitButton(
+            mainButtonContent = {
+                if (isCreatingCard) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text("Creating...")
+                    }
+                } else if (hasCardBeenCreated) {
+                    Text("Card Created ✓")
+                } else {
+                    Text("Add to Anki ($cardDirectionText)")
+                }
+            },
+            dropdownItems = CardDirection.values().toList(),
+            selectedItem = selectedCardDirection,
             enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
-            shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp, topEnd = 0.dp, bottomEnd = 0.dp)
-        ) {
-            if (isCreatingCard) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text("Creating...")
+            onMainClick = onCreateCard,
+            onItemSelect = onCardDirectionChange,
+            itemLabel = { direction ->
+                when (direction) {
+                    CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                    CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                    CardDirection.BOTH_DIRECTIONS -> "Both Directions"
                 }
-            } else if (hasCardBeenCreated) {
-                Text("Card Created ✓")
-            } else {
-                Text("Add to Anki ($cardDirectionText)")
-            }
-        }
-        
-        // Dropdown button
-        Box {
-            Button(
-                onClick = { showDropdown = true },
-                enabled = !isCreatingCard && !hasCardBeenCreated,
-                modifier = Modifier.width(48.dp),
-                shape = RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 8.dp, bottomEnd = 8.dp),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Card direction options"
-                )
-            }
-            
-            DropdownMenu(
-                expanded = showDropdown,
-                onDismissRequest = { showDropdown = false }
-            ) {
-                CardDirection.values().forEach { direction ->
-                    DropdownMenuItem(
-                        text = {
-                            val text = when (direction) {
-                                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
-                            }
-                            Text(
-                                text = text,
-                                color = if (direction == selectedCardDirection) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
-                            )
-                        },
-                        onClick = {
-                            onCardDirectionChange(direction)
-                            showDropdown = false
-                        }
-                    )
-                }
-            }
-        }
-    }
-    
-    if (!isAnkiDroidAvailable) {
-        Text(
-            text = "⚠️ AnkiDroid not available",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(top = 4.dp)
+            },
+            dropdownButtonContentDescription = "Card direction options"
         )
+        
+        if (!isAnkiDroidAvailable) {
+            Text(
+                text = "⚠️ AnkiDroid not available",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
