@@ -267,7 +267,6 @@ class CopilotChatViewModel @Inject constructor(
             appendLine()
             appendLine("The users native language is ${nativeLanguage.displayName} and they are learning ${foreignLanguage.displayName}.")
             
-            // User-provided general instructions: ${context.generalInstructions}
             if (context != null) {
                 appendLine()
                 appendLine("Specific context for this query: $context")
@@ -286,26 +285,31 @@ class CopilotChatViewModel @Inject constructor(
             appendLine("- Alternative expressions")
             appendLine("- Common collocations or related vocabulary")
             appendLine()
-            appendLine("Keep the response concise and practical for language learning.")
+            appendLine("Keep responses concise and practical for language learning - this is for quick lookups.")
             appendLine()
-            appendLine("Please answer in four sections (H1, separated by `--`).")
+            appendLine("Please answer in four sections separated by '---' (markdown horizontal rule):")
             appendLine("It is important that you follow the structure exactly.")
-            appendLine("- A section \"Answer\",")
-            appendLine("- a section \"Front side\",")
-            appendLine("- a section \"Back side\",")
-            appendLine("- a section \"Explanation / Remarks / Extra\" with a concise explanation or interesting remarks if useful.")
             appendLine()
+            appendLine("# Answer")
+            appendLine("(Your direct answer here)")
             appendLine()
+            appendLine("---")
             appendLine()
-            appendLine("Feel very free to keep the last section empty.")
-            appendLine("")
-            appendLine("Keep your answer concise.")
-            appendLine("")
-            appendLine("Remember that you're part of an app for quick lookups.")
-            appendLine("If applicable, the foreign word shall be on the front side.")
-            appendLine("")
+            appendLine("# Front side")
+            appendLine("(Flash card front content)")
+            appendLine()
+            appendLine("---")
+            appendLine()
+            appendLine("# Back side")
+            appendLine("(Flash card back content)")
+            appendLine()
+            appendLine("---")
+            appendLine()
+            appendLine("# Explanation / Remarks / Extra")
+            appendLine("(Optional: concise explanation or interesting remarks - feel free to keep this section empty)")
+            appendLine()
+            appendLine("Note: If applicable, the foreign word shall be on the front side.")
             appendLine("It is not in the spirit of flash cards to have the foreign word on the same side as a native.")
-            appendLine("")
             appendLine("Prefer idiomatic expressions over word-by-word translations.")
         }
     }
@@ -409,8 +413,8 @@ class CopilotChatViewModel @Inject constructor(
     
     private fun parseResponse(response: String): ParsedCopilotResponse? {
         try {
-            // Split by -- separator
-            val sections = response.split("--").map { it.trim() }
+            // Split by --- separator (markdown horizontal rule)
+            val sections = response.split("---").map { it.trim() }
             
             if (sections.size < 4) {
                 // Fallback: return the whole response as direct answer
