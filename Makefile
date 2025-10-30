@@ -129,11 +129,10 @@ shifted:
 	# awk -F'|' '{ $$1 += 0; print $$0 }' OFS='|' gource.log > shifted.log
 
 show-film: shifted
-	gource shifted.log --log-format custom --auto-skip-seconds 1 --max-file-lag 1
+	gource shifted.log --log-format custom --auto-skip-seconds 0.2 --max-file-lag 3
 
-.PHONY: film
 save-film: shifted
-	gource shifted.log --log-format custom -o - --auto-skip-seconds 1 --max-file-lag 1 | ffmpeg -y -f image2pipe -vcodec ppm -i - -vcodec libx265 -preset slow -crf 23 gource.mp4
+	gource shifted.log --log-format custom -o - --auto-skip-seconds 1 --max-file-lag 1 | ffmpeg -y -f image2pipe -vcodec ppm -i - -vcodec libx265 -preset veryslow -crf 23 gource.mp4
 
 # Verify release readiness
 .PHONY: verify-release
