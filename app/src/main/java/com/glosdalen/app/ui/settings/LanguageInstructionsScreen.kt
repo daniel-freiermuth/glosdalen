@@ -269,9 +269,17 @@ private fun InstructionsEditorSection(
     onClear: () -> Unit,
     hasDefaultInstructions: Boolean
 ) {
-    var textFieldValue by remember(instructions) {
+    var textFieldValue by remember(language) {
         mutableStateOf(TextFieldValue(text = instructions, selection = TextRange(instructions.length)))
     }
+    
+    // Only update from external changes when switching languages
+    LaunchedEffect(language, instructions) {
+        if (textFieldValue.text != instructions) {
+            textFieldValue = TextFieldValue(text = instructions, selection = TextRange(instructions.length))
+        }
+    }
+    
     var showClearDialog by remember { mutableStateOf(false) }
     
     Card {
