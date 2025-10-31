@@ -1,0 +1,3 @@
+• Fixed settings persistence when using Android back button
+• Small UI improvements in settings screens
+• Enhanced user experience and stability

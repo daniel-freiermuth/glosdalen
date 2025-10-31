@@ -1,0 +1,9 @@
+🎉 Major Update: GitHub Copilot Integration!
+
+• NEW: AI-powered vocabulary assistance with GitHub Copilot
+• AI can suggest translations, explanations, and create flashcards automatically
+• Configure AI model selection and response creativity
+• New navigation drawer for easy mode switching
+• Reorganized settings into dedicated sub-pages
+• Improved navigation and user interface
+• Better error handling and retry options

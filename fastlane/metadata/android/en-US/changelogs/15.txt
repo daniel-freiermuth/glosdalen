@@ -1,0 +1,5 @@
+• Fixed GitHub Copilot authentication flow
+• Improved handling of network errors during sign-in
+• Device code now stays visible until authentication succeeds
+• Better tracking of pending authentication
+• Enhanced authentication reliability

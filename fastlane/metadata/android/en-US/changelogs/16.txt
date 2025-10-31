@@ -1,0 +1,11 @@
+🌟 Enhanced AI Features!
+
+• NEW: Customize general instructions for AI responses
+• NEW: Configure per-language specific instructions
+• NEW: Temperature control for AI creativity
+• AI now proposes multiple flashcards per query
+• Improved AI response parsing and reliability
+• Model selection directly in query interface
+• Better button styling and labels
+• Fixed keyboard viewport issues
+• Increased maximum response length for more detailed answers

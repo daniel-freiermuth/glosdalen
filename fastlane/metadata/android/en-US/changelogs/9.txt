@@ -1,0 +1,24 @@
+🎉 Welcome to Glosdalen!
+
+Your vocabulary learning companion with seamless AnkiDroid integration.
+
+KEY FEATURES:
+• Multi-language translation powered by DeepL API
+• Support for 30+ languages (German, Swedish, English, French, Spanish, and more)
+• Direct AnkiDroid integration with database access or intent-based fallback
+• Create unidirectional or bidirectional flashcards
+• Context-aware translations for better accuracy
+• Customizable deck name templates (e.g., German::Swedish)
+• Swap translation direction with one tap
+• Multiple translation suggestions with formality options
+• Clean, simple interface: Search → Translate → Create
+• Configurable language pairs
+• Secure API key storage
+
+ANKI INTEGRATION:
+• Choose your preferred method: direct database access or intent-based
+• Automatic AnkiDroid detection
+• Smart card creation with proper front/back ordering
+• Deck template system for organized learning
+
+Get started by adding your DeepL API key in Settings!

@@ -1,0 +1,4 @@
+• Improved Anki deck search (now case-insensitive)
+• Removed first-launch setup screen for faster start
+• Code refactoring for better performance
+• Enhanced app stability and reliability
