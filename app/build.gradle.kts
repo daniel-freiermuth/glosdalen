@@ -57,8 +57,8 @@ android {
         targetSdk = 34
         
         // Static version code and name - F-Droid parses these, increment manually for each release
-        versionCode = 14
-        versionName = "2.0.0"
+        versionCode = 15
+        versionName = "2.0.1"
         
         // Check if repository is dirty (has uncommitted changes)
         // Skip dirty check for F-Droid builds (indicated by SOURCE_DATE_EPOCH)
