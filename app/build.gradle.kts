@@ -64,9 +64,15 @@ android {
         }.standardOutput.asText.get().trim().toIntOrNull() ?: versionCode
         
         // Check if repository is dirty (has uncommitted changes)
-        val isRepoDirty = providers.exec {
-            commandLine("git", "status", "--porcelain")
-        }.standardOutput.asText.get().trim().isNotEmpty()
+        // Skip dirty check for F-Droid builds (indicated by SOURCE_DATE_EPOCH)
+        val isFDroidBuild = System.getenv("SOURCE_DATE_EPOCH") != null
+        val isRepoDirty = if (isFDroidBuild) {
+            false
+        } else {
+            providers.exec {
+                commandLine("git", "status", "--porcelain")
+            }.standardOutput.asText.get().trim().isNotEmpty()
+        }
         
         // Adjust version name based on repository state
         versionName = scmVersion.version
