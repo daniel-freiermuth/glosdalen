@@ -54,14 +54,10 @@ android {
         applicationId = "com.glosdalen.app"
         minSdk = 26
         targetSdk = 34
-        // F-Droid parseable static values (overridden by dynamic values below)
-        versionCode = 93
-        versionName = "1.9.0"
         
-        // Dynamic versioning (takes precedence during actual builds)
-        versionCode = providers.exec {
-            commandLine("git", "rev-list", "--count", "HEAD")
-        }.standardOutput.asText.get().trim().toIntOrNull() ?: versionCode
+        // Static version code and name - F-Droid parses these, increment manually for each release
+        versionCode = 9
+        versionName = "1.9.0"
         
         // Check if repository is dirty (has uncommitted changes)
         // Skip dirty check for F-Droid builds (indicated by SOURCE_DATE_EPOCH)
@@ -74,9 +70,6 @@ android {
             }.standardOutput.asText.get().trim().isNotEmpty()
         }
         
-        // Adjust version name based on repository state
-        versionName = scmVersion.version
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
