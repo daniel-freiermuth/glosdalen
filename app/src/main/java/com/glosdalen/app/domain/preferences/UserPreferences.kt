@@ -82,6 +82,9 @@ class UserPreferences @Inject constructor(
     fun getCopilotTemperature(): Flow<Float> = copilotPreferences.getTemperature()
     suspend fun setCopilotTemperature(temperature: Float) = copilotPreferences.setTemperature(temperature)
     
+    fun shouldShowCopilotIntroDialog(): Flow<Boolean> = copilotPreferences.shouldShowIntroDialog()
+    suspend fun setShowCopilotIntroDialog(show: Boolean) = copilotPreferences.setShowIntroDialog(show)
+    
     // Language-specific instructions
     fun getLanguageInstructions(language: Language): Flow<String> = languageInstructionsPreferences.getInstructions(language)
     suspend fun setLanguageInstructions(language: Language, instructions: String) = languageInstructionsPreferences.setInstructions(language, instructions)

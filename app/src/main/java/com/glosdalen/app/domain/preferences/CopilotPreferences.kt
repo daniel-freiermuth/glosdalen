@@ -19,6 +19,7 @@ class CopilotPreferences @Inject constructor(
         private val COPILOT_SELECTED_MODEL = stringPreferencesKey("copilot_selected_model")
         private val COPILOT_GENERAL_INSTRUCTIONS = stringPreferencesKey("copilot_general_instructions")
         private val COPILOT_TEMPERATURE = floatPreferencesKey("copilot_temperature")
+        private val COPILOT_SHOW_INTRO_DIALOG = stringPreferencesKey("copilot_show_intro_dialog")
         const val AUTO_MODEL = "auto" // Special value for automatic model selection
         const val DEFAULT_TEMPERATURE = 0.6f // Balanced creativity and consistency
         const val DEFAULT_INSTRUCTIONS = """Please provide:
@@ -93,6 +94,26 @@ Prefer idiomatic expressions over word-by-word translations."""
     suspend fun setTemperature(temperature: Float) {
         dataStore.edit { preferences ->
             preferences[COPILOT_TEMPERATURE] = temperature.coerceIn(0.0f, 1.0f)
+        }
+    }
+    
+    /**
+     * Check if the intro dialog should be shown.
+     * Returns true if user hasn't dismissed it permanently.
+     */
+    fun shouldShowIntroDialog(): Flow<Boolean> {
+        return dataStore.data.map { preferences ->
+            preferences[COPILOT_SHOW_INTRO_DIALOG] != "never"
+        }
+    }
+    
+    /**
+     * Set whether to show the intro dialog.
+     * Pass "never" to never show again, or "show" to show next time.
+     */
+    suspend fun setShowIntroDialog(show: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[COPILOT_SHOW_INTRO_DIALOG] = if (show) "show" else "never"
         }
     }
 }

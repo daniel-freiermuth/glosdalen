@@ -78,7 +78,8 @@ data class CopilotChatUiState(
     val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
     val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
     val isLoadingModels: Boolean = false,
-    val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE
+    val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE,
+    val showIntroDialog: Boolean = false
 )
 
 @HiltViewModel
@@ -102,11 +103,13 @@ class CopilotChatViewModel @Inject constructor(
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
             val selectedModel = userPreferences.getCopilotSelectedModel().first()
             val temperature = userPreferences.getCopilotTemperature().first()
+            val shouldShowIntro = userPreferences.shouldShowCopilotIntroDialog().first()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
                 selectedModelId = selectedModel,
-                temperature = temperature
+                temperature = temperature,
+                showIntroDialog = shouldShowIntro
             ) }
             
             // Load models if authenticated
@@ -207,6 +210,13 @@ class CopilotChatViewModel @Inject constructor(
                     error = null
                 )
             }
+        }
+    }
+    
+    fun dismissIntroDialog(showAgain: Boolean) {
+        viewModelScope.launch {
+            userPreferences.setShowCopilotIntroDialog(showAgain)
+            _uiState.update { it.copy(showIntroDialog = false) }
         }
     }
     

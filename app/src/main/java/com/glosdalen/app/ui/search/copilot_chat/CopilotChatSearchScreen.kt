@@ -62,6 +62,16 @@ fun CopilotChatSearchScreen(
         viewModel.refreshLanguageState()
     }
     
+    // Show intro dialog if needed
+    if (uiState.showIntroDialog) {
+        CopilotIntroDialog(
+            onDismiss = { showAgain ->
+                viewModel.dismissIntroDialog(showAgain)
+            },
+            onNavigateToSettings = onNavigateToSettings
+        )
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -760,4 +770,108 @@ private fun CreateCardButton(
             )
         }
     }
+}
+
+@Composable
+private fun CopilotIntroDialog(
+    onDismiss: (showAgain: Boolean) -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { onDismiss(true) },
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text("Welcome to Copilot Chat")
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Copilot Chat uses AI to help you create flashcards with natural language queries.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                Text(
+                    text = "Features:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "• Ask for translations, definitions, examples, and more",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "• Provide additional context to customize responses",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "• Configure AI model, instructions, and settings",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Tip: Customize Copilot settings",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { onNavigateToSettings() }
+                    )
+                }
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = "AI-generated content may contain errors. Always verify important translations and information.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onDismiss(false) }
+            ) {
+                Text("Got it")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = { onDismiss(true) }
+            ) {
+                Text("Show again next time")
+            }
+        }
+    )
 }
