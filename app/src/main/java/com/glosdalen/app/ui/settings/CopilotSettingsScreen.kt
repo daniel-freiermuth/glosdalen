@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -36,6 +37,7 @@ import com.glosdalen.app.domain.preferences.CopilotPreferences
 @Composable
 fun CopilotSettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToLanguageInstructions: () -> Unit = {},
     viewModel: CopilotSettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -116,6 +118,11 @@ fun CopilotSettingsScreen(
                         instructions = generalInstructions,
                         onInstructionsChange = viewModel::updateGeneralInstructions,
                         onResetToDefault = viewModel::resetToDefaultInstructions
+                    )
+                    
+                    // Language-Specific Instructions Section
+                    LanguageInstructionsNavigationCard(
+                        onNavigate = onNavigateToLanguageInstructions
                     )
                     
                     // Temperature Section
@@ -491,6 +498,42 @@ private fun CopilotInfoSection() {
                 text = "GitHub Copilot uses AI to provide intelligent suggestions and help with vocabulary translation. You need a GitHub account with Copilot access to use this feature.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun LanguageInstructionsNavigationCard(
+    onNavigate: () -> Unit
+) {
+    Card(
+        onClick = onNavigate,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Language-Specific Instructions",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Customize instructions for each language pair to control translation style, formality, and context.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Navigate to language instructions",
+                modifier = Modifier.rotate(180f)
             )
         }
     }

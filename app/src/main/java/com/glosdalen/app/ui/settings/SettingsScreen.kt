@@ -66,8 +66,7 @@ fun SettingsScreen(
                 onNavigateBack = onNavigateBack,
                 onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
                 onNavigateToAnki = { currentPage = SettingsPage.Anki },
-                onNavigateToCopilot = { currentPage = SettingsPage.Copilot },
-                onNavigateToLanguageInstructions = { currentPage = SettingsPage.LanguageInstructions }
+                onNavigateToCopilot = { currentPage = SettingsPage.Copilot }
             )
         }
         SettingsPage.DeepL -> {
@@ -82,10 +81,17 @@ fun SettingsScreen(
         }
         SettingsPage.Copilot -> {
             CopilotSettingsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main }
+                onNavigateBack = { currentPage = SettingsPage.Main },
+                onNavigateToLanguageInstructions = { currentPage = SettingsPage.CopilotLanguageInstructions }
+            )
+        }
+        SettingsPage.CopilotLanguageInstructions -> {
+            LanguageInstructionsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Copilot }
             )
         }
         SettingsPage.LanguageInstructions -> {
+            // Kept for backward compatibility - redirects to main
             LanguageInstructionsScreen(
                 onNavigateBack = { currentPage = SettingsPage.Main }
             )
@@ -98,7 +104,8 @@ private enum class SettingsPage {
     DeepL,
     Anki,
     Copilot,
-    LanguageInstructions
+    CopilotLanguageInstructions,
+    LanguageInstructions // Kept for backward compatibility if needed
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +115,6 @@ private fun MainSettingsScreen(
     onNavigateToDeepL: () -> Unit,
     onNavigateToAnki: () -> Unit,
     onNavigateToCopilot: () -> Unit,
-    onNavigateToLanguageInstructions: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -161,15 +167,8 @@ private fun MainSettingsScreen(
             // GitHub Copilot Settings Navigation Card
             SettingsNavigationCard(
                 title = "GitHub Copilot",
-                description = "AI-powered translation suggestions and assistance",
+                description = "AI-powered translation suggestions and language-specific instructions",
                 onClick = onNavigateToCopilot
-            )
-            
-            // Language Instructions Navigation Card
-            SettingsNavigationCard(
-                title = "Language Instructions",
-                description = "Per-language specific guidance for Copilot",
-                onClick = onNavigateToLanguageInstructions
             )
             
             Spacer(modifier = Modifier.weight(1f))
