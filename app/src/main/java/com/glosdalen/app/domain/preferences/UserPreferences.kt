@@ -4,8 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.glosdalen.app.backend.anki.CardDirection
-import com.glosdalen.app.backend.anki.CardType
 import com.glosdalen.app.backend.deepl.DeepLModelType
 import com.glosdalen.app.backend.deepl.Language
 import kotlinx.coroutines.flow.Flow
@@ -70,12 +68,6 @@ class UserPreferences @Inject constructor(
     // Anki-related preferences
     fun getDefaultDeckName(): Flow<String> = ankiPreferences.getDefaultDeckName()
     suspend fun setDefaultDeckName(deckName: String) = ankiPreferences.setDefaultDeckName(deckName)
-    
-    fun getDefaultCardType(): Flow<CardType> = ankiPreferences.getDefaultCardType()
-    suspend fun setDefaultCardType(cardType: CardType) = ankiPreferences.setDefaultCardType(cardType)
-    
-    fun getDefaultCardDirection(): Flow<CardDirection> = ankiPreferences.getDefaultCardDirection()
-    suspend fun setDefaultCardDirection(direction: CardDirection) = ankiPreferences.setDefaultCardDirection(direction)
     
     fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> = ankiPreferences.getPreferredAnkiMethod()
     suspend fun setPreferredAnkiMethod(method: AnkiMethodPreference) = ankiPreferences.setPreferredAnkiMethod(method)

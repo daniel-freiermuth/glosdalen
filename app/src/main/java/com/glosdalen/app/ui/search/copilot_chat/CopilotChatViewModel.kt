@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiRepository
-import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.SearchContext
 import com.glosdalen.app.domain.preferences.UserPreferences
@@ -51,6 +50,16 @@ data class ParsedCopilotResponse(
     val additionalInfo: String
 )
 
+/**
+ * Card direction for Copilot Chat mode
+ * Generic front/back directions since cards are already defined by the LLM
+ */
+enum class CopilotCardDirection {
+    FRONT_TO_BACK,      // Use LLM's front → back as-is
+    BACK_TO_FRONT,      // Reverse: LLM's back → front
+    BOTH_DIRECTIONS     // Create cards in both directions (bidirectional)
+}
+
 data class CopilotChatUiState(
     val query: String = "",
     val sourceLanguage: Language = Language.GERMAN,
@@ -65,7 +74,7 @@ data class CopilotChatUiState(
     val isCreatingCard: Boolean = false,
     val createdCardIndices: Set<Int> = emptySet(), // Track which cards have been created
     val isAnkiDroidAvailable: Boolean = false,
-    val selectedCardDirection: CardDirection = CardDirection.FOREIGN_TO_NATIVE,
+    val selectedCardDirection: CopilotCardDirection = CopilotCardDirection.FRONT_TO_BACK,
     val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
     val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
     val isLoadingModels: Boolean = false,
@@ -380,7 +389,7 @@ class CopilotChatViewModel @Inject constructor(
         _uiState.update { it.copy(isAdditionalInfoExpanded = !it.isAdditionalInfoExpanded) }
     }
     
-    fun updateCardDirection(direction: CardDirection) {
+    fun updateCardDirection(direction: CopilotCardDirection) {
         _uiState.update { it.copy(
             selectedCardDirection = direction,
             createdCardIndices = emptySet() // Reset created cards when direction changes
@@ -455,7 +464,7 @@ class CopilotChatViewModel @Inject constructor(
             
             // Create cards based on direction
             val cardsToCreate = when (cardDirection) {
-                CardDirection.NATIVE_TO_FOREIGN, CardDirection.FOREIGN_TO_NATIVE -> {
+                CopilotCardDirection.FRONT_TO_BACK -> {
                     listOf(
                         AnkiCard(
                             modelName = "Basic",
@@ -465,7 +474,17 @@ class CopilotChatViewModel @Inject constructor(
                         )
                     )
                 }
-                CardDirection.BOTH_DIRECTIONS -> {
+                CopilotCardDirection.BACK_TO_FRONT -> {
+                    listOf(
+                        AnkiCard(
+                            modelName = "Basic",
+                            fields = mapOf("Front" to card.backSide, "Back" to card.frontSide),
+                            deckName = deckName,
+                            tags = listOf("glosdalen", "copilot", native.code, foreign.code, "reversed")
+                        )
+                    )
+                }
+                CopilotCardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
                             modelName = "Basic (and reversed card)",

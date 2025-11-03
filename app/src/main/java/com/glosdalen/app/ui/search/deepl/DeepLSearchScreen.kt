@@ -51,7 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.R
-import com.glosdalen.app.backend.anki.CardDirection
+
 import com.glosdalen.app.ui.search.deepl.DeepLSearchViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +93,7 @@ fun DeepLSearchScreen(
                     "Opened AnkiDroid - please complete card creation"
                 } else {
                     when {
-                        uiState.cardsCreatedCount == 1 && uiState.lastCardDirection == CardDirection.BOTH_DIRECTIONS -> 
+                        uiState.cardsCreatedCount == 1 && uiState.lastCardDirection == DeepLCardDirection.BOTH_DIRECTIONS -> 
                             "Bidirectional card created successfully!"
                         uiState.cardsCreatedCount == 1 -> 
                             "Card created successfully!"
@@ -379,6 +379,8 @@ fun DeepLSearchScreen(
                 hasCardBeenCreated = uiState.hasCardBeenCreated,
                 selectedCardDirection = uiState.selectedCardDirection,
                 ankiImplementationType = uiState.ankiImplementationType,
+                nativeLanguage = nativeLanguage,
+                foreignLanguage = foreignLanguage,
                 onCreateCard = viewModel::createAnkiCard,
                 onCardDirectionChange = viewModel::updateCardDirection,
                 onTranslationClick = { translationText ->
@@ -449,18 +451,20 @@ private fun ErrorCard(
 
 @Composable
 private fun CreateCardButtonWithDropdown(
-    selectedCardDirection: CardDirection,
+    selectedCardDirection: DeepLCardDirection,
     ankiImplementationType: String,
     isCreatingCard: Boolean,
     isAnkiDroidAvailable: Boolean,
     hasCardBeenCreated: Boolean,
+    nativeLanguage: Language,
+    foreignLanguage: Language,
     onCreateCard: () -> Unit,
-    onCardDirectionChange: (CardDirection) -> Unit
+    onCardDirectionChange: (DeepLCardDirection) -> Unit
 ) {
     val cardDirectionText = when (selectedCardDirection) {
-        CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-        CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-        CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+        DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+        DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+        DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
     }
     
     SplitButton(
@@ -482,33 +486,33 @@ private fun CreateCardButtonWithDropdown(
                 Text("Create Card ($cardDirectionText)")
             }
         },
-        dropdownItems = CardDirection.values().toList(),
+        dropdownItems = DeepLCardDirection.values().toList(),
         selectedItem = selectedCardDirection,
         enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
         onMainClick = onCreateCard,
         onItemSelect = onCardDirectionChange,
         itemLabel = { direction ->
             when (direction) {
-                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
             }
         },
         dropdownButtonContentDescription = "Choose card direction",
         isItemEnabled = { direction ->
-            ankiImplementationType == "API" || direction != CardDirection.BOTH_DIRECTIONS
+            ankiImplementationType == "API" || direction != DeepLCardDirection.BOTH_DIRECTIONS
         },
         itemContent = { direction ->
-            val isEnabled = ankiImplementationType == "API" || direction != CardDirection.BOTH_DIRECTIONS
+            val isEnabled = ankiImplementationType == "API" || direction != DeepLCardDirection.BOTH_DIRECTIONS
             val displayName = when (direction) {
-                CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
+                DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
+                DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
             }
             val description = when (direction) {
-                CardDirection.NATIVE_TO_FOREIGN -> "German on front, Swedish on back"
-                CardDirection.FOREIGN_TO_NATIVE -> "Swedish on front, German on back"
-                CardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
+                DeepLCardDirection.NATIVE_TO_FOREIGN -> "${nativeLanguage.displayName} on front, ${foreignLanguage.displayName} on back"
+                DeepLCardDirection.FOREIGN_TO_NATIVE -> "${foreignLanguage.displayName} on front, ${nativeLanguage.displayName} on back"
+                DeepLCardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
             }
             
             Column {
@@ -523,7 +527,7 @@ private fun CreateCardButtonWithDropdown(
                     }
                 )
                 Text(
-                    text = if (!isEnabled && direction == CardDirection.BOTH_DIRECTIONS) {
+                    text = if (!isEnabled && direction == DeepLCardDirection.BOTH_DIRECTIONS) {
                         "Requires AnkiDroid API"
                     } else {
                         description
@@ -543,10 +547,12 @@ private fun TranslationCard(
     isCreatingCard: Boolean,
     selectedTranslation: String?,
     hasCardBeenCreated: Boolean,
-    selectedCardDirection: CardDirection,
+    selectedCardDirection: DeepLCardDirection,
     ankiImplementationType: String,
+    nativeLanguage: Language,
+    foreignLanguage: Language,
     onCreateCard: () -> Unit,
-    onCardDirectionChange: (CardDirection) -> Unit,
+    onCardDirectionChange: (DeepLCardDirection) -> Unit,
     onTranslationClick: (String) -> Unit,
     onTranslationSelect: (String) -> Unit
 ) {
@@ -655,6 +661,8 @@ private fun TranslationCard(
                 isCreatingCard = isCreatingCard,
                 isAnkiDroidAvailable = isAnkiDroidAvailable,
                 hasCardBeenCreated = hasCardBeenCreated,
+                nativeLanguage = nativeLanguage,
+                foreignLanguage = foreignLanguage,
                 onCreateCard = onCreateCard,
                 onCardDirectionChange = onCardDirectionChange
             )

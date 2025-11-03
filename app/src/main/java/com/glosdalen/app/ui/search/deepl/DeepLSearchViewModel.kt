@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiError
 import com.glosdalen.app.backend.anki.AnkiRepository
-import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
@@ -29,15 +28,12 @@ class DeepLSearchViewModel @Inject constructor(
     val nativeLanguage = userPreferences.getNativeLanguage()
     val foreignLanguage = userPreferences.getForeignLanguage()
     val defaultDeckName = userPreferences.getDefaultDeckName()
-    val defaultCardDirection = userPreferences.getDefaultCardDirection()
     
     init {
         viewModelScope.launch {
-            val cardDirection = defaultCardDirection.first()
             _uiState.value = _uiState.value.copy(
                 isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
-                ankiImplementationType = ankiRepository.getImplementationType().name,
-                selectedCardDirection = cardDirection
+                ankiImplementationType = ankiRepository.getImplementationType().name
             )
         }
         
@@ -244,7 +240,7 @@ class DeepLSearchViewModel @Inject constructor(
             
             // Create cards based on user's direction preference
             val cardsToCreate = when (cardDirection) {
-                CardDirection.NATIVE_TO_FOREIGN -> {
+                DeepLCardDirection.NATIVE_TO_FOREIGN -> {
                     listOf(
                         AnkiCard(
                             modelName = "Basic",
@@ -254,7 +250,7 @@ class DeepLSearchViewModel @Inject constructor(
                         )
                     )
                 }
-                CardDirection.FOREIGN_TO_NATIVE -> {
+                DeepLCardDirection.FOREIGN_TO_NATIVE -> {
                     listOf(
                         AnkiCard(
                             modelName = "Basic",
@@ -264,7 +260,7 @@ class DeepLSearchViewModel @Inject constructor(
                         )
                     )
                 }
-                CardDirection.BOTH_DIRECTIONS -> {
+                DeepLCardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
                             modelName = "Basic (and reversed card)",
@@ -321,16 +317,12 @@ class DeepLSearchViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(selectedTranslation = translation)
     }
     
-    fun updateCardDirection(direction: CardDirection) {
+    fun updateCardDirection(direction: DeepLCardDirection) {
         _uiState.value = _uiState.value.copy(
             selectedCardDirection = direction,
             hasCardBeenCreated = false,
             cardCreationResult = null
         )
-        // Also update user preferences
-        viewModelScope.launch {
-            userPreferences.setDefaultCardDirection(direction)
-        }
     }
     
     fun retrySearch() {
@@ -347,6 +339,16 @@ class DeepLSearchViewModel @Inject constructor(
     }
 }
 
+/**
+ * Card direction for DeepL mode
+ * Language-aware directions for vocabulary cards
+ */
+enum class DeepLCardDirection {
+    NATIVE_TO_FOREIGN,  // Native language → Foreign language
+    FOREIGN_TO_NATIVE,  // Foreign language → Native language
+    BOTH_DIRECTIONS     // Create cards in both directions (bidirectional)
+}
+
 data class DeepLUiState(
     val searchQuery: String = "",
     val sourceLanguage: Language = Language.GERMAN,
@@ -359,9 +361,9 @@ data class DeepLUiState(
     val cardsCreatedCount: Int = 0,
     val selectedTranslation: String? = null,
     val ankiImplementationType: String = "UNKNOWN",
-    val lastCardDirection: CardDirection? = null,
+    val lastCardDirection: DeepLCardDirection? = null,
     val hasCardBeenCreated: Boolean = false,
     val contextQuery: String = "",
     val isContextExpanded: Boolean = false,
-    val selectedCardDirection: CardDirection = CardDirection.NATIVE_TO_FOREIGN
+    val selectedCardDirection: DeepLCardDirection = DeepLCardDirection.NATIVE_TO_FOREIGN
 )

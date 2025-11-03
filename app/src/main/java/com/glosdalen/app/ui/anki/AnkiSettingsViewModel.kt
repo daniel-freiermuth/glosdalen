@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.AnkiApiRepository
 import com.glosdalen.app.backend.anki.AnkiImplementationType
-import com.glosdalen.app.backend.anki.CardDirection
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,12 +27,10 @@ class AnkiSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 userPreferences.getDefaultDeckName(),
-                userPreferences.getDefaultCardDirection(),
                 userPreferences.getPreferredAnkiMethod()
-            ) { deckName, direction, preferredMethod ->
+            ) { deckName, preferredMethod ->
                 _uiState.value = _uiState.value.copy(
                     selectedDeckName = deckName,
-                    selectedDirection = direction,
                     selectedMethod = preferredMethod
                 )
             }.collect()
@@ -50,13 +47,6 @@ class AnkiSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setDefaultDeckName(deckName)
             _uiState.value = _uiState.value.copy(selectedDeckName = deckName)
-        }
-    }
-
-    fun selectDirection(direction: CardDirection) {
-        viewModelScope.launch {
-            userPreferences.setDefaultCardDirection(direction)
-            _uiState.value = _uiState.value.copy(selectedDirection = direction)
         }
     }
     
@@ -139,7 +129,6 @@ class AnkiSettingsViewModel @Inject constructor(
 
 data class AnkiSettingsUiState(
     val selectedDeckName: String = "",
-    val selectedDirection: CardDirection = CardDirection.NATIVE_TO_FOREIGN,
     val selectedMethod: AnkiMethodPreference = AnkiMethodPreference.AUTO,
     val availableDecks: Map<Long, String> = emptyMap(),
     val isLoadingDecks: Boolean = false,

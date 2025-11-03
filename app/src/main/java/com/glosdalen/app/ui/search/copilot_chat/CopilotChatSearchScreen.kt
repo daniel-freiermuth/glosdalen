@@ -33,7 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.glosdalen.app.R
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import com.glosdalen.app.backend.anki.CardDirection
+
 import com.glosdalen.app.backend.deepl.Language
 
 @Composable
@@ -702,17 +702,17 @@ private fun ForeignLanguageDropdown(
 
 @Composable
 private fun CreateCardButton(
-    selectedCardDirection: CardDirection,
+    selectedCardDirection: CopilotCardDirection,
     isCreatingCard: Boolean,
     isAnkiDroidAvailable: Boolean,
     hasCardBeenCreated: Boolean,
     onCreateCard: () -> Unit,
-    onCardDirectionChange: (CardDirection) -> Unit
+    onCardDirectionChange: (CopilotCardDirection) -> Unit
 ) {
     val cardDirectionText = when (selectedCardDirection) {
-        CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-        CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-        CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+        CopilotCardDirection.FRONT_TO_BACK -> "Front → Back"
+        CopilotCardDirection.BACK_TO_FRONT -> "Back → Front"
+        CopilotCardDirection.BOTH_DIRECTIONS -> "Both Directions"
     }
     
     Column {
@@ -736,16 +736,16 @@ private fun CreateCardButton(
                     Text("Add to Anki ($cardDirectionText)")
                 }
             },
-            dropdownItems = CardDirection.values().toList(),
+            dropdownItems = CopilotCardDirection.values().toList(),
             selectedItem = selectedCardDirection,
             enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
             onMainClick = onCreateCard,
             onItemSelect = onCardDirectionChange,
             itemLabel = { direction ->
                 when (direction) {
-                    CardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
-                    CardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
-                    CardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                    CopilotCardDirection.FRONT_TO_BACK -> "Front → Back"
+                    CopilotCardDirection.BACK_TO_FRONT -> "Back → Front"
+                    CopilotCardDirection.BOTH_DIRECTIONS -> "Both Directions"
                 }
             },
             dropdownButtonContentDescription = "Card direction options"
