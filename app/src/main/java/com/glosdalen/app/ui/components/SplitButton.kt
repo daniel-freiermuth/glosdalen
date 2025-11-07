@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
  * @param dropdownButtonContentDescription Content description for the dropdown button
  * @param itemContent Optional custom content for dropdown items. If null, uses itemLabel.
  * @param isItemEnabled Optional function to determine if an item is enabled. Defaults to all enabled.
+ * @param colors Optional button colors for customizing the appearance
  */
 @Composable
 fun <T> SplitButton(
@@ -38,7 +39,8 @@ fun <T> SplitButton(
     modifier: Modifier = Modifier,
     dropdownButtonContentDescription: String = "Options",
     itemContent: (@Composable (T) -> Unit)? = null,
-    isItemEnabled: (T) -> Boolean = { true }
+    isItemEnabled: (T) -> Boolean = { true },
+    colors: ButtonColors = ButtonDefaults.buttonColors()
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     
@@ -51,7 +53,8 @@ fun <T> SplitButton(
             onClick = onMainClick,
             modifier = Modifier.weight(1f),
             enabled = enabled,
-            shape = RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50, topEndPercent = 0, bottomEndPercent = 0)
+            shape = RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50, topEndPercent = 0, bottomEndPercent = 0),
+            colors = colors
         ) {
             mainButtonContent()
         }
@@ -63,7 +66,8 @@ fun <T> SplitButton(
                 enabled = enabled,
                 modifier = Modifier.width(48.dp),
                 shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 50, bottomEndPercent = 50),
-                contentPadding = PaddingValues(0.dp)
+                contentPadding = PaddingValues(0.dp),
+                colors = colors
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,

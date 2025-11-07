@@ -438,26 +438,63 @@ fun CopilotChatSearchScreen(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                     
-                    // Retry button
-                    Button(
-                        onClick = {
+                    // Retry button with model selection
+                    val modelItems = buildList {
+                        add(com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL)
+                        addAll(uiState.availableModels.map { it.id })
+                    }
+                    
+                    val selectedModelDisplay = if (uiState.selectedModelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                        "Auto"
+                    } else {
+                        uiState.availableModels.find { it.id == uiState.selectedModelId }?.getDisplayName() ?: uiState.selectedModelId
+                    }
+                    
+                    SplitButton(
+                        onMainClick = {
                             focusManager.clearFocus()
                             viewModel.sendQuery()
                         },
-                        modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onError
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Try Again")
-                    }
+                        ),
+                        mainButtonContent = {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Try Again ($selectedModelDisplay)")
+                        },
+                        dropdownItems = modelItems,
+                        selectedItem = uiState.selectedModelId,
+                        enabled = true,
+                        onItemSelect = { modelId ->
+                            viewModel.selectModel(modelId)
+                        },
+                        itemLabel = { modelId ->
+                            if (modelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                                "Auto (Recommended)"
+                            } else {
+                                uiState.availableModels.find { it.id == modelId }?.getDisplayName() ?: modelId
+                            }
+                        },
+                        dropdownButtonContentDescription = "Select AI model",
+                        itemContent = { modelId ->
+                            val displayName = if (modelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                                "Auto (Recommended)"
+                            } else {
+                                uiState.availableModels.find { it.id == modelId }?.getDisplayName() ?: modelId
+                            }
+                            
+                            Text(
+                                text = displayName,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                    )
                 }
             }
         }
