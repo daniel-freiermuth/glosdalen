@@ -134,23 +134,6 @@ class CopilotModelManager @Inject constructor(
     }
 
     /**
-     * Get model statistics
-     */
-    suspend fun getModelStatistics(): Result<ModelStatistics> {
-        return getAvailableModels().map { models ->
-            ModelStatistics(
-                totalModels = models.size,
-                freeModels = models.count { it.isFree() },
-                paidModels = models.count { !it.isFree() },
-                vendorBreakdown = models.groupBy { it.vendor }.mapValues { it.value.size },
-                categoryBreakdown = models.groupBy { it.category }.mapValues { it.value.size },
-                previewModels = models.count { it.preview },
-                averageContextSize = models.map { it.capabilities.limits?.maxContextTokens ?: 0 }.average().toInt()
-            )
-        }
-    }
-
-    /**
      * Force refresh model cache
      */
     suspend fun refreshModels(): Result<List<CopilotModel>> {

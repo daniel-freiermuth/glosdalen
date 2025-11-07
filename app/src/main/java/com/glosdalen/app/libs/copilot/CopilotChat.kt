@@ -196,27 +196,6 @@ class CopilotChat private constructor(
      */
     fun getConfiguration(): CopilotConfiguration = configuration
 
-    /**
-     * Get current status
-     */
-    suspend fun getStatus(): CopilotStatus {
-        val isAuth = isAuthenticated()
-        val hasValidToken = tokenManager.hasValidToken()
-        val storageInfo = storage.getStorageInfo()
-        
-        val modelStats = if (isAuth && hasValidToken) {
-            modelManager.getModelStatistics().getOrNull()
-        } else null
-
-        return CopilotStatus(
-            isAuthenticated = isAuth,
-            hasValidTokens = hasValidToken,
-            totalModels = modelStats?.totalModels ?: 0,
-            freeModels = modelStats?.freeModels ?: 0,
-            storageInfo = storageInfo
-        )
-    }
-
     // ================================
     // Network Service Creation
     // ================================
