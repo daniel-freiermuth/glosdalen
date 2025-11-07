@@ -96,6 +96,9 @@ class CopilotChatViewModel @Inject constructor(
     val nativeLanguage = userPreferences.getNativeLanguage()
     val foreignLanguage = userPreferences.getForeignLanguage()
     
+    // Track the current query job for cancellation
+    private var queryJob: kotlinx.coroutines.Job? = null
+    
     init {
         // Check authentication status
         viewModelScope.launch {
@@ -224,7 +227,10 @@ class CopilotChatViewModel @Inject constructor(
         val query = _uiState.value.query
         if (query.isBlank()) return
         
-        viewModelScope.launch {
+        // Cancel any existing query
+        queryJob?.cancel()
+        
+        queryJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
@@ -322,6 +328,17 @@ class CopilotChatViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+    
+    fun cancelQuery() {
+        queryJob?.cancel()
+        queryJob = null
+        _uiState.update { 
+            it.copy(
+                isLoading = false,
+                error = null
+            )
         }
     }
     

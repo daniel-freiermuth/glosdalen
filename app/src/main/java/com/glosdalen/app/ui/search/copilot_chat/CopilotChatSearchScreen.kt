@@ -394,13 +394,39 @@ fun CopilotChatSearchScreen(
             )
         }
         
-        // Loading Indicator
+        // Loading Indicator with Cancel Button
         if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+            Card(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircularProgressIndicator()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator()
+                    
+                    Text(
+                        text = "Generating response...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    OutlinedButton(
+                        onClick = { viewModel.cancelQuery() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Cancel")
+                    }
+                }
             }
         }
         
