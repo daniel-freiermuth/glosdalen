@@ -321,6 +321,13 @@ fun CopilotChatSearchScreen(
                 addAll(uiState.availableModels.map { it.id })
             }
             
+            // Get display name for selected model
+            val selectedModelDisplay = if (uiState.selectedModelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
+                "Auto"
+            } else {
+                uiState.availableModels.find { it.id == uiState.selectedModelId }?.getDisplayName() ?: uiState.selectedModelId
+            }
+            
             SplitButton(
                 mainButtonContent = {
                     Icon(
@@ -329,7 +336,7 @@ fun CopilotChatSearchScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (uiState.response.isEmpty()) "Send" else "Re-query")
+                    Text((if (uiState.response.isEmpty()) "Send" else "Re-query") +  " ($selectedModelDisplay)")
                 },
                 dropdownItems = modelItems,
                 selectedItem = uiState.selectedModelId,
