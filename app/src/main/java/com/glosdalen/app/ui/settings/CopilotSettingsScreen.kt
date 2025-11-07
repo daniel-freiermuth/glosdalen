@@ -137,7 +137,7 @@ fun CopilotSettingsScreen(
                         selectedModelId = selectedModelId,
                         isLoading = uiState.isLoadingModels,
                         onModelSelect = viewModel::selectModel,
-                        onRefreshModels = viewModel::loadModels
+                        onRefreshModels = viewModel::refreshModels
                     )
                 }
                 

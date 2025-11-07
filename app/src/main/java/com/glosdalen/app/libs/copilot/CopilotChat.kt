@@ -128,6 +128,13 @@ class CopilotChat private constructor(
     }
 
     /**
+     * Force refresh models bypassing all caches
+     */
+    suspend fun refreshModels(): Result<List<CopilotModel>> {
+        return modelManager.refreshModels()
+    }
+
+    /**
      * Logout and clear all data
      */
     suspend fun logout(): Result<Unit> {

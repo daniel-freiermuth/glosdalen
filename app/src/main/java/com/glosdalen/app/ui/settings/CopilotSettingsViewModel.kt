@@ -86,6 +86,29 @@ class CopilotSettingsViewModel @Inject constructor(
             )
         }
     }
+
+    fun refreshModels() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingModels = true) }
+            // Explicitly bypass caches
+            val result = copilot.refreshModels()
+            result.fold(
+                onSuccess = { models ->
+                    _uiState.update { it.copy(
+                        availableModels = models,
+                        isLoadingModels = false,
+                        errorMessage = null
+                    )}
+                },
+                onFailure = { error ->
+                    _uiState.update { it.copy(
+                        isLoadingModels = false,
+                        errorMessage = "Failed to refresh models: ${error.message}"
+                    )}
+                }
+            )
+        }
+    }
     
     fun selectModel(modelId: String) {
         viewModelScope.launch {
