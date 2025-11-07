@@ -20,9 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Keep DeepL API models
--keep class com.swedishvocab.app.data.network.** { *; }
-
 # Keep Retrofit and Gson
 -keepattributes Signature
 -keepattributes *Annotation*
