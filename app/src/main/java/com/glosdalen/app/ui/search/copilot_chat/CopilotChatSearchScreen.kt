@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import com.glosdalen.app.ui.components.SplitButton
@@ -22,9 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,6 +50,7 @@ fun CopilotChatSearchScreen(
     val foreignLanguage by viewModel.foreignLanguage.collectAsState(Language.SWEDISH)
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
+    val clipboardManager = LocalClipboardManager.current
     
     // Memoize target language calculation to prevent unnecessary recompositions
     val targetLanguage = remember(uiState.sourceLanguage, nativeLanguage, foreignLanguage) {
@@ -539,17 +543,36 @@ fun CopilotChatSearchScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Answer",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = parsed.directAnswer,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Answer",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                            IconButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(parsed.directAnswer))
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy answer",
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        SelectionContainer {
+                            Text(
+                                text = parsed.directAnswer,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
             }
@@ -601,11 +624,13 @@ fun CopilotChatSearchScreen(
                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
                                             )
                                         ) {
-                                            Text(
-                                                text = card.frontSide,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                modifier = Modifier.padding(12.dp)
-                                            )
+                                            SelectionContainer {
+                                                Text(
+                                                    text = card.frontSide,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier.padding(12.dp)
+                                                )
+                                            }
                                         }
                                     }
                                     
@@ -623,11 +648,13 @@ fun CopilotChatSearchScreen(
                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
                                             )
                                         ) {
-                                            Text(
-                                                text = card.backSide,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                modifier = Modifier.padding(12.dp)
-                                            )
+                                            SelectionContainer {
+                                                Text(
+                                                    text = card.backSide,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier.padding(12.dp)
+                                                )
+                                            }
                                         }
                                     }
                                     
@@ -641,12 +668,14 @@ fun CopilotChatSearchScreen(
                                                 style = MaterialTheme.typography.labelMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
-                                            Text(
-                                                text = card.note,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                                            )
+                                            SelectionContainer {
+                                                Text(
+                                                    text = card.note,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                                )
+                                            }
                                         }
                                     }
                                     
@@ -701,22 +730,73 @@ fun CopilotChatSearchScreen(
                             Column(
                                 modifier = Modifier.padding(top = 12.dp)
                             ) {
-                                Text(
-                                    text = parsed.additionalInfo,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                SelectionContainer {
+                                    Text(
+                                        text = parsed.additionalInfo,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
             
-            // Clear button
-            OutlinedButton(
-                onClick = { viewModel.clearResponse() },
-                modifier = Modifier.fillMaxWidth()
+            // Copy All and Clear buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Clear Response")
+                OutlinedButton(
+                    onClick = {
+                        val fullText = buildString {
+                            if (parsed.directAnswer.isNotBlank()) {
+                                appendLine("ANSWER:")
+                                appendLine(parsed.directAnswer)
+                                appendLine()
+                            }
+                            if (parsed.cards.isNotEmpty()) {
+                                appendLine("FLASHCARDS:")
+                                parsed.cards.forEachIndexed { index, card ->
+                                    appendLine("${index + 1}.")
+                                    appendLine("Front: ${card.frontSide}")
+                                    appendLine("Back: ${card.backSide}")
+                                    if (card.note.isNotBlank()) {
+                                        appendLine("Note: ${card.note}")
+                                    }
+                                    appendLine()
+                                }
+                            }
+                            if (parsed.additionalInfo.isNotBlank()) {
+                                appendLine("ADDITIONAL INFORMATION:")
+                                appendLine(parsed.additionalInfo)
+                            }
+                        }
+                        clipboardManager.setText(AnnotatedString(fullText))
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = "Copy all",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Copy All")
+                }
+                
+                OutlinedButton(
+                    onClick = { viewModel.clearResponse() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Clear")
+                }
             }
         }
     }
