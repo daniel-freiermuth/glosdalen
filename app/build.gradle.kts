@@ -16,6 +16,11 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+// Global excludes to remove non-deterministic baseline profile installer library (transitively pulled by lifecycle/activity)
+configurations.configureEach {
+    exclude(group = "androidx.profileinstaller", module = "profileinstaller")
+}
+
 scmVersion {
     tag {
         prefix.set("v")
@@ -127,7 +132,8 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -159,6 +165,9 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Drop any remaining baseline profile artifacts just in case (should be gone after exclusion above)
+            excludes += "META-INF/**.prof"
+            excludes += "META-INF/**baseline-prof.txt"
         }
     }
     
@@ -171,15 +180,6 @@ android {
 
 composeCompiler {
     includeSourceInformation = false
-}
-
-// Disable baseline generation until
-// https://gist.github.com/obfusk/61046e09cee352ae6dd109911534b12e
-// is fixed.
-tasks.whenTaskAdded {
-    if (name.contains("ArtProfile")) {
-        enabled = false
-    }
 }
 
 dependencies {

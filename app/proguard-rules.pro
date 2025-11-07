@@ -29,3 +29,9 @@
 # Keep Hilt generated classes
 -keep class dagger.hilt.** { *; }
 -keep class * extends dagger.hilt.** { *; }
+
+# Suppress missing ErrorProne annotation classes referenced by Tink (security-crypto)
+-dontwarn com.google.errorprone.annotations.CanIgnoreReturnValue
+-dontwarn com.google.errorprone.annotations.CheckReturnValue
+-dontwarn com.google.errorprone.annotations.Immutable
+-dontwarn com.google.errorprone.annotations.RestrictedApi
