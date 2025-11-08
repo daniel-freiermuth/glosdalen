@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.glosdalen.app.R
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -64,6 +66,11 @@ fun CopilotChatSearchScreen(
     // Refresh language state when languages change (e.g., returning from settings)
     LaunchedEffect(nativeLanguage, foreignLanguage) {
         viewModel.refreshLanguageState()
+    }
+    
+    // Recheck authentication status when screen is resumed
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.recheckAuthenticationStatus()
     }
     
     // Show intro dialog if needed

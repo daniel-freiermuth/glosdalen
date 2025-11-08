@@ -100,7 +100,7 @@ class CopilotChatViewModel @Inject constructor(
     private var queryJob: kotlinx.coroutines.Job? = null
     
     init {
-        // Check authentication status
+        // Check authentication status (models loaded via recheckAuthenticationStatus on screen resume)
         viewModelScope.launch {
             val isAuth = copilot.isAuthenticated()
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
@@ -114,11 +114,6 @@ class CopilotChatViewModel @Inject constructor(
                 temperature = temperature,
                 showIntroDialog = shouldShowIntro
             ) }
-            
-            // Load models if authenticated
-            if (isAuth) {
-                loadModels()
-            }
         }
         
         // React to language preference changes and update source language accordingly
@@ -212,6 +207,18 @@ class CopilotChatViewModel @Inject constructor(
                     response = "",
                     error = null
                 )
+            }
+        }
+    }
+    
+    fun recheckAuthenticationStatus() {
+        viewModelScope.launch {
+            val isAuth = copilot.isAuthenticated()
+            _uiState.update { it.copy(isAuthenticated = isAuth) }
+            
+            // Load models if authenticated
+            if (isAuth && _uiState.value.availableModels.isEmpty()) {
+                loadModels()
             }
         }
     }
