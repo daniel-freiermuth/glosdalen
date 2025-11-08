@@ -335,16 +335,14 @@ private fun DeckNameFieldWithDropdown(
             },
             label = { Text("Deck Name") },
             placeholder = { Text("Type custom name or select existing deck") },
-            supportingText = if (textFieldValue.text != resolvedDeckName) {
-                { 
+            supportingText = { 
                     Text(
                         text = "Preview: $resolvedDeckName",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.primary
                     )
-                }
-            } else null,
+            },
             trailingIcon = {
                 // Only show dropdown arrow if we have decks available
                 if (availableDecks.isNotEmpty()) {
