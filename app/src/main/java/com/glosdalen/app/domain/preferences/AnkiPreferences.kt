@@ -21,7 +21,7 @@ class AnkiPreferences @Inject constructor(
     
     fun getDefaultDeckName(): Flow<String> {
         return dataStore.data.map { preferences ->
-            preferences[DEFAULT_DECK_NAME] ?: "German::Swedish"
+            preferences[DEFAULT_DECK_NAME] ?: "Glosdalen::{foreign_native}"
         }
     }
     
