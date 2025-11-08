@@ -124,6 +124,30 @@ class AnkiRepository @Inject constructor(
     }
 
     /**
+     * Check if the AnkiDroid API permission is granted (installed + permission)
+     */
+    suspend fun isApiPermissionGranted(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            apiRepository.isAnkiDroidAvailable() && apiRepository.hasApiPermission()
+        } catch (e: Exception) {
+            Log.w(TAG, "Error checking API permission", e)
+            false
+        }
+    }
+
+    /**
+     * Check whether the AnkiDroid API endpoint is available (AnkiDroid installed and API constructible)
+     */
+    suspend fun isApiEndpointAvailable(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            apiRepository.isAnkiDroidAvailable()
+        } catch (e: Exception) {
+            Log.w(TAG, "Error checking API endpoint availability", e)
+            false
+        }
+    }
+
+    /**
      * Create a single Anki card
      */
     suspend fun createCard(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {

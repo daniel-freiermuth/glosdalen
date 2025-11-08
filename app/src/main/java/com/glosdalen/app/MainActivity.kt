@@ -18,7 +18,10 @@
 
 package com.glosdalen.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -31,14 +34,21 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
  import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.glosdalen.app.ui.anki.AnkiApiInfoDialog
+import com.glosdalen.app.ui.anki.AnkiApiInfoViewModel
 import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
 import com.glosdalen.app.ui.search.copilot_chat.CopilotChatSearchScreen
 import com.glosdalen.app.ui.settings.SettingsScreen
@@ -68,6 +78,14 @@ fun GlosdalenApp() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val ankiInfoViewModel: AnkiApiInfoViewModel = hiltViewModel()
+    val ankiInfoState by ankiInfoViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    
+    // Re-check permission status when app resumes
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        ankiInfoViewModel.recheckPermissionStatus()
+    }
     
     // Observe current route as state
     val currentRoute by navController.currentBackStackEntryFlow
@@ -133,6 +151,22 @@ fun GlosdalenApp() {
                     }
                 )
             }
+        }
+
+        // Global Anki API info dialog (shown only when needed)
+        if (ankiInfoState.shouldShow) {
+            AnkiApiInfoDialog(
+                onDismiss = { ankiInfoViewModel.onDismiss() },
+                onDontNeedApi = { ankiInfoViewModel.onDontNeedApi() },
+                onRemindLater = { ankiInfoViewModel.onDismiss() },
+                onOpenAnkiSettings = {
+                    // Open Android system app settings for Glosdalen
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }
+            )
         }
     }
 }
