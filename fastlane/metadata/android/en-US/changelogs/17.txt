@@ -1,0 +1,11 @@
+✨ Improved User Experience!
+
+• NEW: Info popup guides users to enable AnkiDroid API access
+• Enhanced APK optimization for smaller app size
+• Copy LLM responses to clipboard
+• Cancel ongoing requests
+• Select model on retry button
+• Banner removed from Copilot Chat when authenticated
+• Improved model refresh now bypasses cache
+• Fixed DeepL search screen title
+• Better error handling and user feedback
