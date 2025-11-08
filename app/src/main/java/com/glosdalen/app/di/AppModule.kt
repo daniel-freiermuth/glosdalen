@@ -51,7 +51,7 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
+    fun provideDeepLRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api-free.deepl.com/")
             .client(okHttpClient)
