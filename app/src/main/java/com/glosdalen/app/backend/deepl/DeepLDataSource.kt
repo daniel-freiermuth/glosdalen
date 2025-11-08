@@ -68,11 +68,11 @@ class DeepLDataSource @Inject constructor(
                 try {
                     val request = DeepLTranslateRequest(
                         text = listOf(word),
-                        source_lang = sourceLanguage.code,
-                        target_lang = targetLanguage.code,
-                        model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
+                        sourceLang = sourceLanguage.code,
+                        targetLang = targetLanguage.code,
+                        modelType = if (modelType.value.isNotEmpty()) modelType.value else null,
                         formality = formality,
-                        split_sentences = "0", // Don't split sentences - treat as one context
+                        splitSentences = "0", // Don't split sentences - treat as one context
                         context = context?.takeIf { it.isNotBlank() }
                     )
                     
@@ -98,10 +98,10 @@ class DeepLDataSource @Inject constructor(
             if (allTranslations.isEmpty()) {
                 val request = DeepLTranslateRequest(
                     text = listOf(word),
-                    source_lang = sourceLanguage.code,
-                    target_lang = targetLanguage.code,
-                    model_type = if (modelType.value.isNotEmpty()) modelType.value else null,
-                    split_sentences = "0", // Don't split sentences - treat as one context
+                    sourceLang = sourceLanguage.code,
+                    targetLang = targetLanguage.code,
+                    modelType = if (modelType.value.isNotEmpty()) modelType.value else null,
+                    splitSentences = "0", // Don't split sentences - treat as one context
                     context = context?.takeIf { it.isNotBlank() }
                 )
                 

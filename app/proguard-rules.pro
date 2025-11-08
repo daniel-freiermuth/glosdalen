@@ -20,11 +20,10 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Keep Retrofit and Gson
+# Keep Retrofit
 -keepattributes Signature
 -keepattributes *Annotation*
 -keep class retrofit2.** { *; }
--keep class com.google.gson.** { *; }
 
 # Keep Hilt generated classes
 -keep class dagger.hilt.** { *; }
