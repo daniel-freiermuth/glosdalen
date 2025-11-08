@@ -1,0 +1,9 @@
+🐛 Bug Fix Release
+
+• Fixed DeepL translation functionality broken by APK optimization
+• Fixed Copilot Chat authentication banner not updating after login
+• Migrated from Gson to kotlinx.serialization for better performance
+• Improved code consistency across the app
+• Better R8 minification compatibility
+
+Technical improvements for stability and smaller app size.
