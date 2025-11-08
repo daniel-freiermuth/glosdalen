@@ -156,7 +156,7 @@ fun DeepLSearchScreen(
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    text = "Glosdalen",
+                    text = "DeepL Search",
                     style = MaterialTheme.typography.headlineMedium
                 )
             }
