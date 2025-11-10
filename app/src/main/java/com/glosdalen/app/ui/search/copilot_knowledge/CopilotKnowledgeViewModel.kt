@@ -21,7 +21,8 @@ import javax.inject.Inject
 data class KnowledgeJsonResponse(
     val answer: String,
     val flashcards: List<KnowledgeFlashCardJson> = emptyList(),
-    val explanation: String = ""
+    val explanation: String = "",
+    val suggestedDeck: String = ""
 )
 
 @Serializable
@@ -43,7 +44,8 @@ data class KnowledgeFlashCard(
 data class ParsedKnowledgeResponse(
     val directAnswer: String,
     val cards: List<KnowledgeFlashCard>,
-    val additionalInfo: String
+    val additionalInfo: String,
+    val suggestedDeck: String
 )
 
 /**
@@ -274,6 +276,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
             appendLine("Please respond in the following JSON format:")
             appendLine("""{
   "answer": "Brief, direct answer to the question",
+  "suggestedDeck": "Anki deck name for these cards (e.g., 'Biology', 'World History', 'Physics::Mechanics')",
   "flashcards": [
     {
       "front": "Question or term",
@@ -322,13 +325,13 @@ class CopilotKnowledgeViewModel @Inject constructor(
             _uiState.update { it.copy(isCreatingCard = true, error = null) }
             
             val deckTemplate = userPreferences.getDefaultDeckName().first()
+            val parsed = _uiState.value.parsedResponse ?: return@launch
             
-            // For knowledge mode, we don't have language context, so use a simple deck name
-            val deckName = if (deckTemplate.contains("{")) {
-                // If template has placeholders, just use default
-                "Glosdalen::General Knowledge"
-            } else {
-                deckTemplate
+            // Use LLM's suggested deck, or fall back to template/default
+            val deckName = when {
+                parsed.suggestedDeck.isNotBlank() -> parsed.suggestedDeck
+                deckTemplate.contains("{") -> "Glosdalen::General Knowledge"
+                else -> deckTemplate
             }
             
             // Create cards based on direction
@@ -424,7 +427,8 @@ class CopilotKnowledgeViewModel @Inject constructor(
                         note = it.note
                     )
                 },
-                additionalInfo = parsedJson.explanation
+                additionalInfo = parsedJson.explanation,
+                suggestedDeck = parsedJson.suggestedDeck
             )
         } catch (e: Exception) {
             // If parsing fails, return null and show raw response

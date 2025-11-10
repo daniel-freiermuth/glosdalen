@@ -508,11 +508,56 @@ fun CopilotKnowledgeSearchScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = "Proposed Flashcards (${parsed.cards.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Proposed Flashcards (${parsed.cards.size})",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        // Show suggested deck if available
+                        if (parsed.suggestedDeck.isNotBlank()) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = "Suggested Deck",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                        Text(
+                                            text = parsed.suggestedDeck,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         
                         parsed.cards.forEachIndexed { index, card ->
                             Card(
