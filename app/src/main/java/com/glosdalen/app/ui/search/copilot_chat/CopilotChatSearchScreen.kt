@@ -112,7 +112,7 @@ fun CopilotChatSearchScreen(
                     modifier = Modifier.size(40.dp)
                 )
                 Text(
-                    text = "Copilot Chat",
+                    text = "Copilot Language",
                     style = MaterialTheme.typography.headlineMedium
                 )
             }
@@ -923,14 +923,14 @@ private fun CopilotIntroDialog(
             )
         },
         title = {
-            Text("Welcome to Copilot Chat")
+            Text("Welcome to Copilot Language")
         },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Copilot Chat uses AI to help you create flashcards with natural language queries.",
+                    text = "Copilot Language uses AI to help you create flashcards with natural language queries for language learning.",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 

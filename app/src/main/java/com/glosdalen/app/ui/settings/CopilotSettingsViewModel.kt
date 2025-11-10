@@ -2,6 +2,7 @@ package com.glosdalen.app.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.glosdalen.app.domain.preferences.CopilotLanguagePreferences
 import com.glosdalen.app.domain.preferences.CopilotPreferences
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.libs.copilot.CopilotChat
@@ -23,8 +24,8 @@ class CopilotSettingsViewModel @Inject constructor(
     val selectedModel = userPreferences.getCopilotSelectedModel()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.AUTO_MODEL)
     
-    val generalInstructions = userPreferences.getCopilotGeneralInstructions()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotPreferences.DEFAULT_INSTRUCTIONS)
+    val languageInstructions = userPreferences.getCopilotLanguageInstructions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS)
     
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = combine(
@@ -116,15 +117,15 @@ class CopilotSettingsViewModel @Inject constructor(
         }
     }
     
-    fun updateGeneralInstructions(instructions: String) {
+    fun updateLanguageInstructions(instructions: String) {
         viewModelScope.launch {
-            userPreferences.setCopilotGeneralInstructions(instructions)
+            userPreferences.setCopilotLanguageInstructions(instructions)
         }
     }
     
-    fun resetToDefaultInstructions() {
+    fun resetToDefaultLanguageInstructions() {
         viewModelScope.launch {
-            userPreferences.setCopilotGeneralInstructions(CopilotPreferences.DEFAULT_INSTRUCTIONS)
+            userPreferences.setCopilotLanguageInstructions(CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS)
         }
     }
     

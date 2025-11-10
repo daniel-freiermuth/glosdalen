@@ -205,7 +205,7 @@ private fun AppDrawerContent(
         
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Star, contentDescription = null) },
-            label = { Text("Copilot Chat") },
+            label = { Text("Copilot Language") },
             selected = currentRoute == "copilot-chat",
             onClick = { onNavigate("copilot-chat") },
             modifier = Modifier.padding(horizontal = 12.dp)

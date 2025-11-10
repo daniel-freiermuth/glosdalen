@@ -106,7 +106,7 @@ class CopilotChatViewModel @Inject constructor(
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
             val selectedModel = userPreferences.getCopilotSelectedModel().first()
             val temperature = userPreferences.getCopilotTemperature().first()
-            val shouldShowIntro = userPreferences.shouldShowCopilotIntroDialog().first()
+            val shouldShowIntro = userPreferences.shouldShowCopilotLanguageIntroDialog().first()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
@@ -225,7 +225,7 @@ class CopilotChatViewModel @Inject constructor(
     
     fun dismissIntroDialog(showAgain: Boolean) {
         viewModelScope.launch {
-            userPreferences.setShowCopilotIntroDialog(showAgain)
+            userPreferences.setShowCopilotLanguageIntroDialog(showAgain)
             _uiState.update { it.copy(showIntroDialog = false) }
         }
     }
@@ -261,8 +261,8 @@ class CopilotChatViewModel @Inject constructor(
                     else -> foreign
                 }
                 
-                // Get general instructions
-                val generalInstructions = userPreferences.getCopilotGeneralInstructions().first()
+                // Get language-specific instructions
+                val generalInstructions = userPreferences.getCopilotLanguageInstructions().first()
                 
                 // Get language-specific instructions for the foreign language
                 val languageInstructions = userPreferences.getLanguageInstructions(foreign).first()

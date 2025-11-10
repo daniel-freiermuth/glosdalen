@@ -21,6 +21,8 @@ class UserPreferences @Inject constructor(
     private val deepLPreferences: DeepLPreferences,
     private val ankiPreferences: AnkiPreferences,
     private val copilotPreferences: CopilotPreferences,
+    private val copilotLanguagePreferences: CopilotLanguagePreferences,
+    private val copilotKnowledgePreferences: CopilotKnowledgePreferences,
     private val languageInstructionsPreferences: LanguageInstructionsPreferences
 ) {
     companion object {
@@ -76,14 +78,22 @@ class UserPreferences @Inject constructor(
     fun getCopilotSelectedModel(): Flow<String> = copilotPreferences.getSelectedModel()
     suspend fun setCopilotSelectedModel(modelId: String) = copilotPreferences.setSelectedModel(modelId)
     
-    fun getCopilotGeneralInstructions(): Flow<String> = copilotPreferences.getGeneralInstructions()
-    suspend fun setCopilotGeneralInstructions(instructions: String) = copilotPreferences.setGeneralInstructions(instructions)
-    
     fun getCopilotTemperature(): Flow<Float> = copilotPreferences.getTemperature()
     suspend fun setCopilotTemperature(temperature: Float) = copilotPreferences.setTemperature(temperature)
     
-    fun shouldShowCopilotIntroDialog(): Flow<Boolean> = copilotPreferences.shouldShowIntroDialog()
-    suspend fun setShowCopilotIntroDialog(show: Boolean) = copilotPreferences.setShowIntroDialog(show)
+    // Copilot Language mode preferences
+    fun getCopilotLanguageInstructions(): Flow<String> = copilotLanguagePreferences.getLanguageInstructions()
+    suspend fun setCopilotLanguageInstructions(instructions: String) = copilotLanguagePreferences.setLanguageInstructions(instructions)
+    
+    fun shouldShowCopilotLanguageIntroDialog(): Flow<Boolean> = copilotLanguagePreferences.shouldShowIntroDialog()
+    suspend fun setShowCopilotLanguageIntroDialog(show: Boolean) = copilotLanguagePreferences.setShowIntroDialog(show)
+    
+    // Copilot Knowledge mode preferences
+    fun getCopilotKnowledgeInstructions(): Flow<String> = copilotKnowledgePreferences.getKnowledgeInstructions()
+    suspend fun setCopilotKnowledgeInstructions(instructions: String) = copilotKnowledgePreferences.setKnowledgeInstructions(instructions)
+    
+    fun shouldShowCopilotKnowledgeIntroDialog(): Flow<Boolean> = copilotKnowledgePreferences.shouldShowIntroDialog()
+    suspend fun setShowCopilotKnowledgeIntroDialog(show: Boolean) = copilotKnowledgePreferences.setShowIntroDialog(show)
     
     // Language-specific instructions
     fun getLanguageInstructions(language: Language): Flow<String> = languageInstructionsPreferences.getInstructions(language)

@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.glosdalen.app.domain.preferences.CopilotLanguagePreferences
 import com.glosdalen.app.domain.preferences.CopilotPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,7 +43,7 @@ fun CopilotSettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedModelId by viewModel.selectedModel.collectAsState()
-    val generalInstructions by viewModel.generalInstructions.collectAsState()
+    val languageInstructions by viewModel.languageInstructions.collectAsState()
     val temperature = uiState.temperature
     val lifecycleOwner = LocalLifecycleOwner.current
     
@@ -113,11 +114,14 @@ fun CopilotSettingsScreen(
                         onRefresh = viewModel::checkAuthenticationStatus
                     )
                     
-                    // General Instructions Section
-                    GeneralInstructionsSection(
-                        instructions = generalInstructions,
-                        onInstructionsChange = viewModel::updateGeneralInstructions,
-                        onResetToDefault = viewModel::resetToDefaultInstructions
+                    // Language Mode Instructions Section
+                    InstructionsSection(
+                        title = "Language Mode Instructions",
+                        description = "Customize instructions for Copilot Language mode (vocabulary and translation queries).",
+                        instructions = languageInstructions,
+                        defaultInstructions = com.glosdalen.app.domain.preferences.CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS,
+                        onInstructionsChange = viewModel::updateLanguageInstructions,
+                        onResetToDefault = viewModel::resetToDefaultLanguageInstructions
                     )
                     
                     // Language-Specific Instructions Section
@@ -540,8 +544,11 @@ private fun LanguageInstructionsNavigationCard(
 }
 
 @Composable
-private fun GeneralInstructionsSection(
+private fun InstructionsSection(
+    title: String,
+    description: String,
     instructions: String,
+    defaultInstructions: String,
     onInstructionsChange: (String) -> Unit,
     onResetToDefault: () -> Unit
 ) {
@@ -562,17 +569,16 @@ private fun GeneralInstructionsSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "General Instructions",
+                    text = title,
                     style = MaterialTheme.typography.titleMedium
                 )
                 
                 TextButton(onClick = {
-                    val defaultText = CopilotPreferences.DEFAULT_INSTRUCTIONS
                     val currentText = textFieldValue.text
                     val newText = if (currentText.isBlank()) {
-                        defaultText
+                        defaultInstructions
                     } else {
-                        "$currentText\n\n$defaultText"
+                        "$currentText\n\n$defaultInstructions"
                     }
                     textFieldValue = TextFieldValue(
                         text = newText,
@@ -585,7 +591,7 @@ private fun GeneralInstructionsSection(
             }
             
             Text(
-                text = "Provide general instructions that will be included in every Copilot query. This helps tailor responses to your learning style and preferences.",
+                text = description,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
