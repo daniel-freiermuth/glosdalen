@@ -44,6 +44,7 @@ fun CopilotSettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val selectedModelId by viewModel.selectedModel.collectAsState()
     val languageInstructions by viewModel.languageInstructions.collectAsState()
+    val knowledgeInstructions by viewModel.knowledgeInstructions.collectAsState()
     val temperature = uiState.temperature
     val lifecycleOwner = LocalLifecycleOwner.current
     
@@ -122,6 +123,16 @@ fun CopilotSettingsScreen(
                         defaultInstructions = com.glosdalen.app.domain.preferences.CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS,
                         onInstructionsChange = viewModel::updateLanguageInstructions,
                         onResetToDefault = viewModel::resetToDefaultLanguageInstructions
+                    )
+                    
+                    // Knowledge Mode Instructions Section
+                    InstructionsSection(
+                        title = "General Knowledge Instructions",
+                        description = "Customize instructions for General Knowledge mode (study flashcards for any topic).",
+                        instructions = knowledgeInstructions,
+                        defaultInstructions = com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS,
+                        onInstructionsChange = viewModel::updateKnowledgeInstructions,
+                        onResetToDefault = viewModel::resetToDefaultKnowledgeInstructions
                     )
                     
                     // Language-Specific Instructions Section

@@ -27,6 +27,9 @@ class CopilotSettingsViewModel @Inject constructor(
     val languageInstructions = userPreferences.getCopilotLanguageInstructions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS)
     
+    val knowledgeInstructions = userPreferences.getCopilotKnowledgeInstructions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS)
+    
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = combine(
         _uiState,
@@ -126,6 +129,20 @@ class CopilotSettingsViewModel @Inject constructor(
     fun resetToDefaultLanguageInstructions() {
         viewModelScope.launch {
             userPreferences.setCopilotLanguageInstructions(CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS)
+        }
+    }
+    
+    fun updateKnowledgeInstructions(instructions: String) {
+        viewModelScope.launch {
+            userPreferences.setCopilotKnowledgeInstructions(instructions)
+        }
+    }
+    
+    fun resetToDefaultKnowledgeInstructions() {
+        viewModelScope.launch {
+            userPreferences.setCopilotKnowledgeInstructions(
+                com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS
+            )
         }
     }
     

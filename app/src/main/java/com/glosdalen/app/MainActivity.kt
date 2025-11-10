@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import com.glosdalen.app.ui.anki.AnkiApiInfoDialog
 import com.glosdalen.app.ui.anki.AnkiApiInfoViewModel
 import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
 import com.glosdalen.app.ui.search.copilot_chat.CopilotChatSearchScreen
+import com.glosdalen.app.ui.search.copilot_knowledge.CopilotKnowledgeSearchScreen
 import com.glosdalen.app.ui.settings.SettingsScreen
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -137,6 +139,19 @@ fun GlosdalenApp() {
                 )
             }
             
+            composable("copilot-knowledge") {
+                CopilotKnowledgeSearchScreen(
+                    onOpenDrawer = { scope.launch { drawerState.open() } },
+                    onNavigateToSettings = {
+                        if (navController.currentDestination?.route == "copilot-knowledge") {
+                            navController.navigate("settings") {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                )
+            }
+            
             composable("settings") {
                 SettingsScreen(
                     onNavigateBack = {
@@ -203,11 +218,29 @@ private fun AppDrawerContent(
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Copilot modes section
+        Text(
+            text = "Copilot",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Star, contentDescription = null) },
             label = { Text("Copilot Language") },
             selected = currentRoute == "copilot-chat",
             onClick = { onNavigate("copilot-chat") },
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+        
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Default.Lightbulb, contentDescription = null) },
+            label = { Text("General Knowledge") },
+            selected = currentRoute == "copilot-knowledge",
+            onClick = { onNavigate("copilot-knowledge") },
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
