@@ -138,7 +138,9 @@ fun AnkiSettingsSection(
                 }
             } else {
                 // Show permission hint if AnkiDroid is installed but API not available
-                if (uiState.isAnkiAvailable && !uiState.isUsingApiImplementation) {
+                // Don't show if user explicitly chose Intent mode
+                if (uiState.isAnkiAvailable && 
+                    uiState.selectedMethod != AnkiMethodPreference.INTENT) {
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer
