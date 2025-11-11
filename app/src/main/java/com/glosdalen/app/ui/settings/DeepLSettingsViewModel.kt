@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.deepl.DeepLModelType
 import com.glosdalen.app.backend.deepl.DeepLRepository
+import com.glosdalen.app.domain.preferences.FrontPreference
 import com.glosdalen.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -25,12 +26,14 @@ class DeepLSettingsViewModel @Inject constructor(
             combine(
                 userPreferences.getDeepLApiKey(),
                 userPreferences.getDeepLModelType(),
-                userPreferences.getEnableMultipleFormalities()
-            ) { apiKey, modelType, multipleFormalities ->
+                userPreferences.getEnableMultipleFormalities(),
+                userPreferences.getFrontPreference()
+            ) { apiKey, modelType, multipleFormalities, frontPreference ->
                 _uiState.value = _uiState.value.copy(
                     apiKey = apiKey,
                     deepLModelType = modelType,
-                    enableMultipleFormalities = multipleFormalities
+                    enableMultipleFormalities = multipleFormalities,
+                    frontPreference = frontPreference
                 )
             }.collect()
         }
@@ -51,6 +54,13 @@ class DeepLSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferences.setEnableMultipleFormalities(enabled)
             _uiState.value = _uiState.value.copy(enableMultipleFormalities = enabled)
+        }
+    }
+    
+    fun updateFrontPreference(preference: FrontPreference) {
+        viewModelScope.launch {
+            userPreferences.setFrontPreference(preference)
+            _uiState.value = _uiState.value.copy(frontPreference = preference)
         }
     }
     
@@ -101,7 +111,9 @@ data class DeepLSettingsUiState(
     val apiKey: String = "",
     val deepLModelType: DeepLModelType = DeepLModelType.QUALITY_OPTIMIZED,
     val enableMultipleFormalities: Boolean = true,
+    val frontPreference: FrontPreference = FrontPreference.NATIVE,
     val isValidatingApiKey: Boolean = false,
     val apiKeyValidated: Boolean = false,
     val apiKeyError: String? = null,
 )
+

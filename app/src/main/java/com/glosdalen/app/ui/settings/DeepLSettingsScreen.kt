@@ -55,7 +55,8 @@ fun DeepLSettingsScreen(
                 onApiKeyChange = viewModel::updateApiKey,
                 onValidateApiKey = viewModel::validateAndSaveApiKey,
                 onModelTypeChange = viewModel::updateDeepLModelType,
-                onEnableMultipleFormalitiesChange = viewModel::updateEnableMultipleFormalities
+                onEnableMultipleFormalitiesChange = viewModel::updateEnableMultipleFormalities,
+                onFrontPreferenceChange = viewModel::updateFrontPreference
             )
         }
     }

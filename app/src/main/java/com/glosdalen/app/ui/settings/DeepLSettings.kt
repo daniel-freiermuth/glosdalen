@@ -22,6 +22,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.glosdalen.app.backend.deepl.DeepLModelType
 import com.glosdalen.app.backend.deepl.Language
+import com.glosdalen.app.domain.preferences.FrontPreference
 
 @Composable
 fun DeepLSettingsSection(
@@ -30,6 +31,7 @@ fun DeepLSettingsSection(
     onValidateApiKey: () -> Unit,
     onModelTypeChange: (DeepLModelType) -> Unit,
     onEnableMultipleFormalitiesChange: (Boolean) -> Unit,
+    onFrontPreferenceChange: (FrontPreference) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier) {
@@ -153,6 +155,24 @@ fun DeepLSettingsSection(
                     onCheckedChange = onEnableMultipleFormalitiesChange
                 )
             }
+            
+            // Card Front Preference
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Card Front:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Choose which language appears on the front when creating bidirectional cards",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                FrontDropdown(
+                    selectedPreference = uiState.frontPreference,
+                    onPreferenceSelected = onFrontPreferenceChange,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -213,4 +233,71 @@ private fun ModelTypeDropdown(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FrontDropdown(
+    selectedPreference: FrontPreference,
+    onPreferenceSelected: (FrontPreference) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            readOnly = true,
+            value = when (selectedPreference) {
+                FrontPreference.NATIVE -> "Native Language"
+                FrontPreference.FOREIGN -> "Foreign Language"
+            },
+            onValueChange = { },
+            label = { Text("Front Side") },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            FrontPreference.values().forEach { preference ->
+                DropdownMenuItem(
+                    onClick = {
+                        onPreferenceSelected(preference)
+                        expanded = false
+                    },
+                    text = { 
+                        Column {
+                            Text(
+                                text = when (preference) {
+                                    FrontPreference.NATIVE -> "Native Language"
+                                    FrontPreference.FOREIGN -> "Foreign Language"
+                                },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = when (preference) {
+                                    FrontPreference.NATIVE -> "Native → Foreign, Foreign → Native"
+                                    FrontPreference.FOREIGN -> "Foreign → Native, Native → Foreign"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
 

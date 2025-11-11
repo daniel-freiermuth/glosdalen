@@ -65,6 +65,9 @@ class UserPreferences @Inject constructor(
     fun getEnableMultipleFormalities(): Flow<Boolean> = deepLPreferences.getEnableMultipleFormalities()
     suspend fun setEnableMultipleFormalities(enabled: Boolean) = deepLPreferences.setEnableMultipleFormalities(enabled)
     
+    fun getFrontPreference(): Flow<FrontPreference> = deepLPreferences.getFrontPreference()
+    suspend fun setFrontPreference(preference: FrontPreference) = deepLPreferences.setFrontPreference(preference)
+    
     // Anki-related preferences
     fun getDefaultDeckName(): Flow<String> = ankiPreferences.getDefaultDeckName()
     suspend fun setDefaultDeckName(deckName: String) = ankiPreferences.setDefaultDeckName(deckName)

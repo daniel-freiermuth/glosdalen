@@ -261,10 +261,19 @@ class DeepLSearchViewModel @Inject constructor(
                     )
                 }
                 DeepLCardDirection.BOTH_DIRECTIONS -> {
+                    // Check user preference for which side should be front
+                    val frontPref = userPreferences.getFrontPreference().first()
+                    val (frontSide, backSide) = when (frontPref) {
+                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
+                            Pair(nativeWord, foreignWord)
+                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
+                            Pair(foreignWord, nativeWord)
+                    }
+                    
                     listOf(
                         AnkiCard(
                             modelName = "Basic (and reversed card)",
-                            fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
+                            fields = mapOf("Front" to frontSide, "Back" to backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional")
                         )
