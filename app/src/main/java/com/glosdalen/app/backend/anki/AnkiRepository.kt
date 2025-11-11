@@ -48,10 +48,6 @@ class AnkiRepository @Inject constructor(
             AnkiMethodPreference.INTENT -> {
                 return@withContext tryIntentFirst(apiAvailable, intentAvailable)
             }
-            AnkiMethodPreference.AUTO -> {
-                // Default behavior: prefer API, fall back to Intent
-                return@withContext tryApiFirst(apiAvailable, intentAvailable)
-            }
         }
     }
     

@@ -129,7 +129,7 @@ class AnkiSettingsViewModel @Inject constructor(
 
 data class AnkiSettingsUiState(
     val selectedDeckName: String = "",
-    val selectedMethod: AnkiMethodPreference = AnkiMethodPreference.AUTO,
+    val selectedMethod: AnkiMethodPreference = AnkiMethodPreference.API,
     val availableDecks: Map<Long, String> = emptyMap(),
     val isLoadingDecks: Boolean = false,
     val isAnkiAvailable: Boolean = false,

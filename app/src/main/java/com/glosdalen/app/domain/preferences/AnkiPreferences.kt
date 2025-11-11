@@ -33,11 +33,11 @@ class AnkiPreferences @Inject constructor(
     
     fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> {
         return dataStore.data.map { preferences ->
-            val methodString = preferences[PREFERRED_ANKI_METHOD] ?: "AUTO"
+            val methodString = preferences[PREFERRED_ANKI_METHOD] ?: "API"
             try {
                 AnkiMethodPreference.valueOf(methodString)
             } catch (e: IllegalArgumentException) {
-                AnkiMethodPreference.AUTO
+                AnkiMethodPreference.API
             }
         }
     }
@@ -50,7 +50,6 @@ class AnkiPreferences @Inject constructor(
 }
 
 enum class AnkiMethodPreference {
-    AUTO,   // Automatically choose the best available method
     API,    // Prefer AnkiDroid API
     INTENT  // Prefer Intent method
 }

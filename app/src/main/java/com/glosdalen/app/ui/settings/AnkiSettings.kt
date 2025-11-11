@@ -237,15 +237,6 @@ private fun AnkiMethodDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            // AUTO option
-            DropdownMenuItem(
-                text = { Text("Automatic (recommended)") },
-                onClick = {
-                    onMethodSelected(AnkiMethodPreference.AUTO)
-                    expanded = false
-                }
-            )
-            
             // API option (if available)
             if (availableMethods.contains(AnkiImplementationType.API)) {
                 DropdownMenuItem(
@@ -560,7 +551,6 @@ private fun getMethodDisplayName(
     availableMethods: List<AnkiImplementationType>
 ): String {
     return when (selectedMethod) {
-        AnkiMethodPreference.AUTO -> "Automatic (recommended)"
         AnkiMethodPreference.API -> {
             if (availableMethods.contains(AnkiImplementationType.API)) {
                 "AnkiDroid API"
