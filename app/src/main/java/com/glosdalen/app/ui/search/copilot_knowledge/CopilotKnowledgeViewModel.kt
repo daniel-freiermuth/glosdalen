@@ -188,11 +188,15 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 // Get general knowledge instructions
                 val knowledgeInstructions = userPreferences.getCopilotKnowledgeInstructions().first()
                 
+                // Get deck template for LLM guidance
+                val deckTemplate = userPreferences.getCopilotKnowledgeDeckTemplate().first()
+                
                 // Build prompt for general knowledge query
                 val prompt = buildKnowledgePrompt(
                     query = query,
                     context = _uiState.value.contextQuery.takeIf { it.isNotBlank() },
-                    instructions = knowledgeInstructions
+                    instructions = knowledgeInstructions,
+                    deckTemplate = deckTemplate
                 )
                 
                 // Get selected model (null means auto)
@@ -257,7 +261,8 @@ class CopilotKnowledgeViewModel @Inject constructor(
     private fun buildKnowledgePrompt(
         query: String,
         context: String?,
-        instructions: String
+        instructions: String,
+        deckTemplate: String
     ): String {
         return buildString {
             appendLine("You are a helpful knowledge assistant for creating study flashcards.")
@@ -268,6 +273,12 @@ class CopilotKnowledgeViewModel @Inject constructor(
             
             if (!context.isNullOrBlank()) {
                 appendLine("Additional Context: $context")
+                appendLine()
+            }
+            
+            if (deckTemplate.isNotBlank()) {
+                appendLine("Deck Name Guideline by the user: $deckTemplate")
+                // appendLine("(Use this as inspiration/template for the deck name.)")
                 appendLine()
             }
             

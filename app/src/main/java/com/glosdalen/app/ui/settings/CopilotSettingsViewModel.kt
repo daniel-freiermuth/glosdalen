@@ -30,6 +30,9 @@ class CopilotSettingsViewModel @Inject constructor(
     val knowledgeInstructions = userPreferences.getCopilotKnowledgeInstructions()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS)
     
+    val knowledgeDeckTemplate = userPreferences.getCopilotKnowledgeDeckTemplate()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+    
     private val _uiState = MutableStateFlow(CopilotSettingsUiState())
     val uiState: StateFlow<CopilotSettingsUiState> = combine(
         _uiState,
@@ -143,6 +146,12 @@ class CopilotSettingsViewModel @Inject constructor(
             userPreferences.setCopilotKnowledgeInstructions(
                 com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS
             )
+        }
+    }
+    
+    fun updateKnowledgeDeckTemplate(template: String) {
+        viewModelScope.launch {
+            userPreferences.setCopilotKnowledgeDeckTemplate(template)
         }
     }
     

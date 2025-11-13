@@ -17,6 +17,7 @@ class CopilotKnowledgePreferences @Inject constructor(
     companion object {
         private val COPILOT_KNOWLEDGE_INSTRUCTIONS = stringPreferencesKey("copilot_knowledge_instructions")
         private val COPILOT_KNOWLEDGE_SHOW_INTRO_DIALOG = stringPreferencesKey("copilot_knowledge_show_intro_dialog")
+        private val COPILOT_KNOWLEDGE_DECK_TEMPLATE = stringPreferencesKey("copilot_knowledge_deck_template")
         
         const val DEFAULT_KNOWLEDGE_INSTRUCTIONS = """Please provide:
   - Clear, concise explanations
@@ -71,6 +72,26 @@ Note: Design flashcards following best practices:
     suspend fun setShowIntroDialog(show: Boolean) {
         dataStore.edit { preferences ->
             preferences[COPILOT_KNOWLEDGE_SHOW_INTRO_DIALOG] = if (show) "show" else "never"
+        }
+    }
+    
+    /**
+     * Get the deck template for Knowledge mode.
+     * This is passed to the LLM as a guideline/inspiration for deck naming.
+     * Can be empty to let the LLM decide freely, or contain templates like "{topic}" or specific deck names.
+     */
+    fun getDeckTemplate(): Flow<String> {
+        return dataStore.data.map { preferences ->
+            preferences[COPILOT_KNOWLEDGE_DECK_TEMPLATE] ?: ""
+        }
+    }
+    
+    /**
+     * Set the deck template for Knowledge mode.
+     */
+    suspend fun setDeckTemplate(template: String) {
+        dataStore.edit { preferences ->
+            preferences[COPILOT_KNOWLEDGE_DECK_TEMPLATE] = template
         }
     }
 }

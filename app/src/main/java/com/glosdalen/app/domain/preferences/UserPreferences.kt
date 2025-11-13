@@ -95,6 +95,9 @@ class UserPreferences @Inject constructor(
     fun shouldShowCopilotKnowledgeIntroDialog(): Flow<Boolean> = copilotKnowledgePreferences.shouldShowIntroDialog()
     suspend fun setShowCopilotKnowledgeIntroDialog(show: Boolean) = copilotKnowledgePreferences.setShowIntroDialog(show)
     
+    fun getCopilotKnowledgeDeckTemplate(): Flow<String> = copilotKnowledgePreferences.getDeckTemplate()
+    suspend fun setCopilotKnowledgeDeckTemplate(template: String) = copilotKnowledgePreferences.setDeckTemplate(template)
+    
     // Language-specific instructions
     fun getLanguageInstructions(language: Language): Flow<String> = languageInstructionsPreferences.getInstructions(language)
     suspend fun setLanguageInstructions(language: Language, instructions: String) = languageInstructionsPreferences.setInstructions(language, instructions)

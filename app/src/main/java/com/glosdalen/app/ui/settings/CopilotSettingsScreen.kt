@@ -45,6 +45,7 @@ fun CopilotSettingsScreen(
     val selectedModelId by viewModel.selectedModel.collectAsState()
     val languageInstructions by viewModel.languageInstructions.collectAsState()
     val knowledgeInstructions by viewModel.knowledgeInstructions.collectAsState()
+    val knowledgeDeckTemplate by viewModel.knowledgeDeckTemplate.collectAsState()
     val temperature = uiState.temperature
     val lifecycleOwner = LocalLifecycleOwner.current
     
@@ -133,6 +134,12 @@ fun CopilotSettingsScreen(
                         defaultInstructions = com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS,
                         onInstructionsChange = viewModel::updateKnowledgeInstructions,
                         onResetToDefault = viewModel::resetToDefaultKnowledgeInstructions
+                    )
+                    
+                    // Knowledge Mode Deck Template Section
+                    DeckTemplateSection(
+                        deckTemplate = knowledgeDeckTemplate,
+                        onDeckTemplateChange = viewModel::updateKnowledgeDeckTemplate
                     )
                     
                     // Language-Specific Instructions Section
@@ -885,6 +892,62 @@ private fun ModelSelectionSection(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DeckTemplateSection(
+    deckTemplate: String,
+    onDeckTemplateChange: (String) -> Unit
+) {
+    var textFieldValue by remember(deckTemplate) { 
+        mutableStateOf(TextFieldValue(text = deckTemplate, selection = TextRange(deckTemplate.length)))
+    }
+    
+    Card {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Knowledge Mode Deck Template",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            
+            Text(
+                text = "Optional guideline for the LLM when suggesting deck names. Leave empty to let the LLM decide freely, or use templates like 'Study::{topic}' or specific names.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            OutlinedTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    onDeckTemplateChange(newValue.text)
+                },
+                label = { Text("Deck Template") },
+                placeholder = { Text("e.g., Study::{topic} or leave empty") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            // Examples
+            Text(
+                text = "Examples:\n• Empty = LLM chooses freely\n• \"Study\" = All cards go to Study deck\n• \"Study::{topic}\" = LLM fills {topic} placeholder",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
