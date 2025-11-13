@@ -55,9 +55,10 @@ data class ParsedCopilotResponse(
  * Generic front/back directions since cards are already defined by the LLM
  */
 enum class CopilotCardDirection {
-    FRONT_TO_BACK,      // Use LLM's front → back as-is
-    BACK_TO_FRONT,      // Reverse: LLM's back → front
-    BOTH_DIRECTIONS     // Create cards in both directions (bidirectional)
+    FRONT_TO_BACK,      // Use LLM's front → back as-is (via API)
+    BACK_TO_FRONT,      // Reverse: LLM's back → front (via API)
+    BOTH_DIRECTIONS,    // Create cards in both directions (via API)
+    VIA_INTENT          // Create via AnkiDroid Intent (user chooses direction)
 }
 
 data class CopilotChatUiState(
@@ -498,6 +499,18 @@ class CopilotChatViewModel @Inject constructor(
             
             // Create cards based on direction
             val cardsToCreate = when (cardDirection) {
+                CopilotCardDirection.VIA_INTENT -> {
+                    // For Intent, use front→back as default
+                    // AnkiDroid will handle the UI for user to choose direction
+                    listOf(
+                        AnkiCard(
+                            modelName = "Basic",
+                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            deckName = deckName,
+                            tags = listOf("glosdalen", "copilot", native.code, foreign.code)
+                        )
+                    )
+                }
                 CopilotCardDirection.FRONT_TO_BACK -> {
                     listOf(
                         AnkiCard(
@@ -530,7 +543,12 @@ class CopilotChatViewModel @Inject constructor(
                 }
             }
             
-            val result = ankiRepository.createCards(cardsToCreate)
+            // For VIA_INTENT, force using Intent method
+            val result = if (cardDirection == CopilotCardDirection.VIA_INTENT) {
+                ankiRepository.createCardViaIntent(cardsToCreate.first())
+            } else {
+                ankiRepository.createCards(cardsToCreate)
+            }
             
             result.fold(
                 onSuccess = {

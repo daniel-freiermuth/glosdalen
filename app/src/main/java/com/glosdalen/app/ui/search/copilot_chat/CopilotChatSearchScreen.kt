@@ -859,6 +859,7 @@ private fun CreateCardButton(
         CopilotCardDirection.FRONT_TO_BACK -> "Front → Back"
         CopilotCardDirection.BACK_TO_FRONT -> "Back → Front"
         CopilotCardDirection.BOTH_DIRECTIONS -> "Both Directions"
+        CopilotCardDirection.VIA_INTENT -> "Send to AnkiDroid"
     }
     
     Column {
@@ -892,6 +893,7 @@ private fun CreateCardButton(
                     CopilotCardDirection.FRONT_TO_BACK -> "Front → Back"
                     CopilotCardDirection.BACK_TO_FRONT -> "Back → Front"
                     CopilotCardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                    CopilotCardDirection.VIA_INTENT -> "Via Intent"
                 }
             },
             dropdownButtonContentDescription = "Card direction options"

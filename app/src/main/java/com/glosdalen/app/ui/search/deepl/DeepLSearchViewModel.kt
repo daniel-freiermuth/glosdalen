@@ -239,6 +239,25 @@ class DeepLSearchViewModel @Inject constructor(
             
             // Create cards based on user's direction preference
             val cardsToCreate = when (cardDirection) {
+                DeepLCardDirection.VIA_INTENT -> {
+                    // Check user preference for which side should be front
+                    val frontPref = userPreferences.getFrontPreference().first()
+                    val (frontSide, backSide) = when (frontPref) {
+                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
+                            Pair(nativeWord, foreignWord)
+                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
+                            Pair(foreignWord, nativeWord)
+                    }
+                    
+                    listOf(
+                        AnkiCard(
+                            modelName = "Basic",
+                            fields = mapOf("Front" to frontSide, "Back" to backSide),
+                            deckName = deckName,
+                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code)
+                        )
+                    )
+                }
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> {
                     listOf(
                         AnkiCard(
@@ -281,7 +300,10 @@ class DeepLSearchViewModel @Inject constructor(
             }
             
             try {
-                val ankiResult = if (cardsToCreate.size == 1) {
+                // For VIA_INTENT, force using Intent method
+                val ankiResult = if (cardDirection == DeepLCardDirection.VIA_INTENT) {
+                    ankiRepository.createCardViaIntent(cardsToCreate.first())
+                } else if (cardsToCreate.size == 1) {
                     ankiRepository.createCard(cardsToCreate.first())
                 } else {
                     ankiRepository.createCards(cardsToCreate)
@@ -343,9 +365,10 @@ class DeepLSearchViewModel @Inject constructor(
  * Language-aware directions for vocabulary cards
  */
 enum class DeepLCardDirection {
-    NATIVE_TO_FOREIGN,  // Native language → Foreign language
-    FOREIGN_TO_NATIVE,  // Foreign language → Native language
-    BOTH_DIRECTIONS     // Create cards in both directions (bidirectional)
+    NATIVE_TO_FOREIGN,  // Native language → Foreign language (via API)
+    FOREIGN_TO_NATIVE,  // Foreign language → Native language (via API)
+    BOTH_DIRECTIONS,    // Create cards in both directions (via API)
+    VIA_INTENT          // Create via AnkiDroid Intent (user chooses direction)
 }
 
 data class DeepLUiState(

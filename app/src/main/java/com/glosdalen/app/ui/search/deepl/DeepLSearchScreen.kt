@@ -459,6 +459,7 @@ private fun CreateCardButtonWithDropdown(
         DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
         DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
         DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
+        DeepLCardDirection.VIA_INTENT -> "Via Intent"
     }
     
     SplitButton(
@@ -490,6 +491,7 @@ private fun CreateCardButtonWithDropdown(
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
                 DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
                 DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                DeepLCardDirection.VIA_INTENT -> "Send to AnkiDroid"
             }
         },
         dropdownButtonContentDescription = "Choose card direction",
@@ -499,11 +501,13 @@ private fun CreateCardButtonWithDropdown(
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
                 DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
                 DeepLCardDirection.BOTH_DIRECTIONS -> "Both Directions"
+                DeepLCardDirection.VIA_INTENT -> "Via Intent"
             }
             val description = when (direction) {
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> "${nativeLanguage.displayName} on front, ${foreignLanguage.displayName} on back"
                 DeepLCardDirection.FOREIGN_TO_NATIVE -> "${foreignLanguage.displayName} on front, ${nativeLanguage.displayName} on back"
                 DeepLCardDirection.BOTH_DIRECTIONS -> "Create cards in both directions"
+                DeepLCardDirection.VIA_INTENT -> "Use AnkiDroid's native card creator"
             }
             
             Column {

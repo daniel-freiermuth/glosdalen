@@ -161,6 +161,22 @@ class AnkiRepository @Inject constructor(
             Result.failure(AnkiError.IntentFailed("Unexpected batch error: ${e.message}"))
         }
     }
+    
+    /**
+     * Create a card specifically via Intent method (bypasses user preference)
+     * Useful for "Via Intent" option in card creation buttons
+     */
+    suspend fun createCardViaIntent(card: AnkiCard): Result<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            intentRepository.createCard(card)
+        } catch (e: AnkiError) {
+            Log.e(TAG, "Intent-based card creation error", e)
+            Result.failure(e)
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error during Intent card creation", e)
+            Result.failure(AnkiError.IntentFailed("Intent error: ${e.message}"))
+        }
+    }
 
     /**
      * Get install AnkiDroid intent for when AnkiDroid is not available
