@@ -259,6 +259,4 @@ class AnkiApiRepository @Inject constructor(
             Result.failure(AnkiError.ApiError("Error retrieving models: ${e.message}"))
         }
     }
-
-    override fun getImplementationType(): AnkiImplementationType = AnkiImplementationType.API
 }

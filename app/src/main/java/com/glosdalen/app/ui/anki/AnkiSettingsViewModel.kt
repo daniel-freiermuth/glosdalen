@@ -6,7 +6,6 @@ import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.AnkiApiRepository
 import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.domain.preferences.UserPreferences
-import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,15 +24,11 @@ class AnkiSettingsViewModel @Inject constructor(
     init {
         // Load initial preferences
         viewModelScope.launch {
-            combine(
-                userPreferences.getDefaultDeckName(),
-                userPreferences.getPreferredAnkiMethod()
-            ) { deckName, preferredMethod ->
+            userPreferences.getDefaultDeckName().collect { deckName ->
                 _uiState.value = _uiState.value.copy(
-                    selectedDeckName = deckName,
-                    selectedMethod = preferredMethod
+                    selectedDeckName = deckName
                 )
-            }.collect()
+            }
         }
 
         // Check Anki availability and available methods
@@ -50,15 +45,6 @@ class AnkiSettingsViewModel @Inject constructor(
         }
     }
     
-    fun selectMethod(method: AnkiMethodPreference) {
-        viewModelScope.launch {
-            userPreferences.setPreferredAnkiMethod(method)
-            _uiState.value = _uiState.value.copy(selectedMethod = method)
-            // Refresh availability after method change
-            refreshAnkiAvailability()
-        }
-    }
-
     fun loadAvailableDecks() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingDecks = true)
@@ -95,28 +81,13 @@ class AnkiSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val isAvailable = ankiRepository.isAnkiDroidAvailable()
-                val implementationType = ankiRepository.getImplementationType()
-                val usingApi = implementationType == AnkiImplementationType.API
-                val availableMethods = ankiRepository.getAvailableMethods()
-                val bothMethodsAvailable = ankiRepository.areBothMethodsAvailable()
-                
-                android.util.Log.d("AnkiSettingsViewModel", "Available methods: $availableMethods")
-                android.util.Log.d("AnkiSettingsViewModel", "Both methods available: $bothMethodsAvailable")
                 
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = isAvailable,
-                    implementationType = implementationType.name,
-                    isUsingApiImplementation = usingApi,
-                    availableMethods = availableMethods,
-                    bothMethodsAvailable = bothMethodsAvailable
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isAnkiAvailable = false,
-                    implementationType = "UNAVAILABLE",
-                    isUsingApiImplementation = false,
-                    availableMethods = emptyList(),
-                    bothMethodsAvailable = false
                 )
             }
         }
@@ -129,13 +100,8 @@ class AnkiSettingsViewModel @Inject constructor(
 
 data class AnkiSettingsUiState(
     val selectedDeckName: String = "",
-    val selectedMethod: AnkiMethodPreference = AnkiMethodPreference.API,
     val availableDecks: Map<Long, String> = emptyMap(),
     val isLoadingDecks: Boolean = false,
     val isAnkiAvailable: Boolean = false,
-    val implementationType: String = "UNKNOWN",
-    val isUsingApiImplementation: Boolean = false,
-    val availableMethods: List<AnkiImplementationType> = emptyList(),
-    val bothMethodsAvailable: Boolean = false,
     val errorMessage: String? = null
 )

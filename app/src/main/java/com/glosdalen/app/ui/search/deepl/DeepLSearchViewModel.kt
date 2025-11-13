@@ -33,7 +33,6 @@ class DeepLSearchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
-                ankiImplementationType = ankiRepository.getImplementationType().name
             )
         }
         
@@ -288,26 +287,18 @@ class DeepLSearchViewModel @Inject constructor(
                     ankiRepository.createCards(cardsToCreate)
                 }
                 
-                // Update implementation type in case permissions were granted during card creation
-                val currentImplementationType = ankiRepository.getImplementationType().name
-                
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,
                     cardCreationResult = ankiResult,
                     cardsCreatedCount = cardsToCreate.size,
-                    ankiImplementationType = currentImplementationType,
                     lastCardDirection = cardDirection,
                     hasCardBeenCreated = ankiResult.isSuccess
                 )
             } catch (e: Exception) {
-                // Update implementation type in case permissions state changed
-                val currentImplementationType = ankiRepository.getImplementationType().name
-                
                 _uiState.value = _uiState.value.copy(
                     isCreatingCard = false,
                     cardCreationResult = Result.failure(AnkiError.IntentFailed("Failed to create card: ${e.message}")),
                     cardsCreatedCount = 0,
-                    ankiImplementationType = currentImplementationType,
                     lastCardDirection = cardDirection
                 )
             }
@@ -342,7 +333,6 @@ class DeepLSearchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
-                ankiImplementationType = ankiRepository.getImplementationType().name
             )
         }
     }
@@ -369,7 +359,6 @@ data class DeepLUiState(
     val cardCreationResult: Result<Unit>? = null,
     val cardsCreatedCount: Int = 0,
     val selectedTranslation: String? = null,
-    val ankiImplementationType: String = "UNKNOWN",
     val lastCardDirection: DeepLCardDirection? = null,
     val hasCardBeenCreated: Boolean = false,
     val contextQuery: String = "",

@@ -19,9 +19,4 @@ interface AnkiBackend {
      * Create multiple Anki cards in batch (when supported)
      */
     suspend fun createCards(cards: List<AnkiCard>): Result<Unit>
-    
-    /**
-     * Get the implementation type
-     */
-    fun getImplementationType(): AnkiImplementationType
 }

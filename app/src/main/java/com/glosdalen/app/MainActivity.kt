@@ -82,11 +82,6 @@ fun GlosdalenApp() {
     val ankiInfoState by ankiInfoViewModel.uiState.collectAsState()
     val context = LocalContext.current
     
-    // Re-check permission status when app resumes
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        ankiInfoViewModel.recheckPermissionStatus()
-    }
-    
     // Observe current route as state
     val currentRoute by navController.currentBackStackEntryFlow
         .collectAsState(initial = navController.currentBackStackEntry)
@@ -157,7 +152,6 @@ fun GlosdalenApp() {
         if (ankiInfoState.shouldShow) {
             AnkiApiInfoDialog(
                 onDismiss = { ankiInfoViewModel.onDismiss() },
-                onDontNeedApi = { ankiInfoViewModel.onDontNeedApi() },
                 onRemindLater = { ankiInfoViewModel.onDismiss() },
                 onOpenAnkiSettings = {
                     // Open Android system app settings for Glosdalen

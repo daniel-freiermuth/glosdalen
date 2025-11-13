@@ -28,7 +28,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.SearchContext
-import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -55,207 +54,33 @@ fun AnkiSettingsSection(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            // Method Selection
-            if (uiState.bothMethodsAvailable) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Integration Method:",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    AnkiMethodDropdown(
-                        selectedMethod = uiState.selectedMethod,
-                        availableMethods = uiState.availableMethods,
-                        onMethodSelected = ankiViewModel::selectMethod,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            } else {
-                // Show current status when only one method is available
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val statusIcon = if (uiState.isUsingApiImplementation) 
-                        Icons.Default.Check else Icons.Default.Settings
-                    val statusColor = if (uiState.isUsingApiImplementation)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.secondary
-                    
-                    Icon(
-                        imageVector = statusIcon,
-                        contentDescription = null,
-                        tint = statusColor
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = if (uiState.isUsingApiImplementation) "API Mode" else "Intent Mode",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = if (uiState.isUsingApiImplementation)
-                                "Full features available"
-                            else
-                                "Basic card creation only",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Deck Selection (only if API available)
-            if (uiState.isUsingApiImplementation) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Anki Deck:",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        if (uiState.isLoadingDecks) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
-                            )
-                        }
-                    }
-                    
-                    DeckNameFieldWithDropdown(
-                        selectedDeckName = uiState.selectedDeckName,
-                        availableDecks = uiState.availableDecks,
-                        isLoadingDecks = uiState.isLoadingDecks,
-                        onDeckNameChange = ankiViewModel::selectDeck,
-                        onRefreshDecks = ankiViewModel::loadAvailableDecks,
-                        nativeLanguage = nativeLanguage,
-                        foreignLanguage = foreignLanguage,
-                        templateResolver = templateResolver
-                    )
-                }
-            } else {
-                // Show permission hint if AnkiDroid is installed but API not available
-                // Don't show if user explicitly chose Intent mode
-                if (uiState.isAnkiAvailable && 
-                    uiState.selectedMethod != AnkiMethodPreference.INTENT) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = "Settings",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Enable Advanced Features",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                            
-                            Text(
-                                text = "AnkiDroid is installed but API permissions aren't granted. To enable advanced features like deck selection and templates:",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            
-                            Text(
-                                text = "1. Click on the button below for entering the app settings.\n2. Go to additional permissions.\n3. Enable access to the AnkiDroid database.\n4. Restart app.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            
-                            val context = LocalContext.current
-                            Button(
-                                onClick = {
-                                    // Open app settings
-                                    val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = android.net.Uri.fromParts("package", context.packageName, null)
-                                    }
-                                    context.startActivity(intent)
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Open App Settings")
-                            }
-                        }
-                    }
-                } else {
-                    // Intent mode limitations (when AnkiDroid not installed)
                     Text(
-                        text = "Using basic intent integration. Install AnkiDroid for advanced features like deck and note model selection.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Anki Deck:",
+                        style = MaterialTheme.typography.bodyMedium
                     )
+                    if (uiState.isLoadingDecks) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
                 }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AnkiMethodDropdown(
-    selectedMethod: AnkiMethodPreference,
-    availableMethods: List<AnkiImplementationType>,
-    onMethodSelected: (AnkiMethodPreference) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = getMethodDisplayName(selectedMethod, availableMethods),
-            onValueChange = { },
-            readOnly = true,
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
-        )
-        
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            // API option (if available)
-            if (availableMethods.contains(AnkiImplementationType.API)) {
-                DropdownMenuItem(
-                    text = { Text("AnkiDroid API") },
-                    onClick = {
-                        onMethodSelected(AnkiMethodPreference.API)
-                        expanded = false
-                    }
-                )
-            }
-            
-            // Intent option (if available)
-            if (availableMethods.contains(AnkiImplementationType.INTENT)) {
-                DropdownMenuItem(
-                    text = { Text("Intent Method") },
-                    onClick = {
-                        onMethodSelected(AnkiMethodPreference.INTENT)
-                        expanded = false
-                    }
+                
+                DeckNameFieldWithDropdown(
+                    selectedDeckName = uiState.selectedDeckName,
+                    availableDecks = uiState.availableDecks,
+                    isLoadingDecks = uiState.isLoadingDecks,
+                    onDeckNameChange = ankiViewModel::selectDeck,
+                    onRefreshDecks = ankiViewModel::loadAvailableDecks,
+                    nativeLanguage = nativeLanguage,
+                    foreignLanguage = foreignLanguage,
+                    templateResolver = templateResolver
                 )
             }
         }
@@ -542,28 +367,6 @@ private fun DeckNameFieldWithDropdown(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp)
             )
-        }
-    }
-}
-
-private fun getMethodDisplayName(
-    selectedMethod: AnkiMethodPreference, 
-    availableMethods: List<AnkiImplementationType>
-): String {
-    return when (selectedMethod) {
-        AnkiMethodPreference.API -> {
-            if (availableMethods.contains(AnkiImplementationType.API)) {
-                "AnkiDroid API"
-            } else {
-                "AnkiDroid API (unavailable)"
-            }
-        }
-        AnkiMethodPreference.INTENT -> {
-            if (availableMethods.contains(AnkiImplementationType.INTENT)) {
-                "Intent Method"  
-            } else {
-                "Intent Method (unavailable)"
-            }
         }
     }
 }

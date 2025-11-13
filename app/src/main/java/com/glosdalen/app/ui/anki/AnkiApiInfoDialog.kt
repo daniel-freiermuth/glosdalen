@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AnkiApiInfoDialog(
     onDismiss: () -> Unit,
-    onDontNeedApi: () -> Unit,
     onRemindLater: () -> Unit,
     onOpenAnkiSettings: () -> Unit // Now represents opening system App Settings
 ) {
@@ -52,10 +51,7 @@ fun AnkiApiInfoDialog(
             }
         },
         dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onDontNeedApi) { Text("Don't need API access") }
-                TextButton(onClick = onRemindLater) { Text("Remind Me Later") }
-            }
+            TextButton(onClick = onRemindLater) { Text("Remind Me Later") }
         }
     )
 }

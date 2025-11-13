@@ -3,7 +3,6 @@ package com.glosdalen.app.ui.anki
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiRepository
-import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import com.glosdalen.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,27 +21,12 @@ class AnkiApiInfoViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AnkiApiInfoUiState())
     val uiState: StateFlow<AnkiApiInfoUiState> = _uiState
 
-    init {
-        observeConditions()
-    }
-
-    private fun observeConditions() {
-        viewModelScope.launch {
-            userPreferences.getPreferredAnkiMethod().collect { preferredMethod ->
-                updateDialogState(preferredMethod)
-            }
-        }
-    }
-
-    private suspend fun updateDialogState(preferredMethod: AnkiMethodPreference) {
-        // Only show when user wants API or AUTO (not INTENT)
-        val wantsApi = preferredMethod != AnkiMethodPreference.INTENT
-
+    private suspend fun updateDialogState() {
         // Check repository state for installed vs permission
         val apiEndpointAvailable = ankiRepository.isApiEndpointAvailable()
         val hasPermission = ankiRepository.isApiPermissionGranted()
 
-        val shouldShow = wantsApi && apiEndpointAvailable && !hasPermission
+        val shouldShow = apiEndpointAvailable && !hasPermission
 
         _uiState.update {
             it.copy(
@@ -51,27 +35,8 @@ class AnkiApiInfoViewModel @Inject constructor(
         }
     }
 
-    fun onDontNeedApi() {
-        viewModelScope.launch {
-            // Set preference to INTENT and permanently dismiss
-            userPreferences.setPreferredAnkiMethod(AnkiMethodPreference.INTENT)
-            _uiState.update { it.copy(shouldShow = false) }
-        }
-    }
-
     fun onDismiss() {
         _uiState.update { it.copy(shouldShow = false) }
-    }
-
-    /**
-     * Re-check permission status when app resumes.
-     * If permission is now granted, hide the dialog automatically.
-     */
-    fun recheckPermissionStatus() {
-        viewModelScope.launch {
-            val preferredMethod = userPreferences.getPreferredAnkiMethod().first()
-            updateDialogState(preferredMethod)
-        }
     }
 }
 

@@ -130,6 +130,4 @@ class AnkiIntentRepository @Inject constructor(
             null
         }
     }
-
-    override fun getImplementationType(): AnkiImplementationType = AnkiImplementationType.INTENT
 }

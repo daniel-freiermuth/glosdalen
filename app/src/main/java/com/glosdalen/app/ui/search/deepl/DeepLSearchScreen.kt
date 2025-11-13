@@ -89,17 +89,13 @@ fun DeepLSearchScreen(
     uiState.cardCreationResult?.let { result ->
         LaunchedEffect(result) {
             if (result.isSuccess) {
-                val successMessage = if (uiState.ankiImplementationType == "INTENT") {
-                    "Opened AnkiDroid - please complete card creation"
-                } else {
-                    when {
+                val successMessage = when {
                         uiState.cardsCreatedCount == 1 && uiState.lastCardDirection == DeepLCardDirection.BOTH_DIRECTIONS -> 
                             "Bidirectional card created successfully!"
                         uiState.cardsCreatedCount == 1 -> 
                             "Card created successfully!"
                         else -> 
                             "${uiState.cardsCreatedCount} cards created successfully!"
-                    }
                 }
                 Toast.makeText(
                     context, 
@@ -378,7 +374,6 @@ fun DeepLSearchScreen(
                 selectedTranslation = uiState.selectedTranslation,
                 hasCardBeenCreated = uiState.hasCardBeenCreated,
                 selectedCardDirection = uiState.selectedCardDirection,
-                ankiImplementationType = uiState.ankiImplementationType,
                 nativeLanguage = nativeLanguage,
                 foreignLanguage = foreignLanguage,
                 onCreateCard = viewModel::createAnkiCard,
@@ -452,7 +447,6 @@ private fun ErrorCard(
 @Composable
 private fun CreateCardButtonWithDropdown(
     selectedCardDirection: DeepLCardDirection,
-    ankiImplementationType: String,
     isCreatingCard: Boolean,
     isAnkiDroidAvailable: Boolean,
     hasCardBeenCreated: Boolean,
@@ -499,11 +493,8 @@ private fun CreateCardButtonWithDropdown(
             }
         },
         dropdownButtonContentDescription = "Choose card direction",
-        isItemEnabled = { direction ->
-            ankiImplementationType == "API" || direction != DeepLCardDirection.BOTH_DIRECTIONS
-        },
+        isItemEnabled = { _ -> true },
         itemContent = { direction ->
-            val isEnabled = ankiImplementationType == "API" || direction != DeepLCardDirection.BOTH_DIRECTIONS
             val displayName = when (direction) {
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> "Native → Foreign"
                 DeepLCardDirection.FOREIGN_TO_NATIVE -> "Foreign → Native"
@@ -520,18 +511,12 @@ private fun CreateCardButtonWithDropdown(
                     text = displayName,
                     color = if (direction == selectedCardDirection) {
                         MaterialTheme.colorScheme.primary
-                    } else if (isEnabled) {
-                        MaterialTheme.colorScheme.onSurface
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        MaterialTheme.colorScheme.onSurface
                     }
                 )
                 Text(
-                    text = if (!isEnabled && direction == DeepLCardDirection.BOTH_DIRECTIONS) {
-                        "Requires AnkiDroid API"
-                    } else {
-                        description
-                    },
+                    text = description ,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -548,7 +533,6 @@ private fun TranslationCard(
     selectedTranslation: String?,
     hasCardBeenCreated: Boolean,
     selectedCardDirection: DeepLCardDirection,
-    ankiImplementationType: String,
     nativeLanguage: Language,
     foreignLanguage: Language,
     onCreateCard: () -> Unit,
@@ -657,7 +641,6 @@ private fun TranslationCard(
             // Create card button with direction dropdown
             CreateCardButtonWithDropdown(
                 selectedCardDirection = selectedCardDirection,
-                ankiImplementationType = ankiImplementationType,
                 isCreatingCard = isCreatingCard,
                 isAnkiDroidAvailable = isAnkiDroidAvailable,
                 hasCardBeenCreated = hasCardBeenCreated,

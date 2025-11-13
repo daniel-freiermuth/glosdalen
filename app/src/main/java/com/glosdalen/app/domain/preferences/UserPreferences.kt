@@ -72,9 +72,6 @@ class UserPreferences @Inject constructor(
     fun getDefaultDeckName(): Flow<String> = ankiPreferences.getDefaultDeckName()
     suspend fun setDefaultDeckName(deckName: String) = ankiPreferences.setDefaultDeckName(deckName)
     
-    fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> = ankiPreferences.getPreferredAnkiMethod()
-    suspend fun setPreferredAnkiMethod(method: AnkiMethodPreference) = ankiPreferences.setPreferredAnkiMethod(method)
-    
     // Copilot-related preferences
     fun getCopilotSelectedModel(): Flow<String> = copilotPreferences.getSelectedModel()
     suspend fun setCopilotSelectedModel(modelId: String) = copilotPreferences.setSelectedModel(modelId)

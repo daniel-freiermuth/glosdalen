@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import com.ichi2.anki.api.AddContentApi
 import com.glosdalen.app.domain.preferences.UserPreferences
-import com.glosdalen.app.domain.preferences.AnkiMethodPreference
 import kotlinx.coroutines.flow.first
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -33,22 +32,12 @@ class AnkiRepository @Inject constructor(
      * Determine the best available AnkiDroid integration method based on user preference
      */
     private suspend fun getBestAvailableRepository(): AnkiBackend = withContext(Dispatchers.IO) {
-        val userPreference = userPreferences.getPreferredAnkiMethod().first()
-        Log.d(TAG, "User preference: $userPreference")
-        
         // Check availability of both methods
         val apiAvailable = apiRepository.isAnkiDroidAvailable()
         val intentAvailable = intentRepository.isAnkiDroidAvailable()
         Log.d(TAG, "API available: $apiAvailable, Intent available: $intentAvailable")
         
-        when (userPreference) {
-            AnkiMethodPreference.API -> {
-                return@withContext tryApiFirst(apiAvailable, intentAvailable)
-            }
-            AnkiMethodPreference.INTENT -> {
-                return@withContext tryIntentFirst(apiAvailable, intentAvailable)
-            }
-        }
+        return@withContext tryApiFirst(apiAvailable, intentAvailable)
     }
     
     private suspend fun tryApiFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiBackend {
@@ -174,38 +163,12 @@ class AnkiRepository @Inject constructor(
     }
 
     /**
-     * Get the current implementation type for debugging/logging
-     */
-    fun getImplementationType(): AnkiImplementationType {
-        return runBlocking {
-            try {
-                getBestAvailableRepository().getImplementationType()
-            } catch (e: Exception) {
-                Log.w(TAG, "Error determining implementation type", e)
-                AnkiImplementationType.UNAVAILABLE
-            }
-        }
-    }
-
-    /**
      * Get install AnkiDroid intent for when AnkiDroid is not available
      */
     suspend fun getInstallAnkiDroidIntent(): android.content.Intent? {
         return intentRepository.getInstallAnkiDroidIntent()
     }
 
-    /**
-     * Force refresh of available repositories (useful after app updates or permission changes)
-     */
-    suspend fun refreshAvailability(): AnkiImplementationType = withContext(Dispatchers.IO) {
-        return@withContext try {
-            getBestAvailableRepository().getImplementationType()
-        } catch (e: Exception) {
-            Log.w(TAG, "Error refreshing availability", e)
-            AnkiImplementationType.UNAVAILABLE
-        }
-    }
-    
     /**
      * Check if both API and Intent methods are available
      */

@@ -16,7 +16,6 @@ class AnkiPreferences @Inject constructor(
     
     companion object {
         private val DEFAULT_DECK_NAME = stringPreferencesKey("default_deck_name")
-        private val PREFERRED_ANKI_METHOD = stringPreferencesKey("preferred_anki_method")
     }
     
     fun getDefaultDeckName(): Flow<String> {
@@ -30,26 +29,4 @@ class AnkiPreferences @Inject constructor(
             preferences[DEFAULT_DECK_NAME] = deckName
         }
     }
-    
-    fun getPreferredAnkiMethod(): Flow<AnkiMethodPreference> {
-        return dataStore.data.map { preferences ->
-            val methodString = preferences[PREFERRED_ANKI_METHOD] ?: "API"
-            try {
-                AnkiMethodPreference.valueOf(methodString)
-            } catch (e: IllegalArgumentException) {
-                AnkiMethodPreference.API
-            }
-        }
-    }
-    
-    suspend fun setPreferredAnkiMethod(method: AnkiMethodPreference) {
-        dataStore.edit { preferences ->
-            preferences[PREFERRED_ANKI_METHOD] = method.name
-        }
-    }
-}
-
-enum class AnkiMethodPreference {
-    API,    // Prefer AnkiDroid API
-    INTENT  // Prefer Intent method
 }
