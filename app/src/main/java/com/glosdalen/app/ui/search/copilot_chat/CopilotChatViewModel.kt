@@ -56,7 +56,6 @@ data class ParsedCopilotResponse(
  */
 enum class CopilotCardDirection {
     FRONT_TO_BACK,      // Use LLM's front → back as-is (via API)
-    BACK_TO_FRONT,      // Reverse: LLM's back → front (via API)
     BOTH_DIRECTIONS,    // Create cards in both directions (via API)
     VIA_INTENT          // Create via AnkiDroid Intent (user chooses direction)
 }
@@ -518,16 +517,6 @@ class CopilotChatViewModel @Inject constructor(
                             fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code)
-                        )
-                    )
-                }
-                CopilotCardDirection.BACK_TO_FRONT -> {
-                    listOf(
-                        AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.backSide, "Back" to card.frontSide),
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "copilot", native.code, foreign.code, "reversed")
                         )
                     )
                 }
