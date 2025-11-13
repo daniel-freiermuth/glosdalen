@@ -187,9 +187,10 @@ class CopilotSettingsViewModel @Inject constructor(
         // 1. We have a device code
         // 2. We're in WaitingForUser state with isPolling = false (polling stopped)
         // 3. No active polling job is running
+        val waitingState = currentState.authState as? AuthState.WaitingForUser
         if (currentState.deviceCode != null && 
-            currentState.authState is AuthState.WaitingForUser &&
-            !(currentState.authState as AuthState.WaitingForUser).isPolling &&
+            waitingState != null &&
+            !waitingState.isPolling &&
             pollingJob?.isActive != true) {
             
             _uiState.update { it.copy(errorMessage = null) }
