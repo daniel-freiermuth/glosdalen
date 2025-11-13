@@ -1,0 +1,14 @@
+🎉 Major Update: Simplified AnkiDroid Integration
+
+• API Mode Now Primary: AnkiDroid API is now the main integration method for the best experience
+• On-Demand Intent Cards: Create cards via AnkiDroid's UI when you need manual control
+• Bidirectional Card Preference: Choose which language appears on the front of bidirectional cards
+• Streamlined Settings: Simplified Anki settings interface for easier configuration
+• Better Default Deck Name: Changed default from "Default" to more intuitive "Glosdalen"
+• Deck Name Preview: Always visible in settings for clarity
+
+Breaking Changes:
+• Removed manual API/Intent method selection (API used automatically when available)
+• Removed back-to-front card creation option (simplified to front-to-back)
+
+This update focuses on providing the best experience by default while still offering flexibility when needed.
