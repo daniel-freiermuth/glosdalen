@@ -43,10 +43,11 @@ class DeepLDataSource @Inject constructor(
             // Check user preference for multiple formalities
             val enableMultipleFormalities = userPreferences.getEnableMultipleFormalities().first()
             
-            // Languages that support formality parameter
+            // Languages that support formality parameter (according to DeepL API)
             val formalitySupported = setOf(
                 Language.GERMAN, Language.FRENCH, Language.ITALIAN, Language.SPANISH, 
-                Language.PORTUGUESE, Language.RUSSIAN, Language.POLISH, Language.DUTCH
+                Language.PORTUGUESE, Language.RUSSIAN, Language.POLISH, Language.DUTCH,
+                Language.JAPANESE
             )
             
             val allTranslations = mutableListOf<Translation>()

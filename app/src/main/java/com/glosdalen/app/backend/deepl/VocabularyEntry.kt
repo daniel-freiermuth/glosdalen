@@ -18,19 +18,39 @@ enum class Language(
     val nativeName: String,
     private val localizedNames: Map<String, String> = emptyMap()
 ) {
+    // All DeepL-supported languages (alphabetically by display name)
+    // ARABIC("AR", "Arabic", "العربية"), deactivated because RTL
+    BULGARIAN("BG", "Bulgarian", "Български"),
+    CHINESE_SIMPLIFIED("ZH", "Chinese (Simplified)", "简体中文"),
+    CHINESE_TRADITIONAL("ZH-HANT", "Chinese (Traditional)", "繁體中文"),
+    CZECH("CS", "Czech", "Čeština"),
     GERMAN("DE", "German", "Deutsch"),
     ENGLISH("EN", "English", "English"),
     SPANISH("ES", "Spanish", "Español"),
+    ESTONIAN("ET", "Estonian", "Eesti"),
     FRENCH("FR", "French", "Français"),
+    GREEK("EL", "Greek", "Ελληνικά"),
+    // HEBREW("HE", "Hebrew", "עברית"), deactivated because RTL
+    HUNGARIAN("HU", "Hungarian", "Magyar"),
+    INDONESIAN("ID", "Indonesian", "Indonesia"),
     ITALIAN("IT", "Italian", "Italiano"),
     DUTCH("NL", "Dutch", "Nederlands"),
+    JAPANESE("JA", "Japanese", "日本語"),
+    KOREAN("KO", "Korean", "한국어"),
+    LATVIAN("LV", "Latvian", "Latviešu"),
+    LITHUANIAN("LT", "Lithuanian", "Lietuvių"),
     POLISH("PL", "Polish", "Polski"),
     PORTUGUESE("PT", "Portuguese", "Português"),
+    ROMANIAN("RO", "Romanian", "Română"),
     RUSSIAN("RU", "Russian", "Русский"),
+    SLOVAK("SK", "Slovak", "Slovenčina"),
+    SLOVENIAN("SL", "Slovenian", "Slovenščina"),
     SWEDISH("SV", "Swedish", "Svenska"),
     DANISH("DA", "Danish", "Dansk"),
-    NORWEGIAN("NO", "Norwegian", "Norsk"),
-    FINNISH("FI", "Finnish", "Suomi");
+    NORWEGIAN("NB", "Norwegian", "Norsk"),
+    FINNISH("FI", "Finnish", "Suomi"),
+    TURKISH("TR", "Turkish", "Türkçe"),
+    UKRAINIAN("UK", "Ukrainian", "Українська");
     
 }
 
