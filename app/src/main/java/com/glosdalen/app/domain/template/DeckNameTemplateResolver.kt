@@ -26,10 +26,6 @@ class DeckNameTemplateResolver @Inject constructor() {
         resolved = resolved.replace("{Foreign_native}", foreignLanguage.nativeName)
         resolved = resolved.replace("{Foreign_english}", foreignLanguage.displayName)
         
-        // Language code templates
-        resolved = resolved.replace("{foreign_code_native}", foreignLanguage.code)
-        resolved = resolved.replace("{foreign_code_english}", foreignLanguage.code)
-        
         // Date templates
         val now = LocalDate.now()
         resolved = resolved.replace("{day}", String.format("%02d", now.dayOfMonth))
@@ -49,10 +45,6 @@ class DeckNameTemplateResolver @Inject constructor() {
             // Foreign language names - uppercase
             TemplateInfo("{Foreign_native}", "Language in its native form (capitalized)", "Deutsch, Français, Svenska"),
             TemplateInfo("{Foreign_english}", "Language name in English (capitalized)", "German, French, Swedish"),
-            
-            // Language codes
-            TemplateInfo("{foreign_code_native}", "Foreign language code", "DE, FR, SV"),
-            TemplateInfo("{foreign_code_english}", "Foreign language code", "DE, FR, SV"),
             
             // Date templates
             TemplateInfo("{day}", "Current day (01-31)", "01, 15, 31"),
