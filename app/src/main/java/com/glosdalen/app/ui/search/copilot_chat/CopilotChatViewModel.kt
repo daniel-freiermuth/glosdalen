@@ -482,19 +482,7 @@ class CopilotChatViewModel @Inject constructor(
             val deckTemplate = userPreferences.getDefaultDeckName().first()
             val cardDirection = _uiState.value.selectedCardDirection
             
-            val searchContext = SearchContext(
-                nativeLanguage = native,
-                foreignLanguage = foreign,
-                sourceLanguage = _uiState.value.sourceLanguage,
-                targetLanguage = when (_uiState.value.sourceLanguage) {
-                    native -> foreign
-                    foreign -> native
-                    else -> foreign
-                },
-                context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
-            )
-            
-            val deckName = templateResolver.resolveDeckName(deckTemplate, searchContext)
+            val deckName = templateResolver.resolveDeckName(deckTemplate, foreign)
             
             // Create cards based on direction
             val cardsToCreate = when (cardDirection) {

@@ -115,22 +115,11 @@ private fun DeckNameFieldWithDropdown(
         }
     }
     
-    // Create search context for template resolution  
-    val searchContext = remember(nativeLanguage, foreignLanguage) {
-        SearchContext(
-            nativeLanguage = nativeLanguage, 
-            foreignLanguage = foreignLanguage,
-            sourceLanguage = foreignLanguage,
-            targetLanguage = nativeLanguage,
-            context = null
-        )
-    }
-    
     // Resolve preview
-    val resolvedDeckName by remember(textFieldValue.text, searchContext) {
+    val resolvedDeckName by remember(textFieldValue.text, foreignLanguage) {
         derivedStateOf {
             try {
-                templateResolver.resolveDeckName(textFieldValue.text, searchContext)
+                templateResolver.resolveDeckName(textFieldValue.text, foreignLanguage)
             } catch (e: Exception) {
                 textFieldValue.text
             }
@@ -308,13 +297,6 @@ private fun DeckNameFieldWithDropdown(
                     
                     // Show template variables (simplified version)
                     val templates = templateResolver.getAvailableTemplates()
-                    val sampleContext = SearchContext(
-                        nativeLanguage = nativeLanguage,
-                        foreignLanguage = foreignLanguage,
-                        sourceLanguage = foreignLanguage,
-                        targetLanguage = nativeLanguage,
-                        context = null
-                    )
                     
                     templates.forEach { templateInfo ->
                         Row(
@@ -357,7 +339,7 @@ private fun DeckNameFieldWithDropdown(
                             }
                             Text(
                                 text = try {
-                                    templateResolver.resolveDeckName(templateInfo.template, sampleContext)
+                                    templateResolver.resolveDeckName(templateInfo.template, foreignLanguage)
                                 } catch (e: Exception) {
                                     templateInfo.example
                                 },

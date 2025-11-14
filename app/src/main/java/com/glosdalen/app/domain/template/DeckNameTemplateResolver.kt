@@ -1,5 +1,6 @@
 package com.glosdalen.app.domain.template
 
+import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.SearchContext
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -13,25 +14,21 @@ class DeckNameTemplateResolver @Inject constructor() {
     
     fun resolveDeckName(
         templateString: String,
-        searchContext: SearchContext
+        foreignLanguage: Language
     ): String {
         var resolved = templateString
         
         // Foreign language name templates - lowercase
-        resolved = resolved.replace("{foreign_native}", searchContext.foreignLanguage.nativeName.lowercase())
-        resolved = resolved.replace("{foreign_english}", searchContext.foreignLanguage.displayName.lowercase())
-        resolved = resolved.replace("{foreign_local}", 
-            searchContext.foreignLanguage.getNameInLanguage(searchContext.nativeLanguage).lowercase())
+        resolved = resolved.replace("{foreign_native}", foreignLanguage.nativeName.lowercase())
+        resolved = resolved.replace("{foreign_english}", foreignLanguage.displayName.lowercase())
         
         // Foreign language name templates - uppercase (capitalized)
-        resolved = resolved.replace("{Foreign_native}", searchContext.foreignLanguage.nativeName)
-        resolved = resolved.replace("{Foreign_english}", searchContext.foreignLanguage.displayName)
-        resolved = resolved.replace("{Foreign_local}", 
-            searchContext.foreignLanguage.getNameInLanguage(searchContext.nativeLanguage))
+        resolved = resolved.replace("{Foreign_native}", foreignLanguage.nativeName)
+        resolved = resolved.replace("{Foreign_english}", foreignLanguage.displayName)
         
         // Language code templates
-        resolved = resolved.replace("{foreign_code_native}", searchContext.foreignLanguage.code)
-        resolved = resolved.replace("{foreign_code_english}", searchContext.foreignLanguage.code)
+        resolved = resolved.replace("{foreign_code_native}", foreignLanguage.code)
+        resolved = resolved.replace("{foreign_code_english}", foreignLanguage.code)
         
         // Date templates
         val now = LocalDate.now()
@@ -48,12 +45,10 @@ class DeckNameTemplateResolver @Inject constructor() {
             // Foreign language names - lowercase
             TemplateInfo("{foreign_native}", "Language in its native form", "deutsch, français, svenska"),
             TemplateInfo("{foreign_english}", "Language name in English", "german, french, swedish"),
-            TemplateInfo("{foreign_local}", "Language name in your native language", "tyska, allemand, schwedisch"),
             
             // Foreign language names - uppercase
             TemplateInfo("{Foreign_native}", "Language in its native form (capitalized)", "Deutsch, Français, Svenska"),
             TemplateInfo("{Foreign_english}", "Language name in English (capitalized)", "German, French, Swedish"),
-            TemplateInfo("{Foreign_local}", "Language name in your native language (capitalized)", "Tyska, Allemand, Schwedisch"),
             
             // Language codes
             TemplateInfo("{foreign_code_native}", "Foreign language code", "DE, FR, SV"),

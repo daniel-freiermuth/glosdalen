@@ -214,19 +214,7 @@ class DeepLSearchViewModel @Inject constructor(
             val cardDirection = _uiState.value.selectedCardDirection
             
             // Resolve deck name template
-            val searchContext = SearchContext(
-                nativeLanguage = currentNative,
-                foreignLanguage = currentForeign,
-                sourceLanguage = result.sourceLanguage,
-                targetLanguage = when (result.sourceLanguage) {
-                    currentNative -> currentForeign
-                    currentForeign -> currentNative
-                    else -> currentForeign
-                },
-                context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
-            )
-            
-            val deckName = templateResolver.resolveDeckName(deckTemplate, searchContext)
+            val deckName = templateResolver.resolveDeckName(deckTemplate, currentForeign)
             
             // Determine which word is native and which is foreign
             val (nativeWord, foreignWord) = if (result.sourceLanguage == currentNative) {
