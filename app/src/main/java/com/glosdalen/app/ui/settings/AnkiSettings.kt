@@ -137,6 +137,13 @@ private fun DeckNameFieldWithDropdown(
         }
     }
     
+    // Validate deck name for whitespace around ::
+    val hasWhitespaceIssue by remember(resolvedDeckName) {
+        derivedStateOf {
+            resolvedDeckName.contains(Regex("\\s+::|::\\s+"))
+        }
+    }
+    
     Column {
         // Main dropdown-style text field with proper cursor management
         OutlinedTextField(
@@ -154,13 +161,22 @@ private fun DeckNameFieldWithDropdown(
             label = { Text("Deck Name") },
             placeholder = { Text("Type custom name or select existing deck") },
             supportingText = { 
+                if (hasWhitespaceIssue) {
+                    Text(
+                        text = "⚠️ Invalid: whitespace not allowed around '::' separator",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else {
                     Text(
                         text = "Preview: $resolvedDeckName",
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.primary
                     )
+                }
             },
+            isError = hasWhitespaceIssue,
             trailingIcon = {
                 // Only show dropdown arrow if we have decks available
                 if (availableDecks.isNotEmpty()) {

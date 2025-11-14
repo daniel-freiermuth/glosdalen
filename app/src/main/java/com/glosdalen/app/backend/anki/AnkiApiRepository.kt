@@ -96,6 +96,14 @@ class AnkiApiRepository @Inject constructor(
                 )
             }
 
+            // Validate deck name - reject if it has whitespace around ::
+            if (deckName.contains(Regex("\\s+::|::\\s+"))) {
+                android.util.Log.e("AnkiApiRepository", "Invalid deck name with whitespace around '::': '$deckName'")
+                return@withContext Result.failure(
+                    AnkiError.DeckCreationFailed("Invalid deck name: whitespace not allowed around '::' separator. Please check your deck name template.")
+                )
+            }
+            
             // Check if deck already exists (case-insensitive, as AnkiDroid treats deck names)
             val decks = api.deckList
             val existingDeck = decks.entries.find { it.value.equals(deckName, ignoreCase = true) }
