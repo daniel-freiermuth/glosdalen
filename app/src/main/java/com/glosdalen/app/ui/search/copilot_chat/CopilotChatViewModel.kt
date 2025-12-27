@@ -540,7 +540,7 @@ class CopilotChatViewModel @Inject constructor(
                     _uiState.update { 
                         it.copy(
                             isCreatingCard = false,
-                            error = error.message ?: "Failed to create Anki card"
+                            error = formatAnkiError(error)
                         )
                     }
                 }
@@ -627,5 +627,24 @@ class CopilotChatViewModel @Inject constructor(
         
         // Return as-is and let JSON parser fail
         return trimmed
+    }
+    
+    /**
+     * Format Anki error messages for user display
+     */
+    private fun formatAnkiError(error: Throwable): String {
+        val message = error.message ?: return "Failed to create Anki card"
+        return when {
+            message.contains("permission", ignoreCase = true) -> 
+                "AnkiDroid permission required. Please grant access in settings."
+            message.contains("not installed", ignoreCase = true) -> 
+                "AnkiDroid is not installed. Please install it from the Play Store."
+            message.contains("deck", ignoreCase = true) -> 
+                "Failed to create deck. Please check AnkiDroid settings."
+            message.contains("model", ignoreCase = true) ||
+            message.contains("reversed", ignoreCase = true) -> 
+                "Card type not found. Please open AnkiDroid first to initialize note types."
+            else -> "Error when creating card: $message"
+        }
     }
 }

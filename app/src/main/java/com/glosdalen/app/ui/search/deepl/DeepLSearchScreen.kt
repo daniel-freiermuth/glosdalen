@@ -111,7 +111,10 @@ fun DeepLSearchScreen(
                         "AnkiDroid is not installed. Please install it from the Play Store."
                     error?.message?.contains("deck", ignoreCase = true) == true -> 
                         "Failed to create deck. Please check AnkiDroid settings."
-                    else -> "Failed to create card: ${error?.message ?: "Unknown error"}"
+                    error?.message?.contains("model", ignoreCase = true) == true ||
+                    error?.message?.contains("reversed", ignoreCase = true) == true -> 
+                        "Card type not found. Please open AnkiDroid first to initialize note types."
+                    else -> "Error when creating card: ${error?.message ?: "Unknown error"}"
                 }
                 Toast.makeText(
                     context, 
