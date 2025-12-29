@@ -1,0 +1,8 @@
+🔊 ElevenLabs Text-to-Speech Integration
+- Lyssna på ordförrådsuttal med naturligt klingande röster
+- Konfigurera din ElevenLabs API-nyckel i Inställningar
+- Välj bland premiumröster (Rachel, Charlotte, George, m.fl.)
+
+🎵 Ljud inbäddat i Anki-kort
+- TTS-ljud bifogas nu automatiskt till dina flashcards
+- Hör korrekt uttal vid repetition i AnkiDroid

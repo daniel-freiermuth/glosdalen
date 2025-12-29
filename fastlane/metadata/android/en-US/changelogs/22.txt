@@ -1,0 +1,8 @@
+🔊 ElevenLabs Text-to-Speech Integration
+- Listen to vocabulary pronunciations with natural-sounding voices
+- Configure your ElevenLabs API key in Settings
+- Choose from premium voices (Rachel, Charlotte, George, and more)
+
+🎵 Audio Embedded in Anki Cards
+- TTS audio is now automatically attached to your flashcards
+- Hear correct pronunciation when reviewing in AnkiDroid

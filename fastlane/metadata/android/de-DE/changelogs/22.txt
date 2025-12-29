@@ -1,0 +1,8 @@
+🔊 ElevenLabs Text-to-Speech Integration
+- Vokabel-Aussprache mit natürlich klingenden Stimmen anhören
+- ElevenLabs API-Schlüssel in den Einstellungen konfigurieren
+- Auswahl aus Premium-Stimmen (Rachel, Charlotte, George, u.a.)
+
+🎵 Audio in Anki-Karten eingebettet
+- TTS-Audio wird automatisch an Lernkarten angehängt
+- Korrekte Aussprache beim Wiederholen in AnkiDroid hören
