@@ -1,10 +1,13 @@
 package com.glosdalen.app.backend.anki
 
+import java.io.File
+
 data class AnkiCard(
     val modelName: String,
     val fields: Map<String, String>,
     val tags: List<String> = emptyList(),
     val deckName: String,
+    val audioFiles: Map<String, File> = emptyMap() // Map of field name to audio file
 )
 
 sealed class AnkiError : Exception() {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import com.glosdalen.app.domain.preferences.ElevenLabsPreferences
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -37,7 +38,8 @@ sealed class ElevenLabsError : Exception() {
 class ElevenLabsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val apiService: ElevenLabsApiService,
-    private val preferences: ElevenLabsPreferences
+    private val preferences: ElevenLabsPreferences,
+    private val timeProvider: TimeProvider
 ) {
     private var mediaPlayer: MediaPlayer? = null
     private var currentAudioFile: File? = null
@@ -82,7 +84,7 @@ class ElevenLabsRepository @Inject constructor(
             val cacheDir = File(context.cacheDir, AUDIO_CACHE_DIR)
             if (!cacheDir.exists()) return
             
-            val cutoffTime = System.currentTimeMillis() - (MAX_CACHE_AGE_DAYS * 24 * 60 * 60 * 1000L)
+            val cutoffTime = timeProvider.currentTimeMillis() - (MAX_CACHE_AGE_DAYS * 24 * 60 * 60 * 1000L)
             val files = cacheDir.listFiles() ?: return
             
             var deletedCount = 0
@@ -238,6 +240,66 @@ class ElevenLabsRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch models", e)
+            Result.failure(ElevenLabsError.NetworkError)
+        }
+    }
+    
+    /**
+     * Generate audio file for text without playing it.
+     * Useful for generating audio files to attach to Anki cards.
+     * Returns the cached or newly generated audio file.
+     * 
+     * @param text The text to convert to speech
+     * @param languageCode Optional ISO 639-1 language code
+     * @return Result containing the audio file or an error
+     */
+    suspend fun generateAudioFile(
+        text: String,
+        languageCode: String? = null
+    ): Result<File> = withContext(Dispatchers.IO) {
+        val apiKey = preferences.getApiKey().first()
+        if (apiKey.isBlank()) {
+            return@withContext Result.failure(ElevenLabsError.NoApiKey)
+        }
+        
+        val voiceId = preferences.getVoiceId().first()
+        val modelId = preferences.getModelId().first()
+        
+        Log.d(TAG, "generateAudioFile: text='${text.take(50)}', languageCode='$languageCode', voiceId='$voiceId'")
+        
+        // Generate cache key and check if we have cached audio
+        val cacheKey = generateCacheKey(text, languageCode, voiceId, modelId)
+        val cachedFile = getCachedAudioFile(cacheKey)
+        
+        if (cachedFile != null) {
+            Log.d(TAG, "Returning cached audio file for: ${text.take(20)}")
+            return@withContext Result.success(cachedFile)
+        }
+        
+        // Generate new audio file
+        try {
+            val request = TextToSpeechRequest(
+                text = text,
+                modelId = modelId,
+                languageCode = languageCode
+            )
+            
+            val response = apiService.textToSpeech(voiceId, apiKey, request)
+            
+            when {
+                response.isSuccessful -> {
+                    response.body()?.let { responseBody ->
+                        val audioFile = saveAudioToCacheFile(cacheKey, responseBody.bytes())
+                        Log.d(TAG, "Generated new audio file for: ${text.take(20)}")
+                        Result.success(audioFile)
+                    } ?: Result.failure(ElevenLabsError.ApiError(response.code(), "Empty audio response"))
+                }
+                response.code() == 401 -> Result.failure(ElevenLabsError.InvalidApiKey)
+                response.code() == 429 -> Result.failure(ElevenLabsError.QuotaExceeded)
+                else -> Result.failure(ElevenLabsError.ApiError(response.code(), response.message()))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to generate audio file", e)
             Result.failure(ElevenLabsError.NetworkError)
         }
     }

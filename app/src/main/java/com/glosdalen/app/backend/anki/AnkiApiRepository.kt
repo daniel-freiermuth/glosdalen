@@ -1,12 +1,16 @@
 package com.glosdalen.app.backend.anki
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import com.glosdalen.app.libs.copilot.util.TimeProvider
 import com.ichi2.anki.api.AddContentApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +20,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AnkiApiRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val timeProvider: TimeProvider
 ) : AnkiBackend {
 
     companion object {
@@ -250,10 +255,15 @@ class AnkiApiRepository @Inject constructor(
 
                 // Prepare notes for batch addition
                 val notes = deckCards.map { card ->
-                    arrayOf(
-                        card.fields["Front"] ?: "",
-                        card.fields["Back"] ?: ""
-                    )
+                    // Add audio files to AnkiDroid's media collection if present
+                    val frontField = card.fields["Front"] ?: ""
+                    val backField = card.fields["Back"] ?: ""
+                    
+                    // Add audio tags if audio files are provided
+                    val frontWithAudio = addAudioTag(api, frontField, card.audioFiles["Front"])
+                    val backWithAudio = addAudioTag(api, backField, card.audioFiles["Back"])
+                    
+                    arrayOf(frontWithAudio, backWithAudio)
                 }
 
                 // Use batch API for better performance - convert to List
@@ -270,6 +280,53 @@ class AnkiApiRepository @Inject constructor(
         }
     }
 
+    /**
+     * Add audio file to AnkiDroid media collection and return the field with [sound:...] tag.
+     * Returns the original text if audio file is null or copying fails.
+     */
+    private fun addAudioTag(api: AddContentApi, fieldText: String, audioFile: File?): String {
+        if (audioFile == null || !audioFile.exists()) {
+            return fieldText
+        }
+        
+        return try {
+            // Use FileProvider to create a content URI that AnkiDroid can access
+            val authority = "${context.packageName}.fileprovider"
+            val mediaUri = FileProvider.getUriForFile(context, authority, audioFile)
+            
+            // Grant read permission to AnkiDroid
+            val ankiPackage = AddContentApi.getAnkiDroidPackageName(context)
+            if (ankiPackage != null) {
+                context.grantUriPermission(ankiPackage, mediaUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            // Generate a unique preferred name based on the file name
+            val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}"
+            val soundTag = api.addMediaFromUri(mediaUri, preferredName, "audio")
+            
+            // Revoke the permission after the file is copied
+            if (ankiPackage != null) {
+                context.revokeUriPermission(mediaUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            // addMediaFromUri returns the formatted [sound:...] tag directly, or null if it failed
+            if (soundTag != null) {
+                android.util.Log.d("AnkiApiRepository", "Successfully added audio: $soundTag")
+                if (fieldText.isNotBlank()) {
+                    "$fieldText $soundTag"
+                } else {
+                    soundTag
+                }
+            } else {
+                android.util.Log.w("AnkiApiRepository", "addMediaFromUri returned null for: ${audioFile.name}")
+                fieldText
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("AnkiApiRepository", "Failed to add audio file: ${e.message}", e)
+            fieldText // Return original text if audio addition fails
+        }
+    }
+    
     /**
      * Get list of available decks in AnkiDroid
      */

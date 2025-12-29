@@ -512,6 +512,29 @@ class CopilotChatViewModel @Inject constructor(
             
             val deckName = templateResolver.resolveDeckName(deckTemplate, foreign)
             
+            // Generate audio files for front and back if ElevenLabs is configured
+            val frontAudioFile = if (elevenLabsRepository.isConfigured() && card.frontLanguageCode != null) {
+                try {
+                    elevenLabsRepository.generateAudioFile(card.frontSide, card.frontLanguageCode).getOrNull()
+                } catch (e: Exception) {
+                    android.util.Log.w("CopilotChatViewModel", "Failed to generate front audio", e)
+                    null
+                }
+            } else null
+            
+            val backAudioFile = if (elevenLabsRepository.isConfigured() && card.backLanguageCode != null) {
+                try {
+                    elevenLabsRepository.generateAudioFile(card.backSide, card.backLanguageCode).getOrNull()
+                } catch (e: Exception) {
+                    android.util.Log.w("CopilotChatViewModel", "Failed to generate back audio", e)
+                    null
+                }
+            } else null
+            
+            val audioFiles = mutableMapOf<String, java.io.File>()
+            if (frontAudioFile != null) audioFiles["Front"] = frontAudioFile
+            if (backAudioFile != null) audioFiles["Back"] = backAudioFile
+            
             // Create cards based on direction
             val cardsToCreate = when (cardDirection) {
                 CopilotCardDirection.VIA_INTENT -> {
@@ -522,7 +545,8 @@ class CopilotChatViewModel @Inject constructor(
                             modelName = "Basic",
                             fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
-                            tags = listOf("glosdalen", "copilot", native.code, foreign.code)
+                            tags = listOf("glosdalen", "copilot", native.code, foreign.code),
+                            audioFiles = audioFiles
                         )
                     )
                 }
@@ -532,7 +556,8 @@ class CopilotChatViewModel @Inject constructor(
                             modelName = "Basic",
                             fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
-                            tags = listOf("glosdalen", "copilot", native.code, foreign.code)
+                            tags = listOf("glosdalen", "copilot", native.code, foreign.code),
+                            audioFiles = audioFiles
                         )
                     )
                 }
@@ -542,7 +567,8 @@ class CopilotChatViewModel @Inject constructor(
                             modelName = "Basic (and reversed card)",
                             fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
-                            tags = listOf("glosdalen", "copilot", native.code, foreign.code, "bidirectional")
+                            tags = listOf("glosdalen", "copilot", native.code, foreign.code, "bidirectional"),
+                            audioFiles = audioFiles
                         )
                     )
                 }
