@@ -103,7 +103,7 @@ object CopilotApiConstants {
     const val GITHUB_API_BASE_URL = "https://api.github.com/"
     
     // Copilot API
-    const val COPILOT_API_BASE_URL = "https://api.individual.githubcopilot.com/"
+    const val COPILOT_API_BASE_URL = "https://api.githubcopilot.com/"
     
     // OAuth Configuration  
     const val CLIENT_ID = "Iv1.b507a08c87ecfe98"
