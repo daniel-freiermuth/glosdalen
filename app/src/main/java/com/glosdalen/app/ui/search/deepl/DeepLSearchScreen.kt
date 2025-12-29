@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.foundation.Image
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -379,6 +381,8 @@ fun DeepLSearchScreen(
                 selectedCardDirection = uiState.selectedCardDirection,
                 nativeLanguage = nativeLanguage,
                 foreignLanguage = foreignLanguage,
+                isTtsConfigured = uiState.isTtsConfigured,
+                isTtsPlaying = uiState.isTtsPlaying,
                 onCreateCard = viewModel::createAnkiCard,
                 onCardDirectionChange = viewModel::updateCardDirection,
                 onTranslationClick = { translationText ->
@@ -389,7 +393,8 @@ fun DeepLSearchScreen(
                     // Trigger new search
                     viewModel.searchWord()
                 },
-                onTranslationSelect = viewModel::selectTranslation
+                onTranslationSelect = viewModel::selectTranslation,
+                onSpeakText = { text, language -> viewModel.speakText(text, language) }
             )
         }
     }
@@ -542,10 +547,13 @@ private fun TranslationCard(
     selectedCardDirection: DeepLCardDirection,
     nativeLanguage: Language,
     foreignLanguage: Language,
+    isTtsConfigured: Boolean,
+    isTtsPlaying: Boolean,
     onCreateCard: () -> Unit,
     onCardDirectionChange: (DeepLCardDirection) -> Unit,
     onTranslationClick: (String) -> Unit,
-    onTranslationSelect: (String) -> Unit
+    onTranslationSelect: (String) -> Unit,
+    onSpeakText: (String, Language) -> Unit
 ) {
     
     Card {
@@ -553,8 +561,46 @@ private fun TranslationCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Original word with TTS button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = vocabularyEntry.originalWord,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = vocabularyEntry.sourceLanguage.displayName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
+                if (isTtsConfigured) {
+                    IconButton(
+                        onClick = { onSpeakText(vocabularyEntry.originalWord, vocabularyEntry.sourceLanguage) }
+                    ) {
+                        Icon(
+                            imageVector = if (isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
+                            tint = if (isTtsPlaying) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                }
+            }
+            
+            HorizontalDivider()
+            
             Text(
-                text = "Translation",
+                text = "Translations",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -621,6 +667,30 @@ private fun TranslationCard(
                             
                             // Action buttons
                             Column(horizontalAlignment = Alignment.End) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // TTS button for translation
+                                    if (isTtsConfigured) {
+                                        IconButton(
+                                            onClick = { onSpeakText(translation.text, vocabularyEntry.targetLanguage) },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
+                                                modifier = Modifier.size(18.dp),
+                                                tint = if (isTtsPlaying) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                
                                 // Reverse search button
                                 TextButton(
                                     onClick = { onTranslationClick(translation.text) },

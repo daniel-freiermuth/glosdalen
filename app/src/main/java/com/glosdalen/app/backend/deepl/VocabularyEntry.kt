@@ -16,42 +16,57 @@ enum class Language(
     val code: String, 
     val displayName: String, 
     val nativeName: String,
+    /** ISO 639-1 language code for ElevenLabs TTS. Null if not supported by ElevenLabs. */
+    val elevenLabsCode: String? = null,
     private val localizedNames: Map<String, String> = emptyMap()
 ) {
     // All DeepL-supported languages (alphabetically by display name)
-    // ARABIC("AR", "Arabic", "العربية"), deactivated because RTL
-    BULGARIAN("BG", "Bulgarian", "Български"),
-    CHINESE_SIMPLIFIED("ZH", "Chinese (Simplified)", "简体中文"),
-    CHINESE_TRADITIONAL("ZH-HANT", "Chinese (Traditional)", "繁體中文"),
-    CZECH("CS", "Czech", "Čeština"),
-    GERMAN("DE", "German", "Deutsch"),
-    ENGLISH("EN", "English", "English"),
-    SPANISH("ES", "Spanish", "Español"),
-    ESTONIAN("ET", "Estonian", "Eesti"),
-    FRENCH("FR", "French", "Français"),
-    GREEK("EL", "Greek", "Ελληνικά"),
+    // ElevenLabs supports: English, Japanese, Chinese, German, Hindi, French, Korean, 
+    // Portuguese, Italian, Spanish, Indonesian, Dutch, Turkish, Filipino, Polish, 
+    // Swedish, Bulgarian, Romanian, Arabic, Czech, Greek, Finnish, Croatian, Malay, 
+    // Slovak, Danish, Tamil, Ukrainian, Russian, Hungarian, Norwegian, Vietnamese
+    // ARABIC("AR", "Arabic", "العربية", "ar"), deactivated because RTL
+    BULGARIAN("BG", "Bulgarian", "Български", "bg"),
+    CHINESE_SIMPLIFIED("ZH", "Chinese (Simplified)", "简体中文", "zh"),
+    CHINESE_TRADITIONAL("ZH-HANT", "Chinese (Traditional)", "繁體中文", "zh"),
+    CZECH("CS", "Czech", "Čeština", "cs"),
+    GERMAN("DE", "German", "Deutsch", "de"),
+    ENGLISH("EN", "English", "English", "en"),
+    SPANISH("ES", "Spanish", "Español", "es"),
+    ESTONIAN("ET", "Estonian", "Eesti", null), // Not supported by ElevenLabs
+    FRENCH("FR", "French", "Français", "fr"),
+    GREEK("EL", "Greek", "Ελληνικά", "el"),
     // HEBREW("HE", "Hebrew", "עברית"), deactivated because RTL
-    HUNGARIAN("HU", "Hungarian", "Magyar"),
-    INDONESIAN("ID", "Indonesian", "Indonesia"),
-    ITALIAN("IT", "Italian", "Italiano"),
-    DUTCH("NL", "Dutch", "Nederlands"),
-    JAPANESE("JA", "Japanese", "日本語"),
-    KOREAN("KO", "Korean", "한국어"),
-    LATVIAN("LV", "Latvian", "Latviešu"),
-    LITHUANIAN("LT", "Lithuanian", "Lietuvių"),
-    POLISH("PL", "Polish", "Polski"),
-    PORTUGUESE("PT", "Portuguese", "Português"),
-    ROMANIAN("RO", "Romanian", "Română"),
-    RUSSIAN("RU", "Russian", "Русский"),
-    SLOVAK("SK", "Slovak", "Slovenčina"),
-    SLOVENIAN("SL", "Slovenian", "Slovenščina"),
-    SWEDISH("SV", "Swedish", "Svenska"),
-    DANISH("DA", "Danish", "Dansk"),
-    NORWEGIAN("NB", "Norwegian", "Norsk"),
-    FINNISH("FI", "Finnish", "Suomi"),
-    TURKISH("TR", "Turkish", "Türkçe"),
-    UKRAINIAN("UK", "Ukrainian", "Українська");
+    HUNGARIAN("HU", "Hungarian", "Magyar", "hu"),
+    INDONESIAN("ID", "Indonesian", "Indonesia", "id"),
+    ITALIAN("IT", "Italian", "Italiano", "it"),
+    DUTCH("NL", "Dutch", "Nederlands", "nl"),
+    JAPANESE("JA", "Japanese", "日本語", "ja"),
+    KOREAN("KO", "Korean", "한국어", "ko"),
+    LATVIAN("LV", "Latvian", "Latviešu", null), // Not supported by ElevenLabs
+    LITHUANIAN("LT", "Lithuanian", "Lietuvių", null), // Not supported by ElevenLabs
+    POLISH("PL", "Polish", "Polski", "pl"),
+    PORTUGUESE("PT", "Portuguese", "Português", "pt"),
+    ROMANIAN("RO", "Romanian", "Română", "ro"),
+    RUSSIAN("RU", "Russian", "Русский", "ru"),
+    SLOVAK("SK", "Slovak", "Slovenčina", "sk"),
+    SLOVENIAN("SL", "Slovenian", "Slovenščina", null), // Not supported by ElevenLabs
+    SWEDISH("SV", "Swedish", "Svenska", "sv"),
+    DANISH("DA", "Danish", "Dansk", "da"),
+    NORWEGIAN("NB", "Norwegian", "Norsk", "no"),
+    FINNISH("FI", "Finnish", "Suomi", "fi"),
+    TURKISH("TR", "Turkish", "Türkçe", "tr"),
+    UKRAINIAN("UK", "Ukrainian", "Українська", "uk");
     
+    companion object {
+        /**
+         * Find Language by ElevenLabs language code.
+         * Returns null if no matching language is found.
+         */
+        fun fromElevenLabsCode(code: String): Language? {
+            return entries.find { it.elevenLabsCode == code.lowercase() }
+        }
+    }
 }
 
 enum class DeepLModelType(val value: String, val displayName: String, val description: String) {

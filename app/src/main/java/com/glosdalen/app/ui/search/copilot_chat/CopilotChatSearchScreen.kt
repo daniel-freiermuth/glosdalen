@@ -16,6 +16,7 @@ import com.glosdalen.app.ui.components.SplitButton
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -540,16 +541,39 @@ fun CopilotChatSearchScreen(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontWeight = FontWeight.Bold
                             )
-                            IconButton(
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString(parsed.directAnswer))
+                            Row {
+                                if (uiState.isTtsConfigured) {
+                                    IconButton(
+                                        onClick = {
+                                            if (uiState.isTtsPlaying) {
+                                                viewModel.stopTts()
+                                            } else {
+                                                viewModel.speakText(parsed.directAnswer, parsed.directAnswerLanguageCode)
+                                            }
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = if (uiState.isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                            contentDescription = if (uiState.isTtsPlaying) "Stop" else "Listen",
+                                            tint = if (uiState.isTtsPlaying) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            }
+                                        )
+                                    }
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = "Copy answer",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                                IconButton(
+                                    onClick = {
+                                        clipboardManager.setText(AnnotatedString(parsed.directAnswer))
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = "Copy answer",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
                             }
                         }
                         SelectionContainer {
@@ -600,11 +624,40 @@ fun CopilotChatSearchScreen(
                                     Column(
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Text(
-                                            text = "Front:",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Front:",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (uiState.isTtsConfigured) {
+                                                IconButton(
+                                                    onClick = {
+                                                        if (uiState.isTtsPlaying) {
+                                                            viewModel.stopTts()
+                                                        } else {
+                                                            viewModel.speakText(card.frontSide, card.frontLanguageCode)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = if (uiState.isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                        contentDescription = if (uiState.isTtsPlaying) "Stop" else "Listen",
+                                                        tint = if (uiState.isTtsPlaying) {
+                                                            MaterialTheme.colorScheme.primary
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                                        },
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Card(
                                             colors = CardDefaults.cardColors(
                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -624,11 +677,40 @@ fun CopilotChatSearchScreen(
                                     Column(
                                         verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Text(
-                                            text = "Back:",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Back:",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (uiState.isTtsConfigured) {
+                                                IconButton(
+                                                    onClick = {
+                                                        if (uiState.isTtsPlaying) {
+                                                            viewModel.stopTts()
+                                                        } else {
+                                                            viewModel.speakText(card.backSide, card.backLanguageCode)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = if (uiState.isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                        contentDescription = if (uiState.isTtsPlaying) "Stop" else "Listen",
+                                                        tint = if (uiState.isTtsPlaying) {
+                                                            MaterialTheme.colorScheme.primary
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                                        },
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Card(
                                             colors = CardDefaults.cardColors(
                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant

@@ -6,6 +6,8 @@ import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.SearchContext
+import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
+import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.libs.copilot.CopilotChat
@@ -24,6 +26,8 @@ import javax.inject.Inject
 @Serializable
 data class CopilotJsonResponse(
     val answer: String,
+    @SerialName("answer_language")
+    val answerLanguage: String = "",
     val flashcards: List<FlashCardJson> = emptyList(),
     val explanation: String = ""
 )
@@ -31,7 +35,11 @@ data class CopilotJsonResponse(
 @Serializable
 data class FlashCardJson(
     val front: String,
+    @SerialName("front_language")
+    val frontLanguage: String = "",
     val back: String,
+    @SerialName("back_language")
+    val backLanguage: String = "",
     val note: String = ""
 )
 
@@ -40,12 +48,15 @@ data class FlashCardJson(
  */
 data class FlashCard(
     val frontSide: String,
+    val frontLanguageCode: String? = null,
     val backSide: String,
+    val backLanguageCode: String? = null,
     val note: String = ""
 )
 
 data class ParsedCopilotResponse(
     val directAnswer: String,
+    val directAnswerLanguageCode: String? = null,
     val cards: List<FlashCard>,
     val additionalInfo: String
 )
@@ -79,7 +90,11 @@ data class CopilotChatUiState(
     val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
     val isLoadingModels: Boolean = false,
     val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE,
-    val showIntroDialog: Boolean = false
+    val showIntroDialog: Boolean = false,
+    // TTS state
+    val isTtsConfigured: Boolean = false,
+    val isTtsPlaying: Boolean = false,
+    val ttsError: String? = null
 )
 
 @HiltViewModel
@@ -87,7 +102,8 @@ class CopilotChatViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val copilot: CopilotChat,
     private val ankiRepository: AnkiRepository,
-    private val templateResolver: DeckNameTemplateResolver
+    private val templateResolver: DeckNameTemplateResolver,
+    private val elevenLabsRepository: ElevenLabsRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(CopilotChatUiState())
@@ -107,12 +123,14 @@ class CopilotChatViewModel @Inject constructor(
             val selectedModel = userPreferences.getCopilotSelectedModel().first()
             val temperature = userPreferences.getCopilotTemperature().first()
             val shouldShowIntro = userPreferences.shouldShowCopilotLanguageIntroDialog().first()
+            val ttsConfigured = elevenLabsRepository.isConfigured()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
                 selectedModelId = selectedModel,
                 temperature = temperature,
-                showIntroDialog = shouldShowIntro
+                showIntroDialog = shouldShowIntro,
+                isTtsConfigured = ttsConfigured
             ) }
         }
         
@@ -198,6 +216,7 @@ class CopilotChatViewModel @Inject constructor(
             val native = nativeLanguage.first()
             val foreign = foreignLanguage.first()
             val currentState = _uiState.value
+            val ttsConfigured = elevenLabsRepository.isConfigured()
             
             // If current source language is not one of the configured languages,
             // reset to native language
@@ -205,8 +224,12 @@ class CopilotChatViewModel @Inject constructor(
                 _uiState.value = currentState.copy(
                     sourceLanguage = native,
                     response = "",
-                    error = null
+                    error = null,
+                    isTtsConfigured = ttsConfigured
                 )
+            } else {
+                // Still update TTS config status even if language didn't change
+                _uiState.update { it.copy(isTtsConfigured = ttsConfigured) }
             }
         }
     }
@@ -389,10 +412,13 @@ class CopilotChatViewModel @Inject constructor(
             appendLine("""
                 {
                   "answer": "Your direct answer to the user's query",
+                  "answer_language": "ISO 639-1 language code of the answer (e.g., 'en', 'de', 'sv')",
                   "flashcards": [
                     {
                       "front": "Front side of the flashcard",
+                      "front_language": "ISO 639-1 language code of front text (e.g., 'en', 'de', 'sv')",
                       "back": "Back side of the flashcard",
+                      "back_language": "ISO 639-1 language code of back text (e.g., 'en', 'de', 'sv')",
                       "note": "Optional note about this card (can be empty string)"
                     }
                   ],
@@ -402,9 +428,11 @@ class CopilotChatViewModel @Inject constructor(
             appendLine()
             appendLine("Important:")
             appendLine("- The 'flashcards' array can contain 0 or more cards (as many as you think would be helpful)")
-            appendLine("- Each flashcard must have 'front' and 'back' fields")
+            appendLine("- Each flashcard must have 'front', 'front_language', 'back', and 'back_language' fields")
+            appendLine("- Language codes must be lowercase ISO 639-1 codes (e.g., 'en' for English, 'de' for German, 'sv' for Swedish)")
             appendLine("- The 'note' field in flashcards is optional (use empty string if not needed)")
             appendLine("- The 'explanation' field is optional (use empty string if not needed)")
+            appendLine("- The 'answer_language' indicates the primary language of your answer (for text-to-speech)")
             appendLine("- Respond with ONLY the JSON object, no additional text before or after")
         }
     }
@@ -565,10 +593,13 @@ class CopilotChatViewModel @Inject constructor(
             // Convert to internal representation
             ParsedCopilotResponse(
                 directAnswer = copilotResponse.answer,
+                directAnswerLanguageCode = copilotResponse.answerLanguage.takeIf { it.isNotBlank() },
                 cards = copilotResponse.flashcards.map { flashcard ->
                     FlashCard(
                         frontSide = flashcard.front,
+                        frontLanguageCode = flashcard.frontLanguage.takeIf { it.isNotBlank() },
                         backSide = flashcard.back,
+                        backLanguageCode = flashcard.backLanguage.takeIf { it.isNotBlank() },
                         note = flashcard.note
                     )
                 },
@@ -646,5 +677,51 @@ class CopilotChatViewModel @Inject constructor(
                 "Card type not found. Please open AnkiDroid first to initialize note types."
             else -> "Error when creating card: $message"
         }
+    }
+    
+    // TTS Functions
+    
+    /**
+     * Speak the given text using ElevenLabs TTS.
+     * @param text The text to speak
+     * @param languageCode Optional ISO 639-1 language code for proper pronunciation (from LLM annotation)
+     */
+    fun speakText(text: String, languageCode: String? = null) {
+        if (_uiState.value.isTtsPlaying) {
+            stopTts()
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTtsPlaying = true, ttsError = null) }
+            
+            elevenLabsRepository.speakText(
+                text = text,
+                languageCode = languageCode,
+                onComplete = {
+                    _uiState.update { it.copy(isTtsPlaying = false) }
+                },
+                onError = { error ->
+                    val errorMessage = when (error) {
+                        is ElevenLabsError.NoApiKey -> "TTS not configured. Set up in Settings → ElevenLabs TTS"
+                        is ElevenLabsError.InvalidApiKey -> "Invalid ElevenLabs API key"
+                        is ElevenLabsError.NetworkError -> "Network error"
+                        is ElevenLabsError.QuotaExceeded -> "ElevenLabs character quota exceeded"
+                        is ElevenLabsError.PlaybackError -> "Playback failed"
+                        else -> "TTS error"
+                    }
+                    _uiState.update { it.copy(isTtsPlaying = false, ttsError = errorMessage) }
+                }
+            )
+        }
+    }
+    
+    fun stopTts() {
+        elevenLabsRepository.stopPlayback()
+        _uiState.update { it.copy(isTtsPlaying = false) }
+    }
+    
+    fun clearTtsError() {
+        _uiState.update { it.copy(ttsError = null) }
     }
 }

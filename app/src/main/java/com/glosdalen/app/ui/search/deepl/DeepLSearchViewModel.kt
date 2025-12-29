@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiError
 import com.glosdalen.app.backend.anki.AnkiRepository
+import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
+import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
@@ -17,6 +19,7 @@ import javax.inject.Inject
 class DeepLSearchViewModel @Inject constructor(
     private val deepLRepository: DeepLRepository,
     private val ankiRepository: AnkiRepository,
+    private val elevenLabsRepository: ElevenLabsRepository,
     private val userPreferences: UserPreferences,
     private val templateResolver: DeckNameTemplateResolver
 ) : ViewModel() {
@@ -33,6 +36,7 @@ class DeepLSearchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
+                isTtsConfigured = elevenLabsRepository.isConfigured()
             )
         }
         
@@ -113,6 +117,9 @@ class DeepLSearchViewModel @Inject constructor(
             val foreign = foreignLanguage.first()
             val currentState = _uiState.value
             
+            // Refresh TTS configuration status (in case it was set up in settings)
+            val ttsConfigured = elevenLabsRepository.isConfigured()
+            
             // If current source language is not one of the configured languages,
             // reset to native language
             if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
@@ -121,8 +128,11 @@ class DeepLSearchViewModel @Inject constructor(
                     translationResult = null,
                     error = null,
                     cardCreationResult = null,
-                    cardsCreatedCount = 0
+                    cardsCreatedCount = 0,
+                    isTtsConfigured = ttsConfigured
                 )
+            } else {
+                _uiState.value = currentState.copy(isTtsConfigured = ttsConfigured)
             }
         }
     }
@@ -346,6 +356,68 @@ class DeepLSearchViewModel @Inject constructor(
             )
         }
     }
+    
+    /**
+     * Speak the given text using ElevenLabs TTS.
+     * @param text The text to speak
+     * @param language The language of the text (for proper pronunciation)
+     */
+    fun speakText(text: String, language: Language? = null) {
+        if (_uiState.value.isTtsPlaying) {
+            stopTts()
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isTtsPlaying = true,
+                ttsError = null
+            )
+            
+            elevenLabsRepository.speakText(
+                text = text,
+                languageCode = language?.elevenLabsCode,
+                onComplete = {
+                    _uiState.value = _uiState.value.copy(isTtsPlaying = false)
+                },
+                onError = { error ->
+                    val errorMessage = when (error) {
+                        is ElevenLabsError.NoApiKey -> "TTS not configured. Set up in Settings → ElevenLabs TTS"
+                        is ElevenLabsError.InvalidApiKey -> "Invalid ElevenLabs API key"
+                        is ElevenLabsError.NetworkError -> "Network error"
+                        is ElevenLabsError.QuotaExceeded -> "ElevenLabs character quota exceeded"
+                        is ElevenLabsError.PlaybackError -> "Playback failed"
+                        else -> "TTS error"
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isTtsPlaying = false,
+                        ttsError = errorMessage
+                    )
+                }
+            )
+        }
+    }
+    
+    /**
+     * Stop any currently playing TTS audio.
+     */
+    fun stopTts() {
+        elevenLabsRepository.stopPlayback()
+        _uiState.value = _uiState.value.copy(isTtsPlaying = false)
+    }
+    
+    /**
+     * Clear TTS error message.
+     */
+    fun clearTtsError() {
+        _uiState.value = _uiState.value.copy(ttsError = null)
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        // Stop any playing audio when ViewModel is cleared
+        elevenLabsRepository.stopPlayback()
+    }
 }
 
 /**
@@ -374,5 +446,9 @@ data class DeepLUiState(
     val hasCardBeenCreated: Boolean = false,
     val contextQuery: String = "",
     val isContextExpanded: Boolean = false,
-    val selectedCardDirection: DeepLCardDirection = DeepLCardDirection.NATIVE_TO_FOREIGN
+    val selectedCardDirection: DeepLCardDirection = DeepLCardDirection.NATIVE_TO_FOREIGN,
+    // TTS state
+    val isTtsConfigured: Boolean = false,
+    val isTtsPlaying: Boolean = false,
+    val ttsError: String? = null
 )

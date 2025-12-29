@@ -65,7 +65,8 @@ fun SettingsScreen(
                 onNavigateBack = onNavigateBack,
                 onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
                 onNavigateToAnki = { currentPage = SettingsPage.Anki },
-                onNavigateToCopilot = { currentPage = SettingsPage.Copilot }
+                onNavigateToCopilot = { currentPage = SettingsPage.Copilot },
+                onNavigateToElevenLabs = { currentPage = SettingsPage.ElevenLabs }
             )
         }
         SettingsPage.DeepL -> {
@@ -95,6 +96,11 @@ fun SettingsScreen(
                 onNavigateBack = { currentPage = SettingsPage.Main }
             )
         }
+        SettingsPage.ElevenLabs -> {
+            ElevenLabsSettingsScreen(
+                onNavigateBack = { currentPage = SettingsPage.Main }
+            )
+        }
     }
 }
 
@@ -104,7 +110,8 @@ private enum class SettingsPage {
     Anki,
     Copilot,
     CopilotLanguageInstructions,
-    LanguageInstructions // Kept for backward compatibility if needed
+    LanguageInstructions, // Kept for backward compatibility if needed
+    ElevenLabs
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,6 +121,7 @@ private fun MainSettingsScreen(
     onNavigateToDeepL: () -> Unit,
     onNavigateToAnki: () -> Unit,
     onNavigateToCopilot: () -> Unit,
+    onNavigateToElevenLabs: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -168,6 +176,13 @@ private fun MainSettingsScreen(
                 title = "GitHub Copilot",
                 description = "AI-powered translation suggestions and language-specific instructions",
                 onClick = onNavigateToCopilot
+            )
+            
+            // ElevenLabs TTS Settings Navigation Card
+            SettingsNavigationCard(
+                title = "ElevenLabs TTS",
+                description = "Text-to-speech voice settings for pronunciation",
+                onClick = onNavigateToElevenLabs
             )
             
             Spacer(modifier = Modifier.weight(1f))
