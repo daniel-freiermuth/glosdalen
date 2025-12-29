@@ -160,9 +160,14 @@ class CopilotModelManager @Inject constructor(
             val authHeader = authResult.getOrThrow()
 
             val startApiCall = timeProvider.currentTimeMillis()
-            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Calling models API...")
+            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Calling models API with authHeader length=${authHeader.length}...")
             val response = copilotApiService.getModels(authorization = authHeader)
             android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: API call took ${timeProvider.currentTimeMillis() - startApiCall}ms")
+            android.util.Log.d("CopilotModelManager", "discoverModelsFromAPI: Response code=${response.code()}, isSuccessful=${response.isSuccessful}")
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("CopilotModelManager", "discoverModelsFromAPI: Error body: $errorBody")
+            }
 
             if (response.isSuccessful && response.body() != null) {
                 val modelsResponse = response.body()!!

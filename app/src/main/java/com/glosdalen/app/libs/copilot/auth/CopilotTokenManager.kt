@@ -41,32 +41,46 @@ class CopilotTokenManager @Inject constructor(
      * Get valid Copilot token (handles exchange and renewal automatically)
      */
     suspend fun getValidCopilotToken(): Result<CopilotToken> {
+        android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Starting...")
         return tokenMutex.withLock {
             // Check if current token is valid
             currentCopilotToken?.let { token ->
+                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Found cached token, checking validity...")
                 if (isTokenValid(token)) {
+                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Cached token is valid")
                     return@withLock token.asSuccess()
+                } else {
+                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Cached token is expired")
                 }
-            }
+            } ?: android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: No cached token")
 
             // Try to load from storage
+            android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Loading from storage...")
             val storedToken = storage.loadCopilotToken()
             if (storedToken != null) {
+                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Found stored token")
                 // Parse expiration from token string if not already parsed
                 val tokenWithExpiration = if (storedToken.expiresAt == null) {
                     val parsedExpiration = parseExpirationFromToken(storedToken.token)
+                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Parsed expiration: $parsedExpiration")
                     storedToken.copy(expiresAt = parsedExpiration)
                 } else {
                     storedToken
                 }
                 
                 if (isTokenValid(tokenWithExpiration)) {
+                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Stored token is valid")
                     currentCopilotToken = tokenWithExpiration
                     return@withLock tokenWithExpiration.asSuccess()
+                } else {
+                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Stored token is expired")
                 }
+            } else {
+                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: No stored token found")
             }
 
             // Need to exchange/refresh token
+            android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Exchanging/refreshing token...")
             exchangeOrRefreshToken()
         }
     }
@@ -84,18 +98,24 @@ class CopilotTokenManager @Inject constructor(
      * Exchange OAuth token for Copilot token
      */
     suspend fun exchangeOAuthToken(oauthToken: OAuthToken): Result<CopilotToken> {
+        android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Starting token exchange...")
         return try {
             val accessToken = oauthToken.accessToken 
-                ?: return CopilotException.AuthException.InvalidToken().asFailure()
+                ?: run {
+                    android.util.Log.e("CopilotTokenManager", "exchangeOAuthToken: Access token is null!")
+                    return CopilotException.AuthException.InvalidToken().asFailure()
+                }
                 
             // Validate OAuth token format
             if (accessToken.length < 20) {
                 android.util.Log.e("CopilotTokenManager", "OAuth token seems too short: ${accessToken.length} chars")
                 return CopilotException.AuthException.InvalidToken().asFailure()
             }
+            android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Calling GitHub API copilot_internal/v2/token...")
             val response = githubApiService.getCopilotToken(
                 authorization = "token $accessToken"
             )
+            android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Got response code=${response.code()}, isSuccessful=${response.isSuccessful}")
 
             if (response.isSuccessful && response.body() != null) {
                 val copilotToken = response.body()!!
@@ -168,13 +188,16 @@ class CopilotTokenManager @Inject constructor(
     // ================================
 
     private suspend fun exchangeOrRefreshToken(): Result<CopilotToken> {
+        android.util.Log.d("CopilotTokenManager", "exchangeOrRefreshToken: Getting OAuth token...")
         // Get fresh OAuth token
         val oauthResult = authManager.getOAuthToken()
         if (oauthResult.isFailure) {
+            android.util.Log.e("CopilotTokenManager", "exchangeOrRefreshToken: Failed to get OAuth token: ${oauthResult.exceptionOrNull()?.message}")
             return Result.failure(oauthResult.exceptionOrNull()!!)
         }
 
         val oauthToken = oauthResult.getOrThrow()
+        android.util.Log.d("CopilotTokenManager", "exchangeOrRefreshToken: Got OAuth token, length=${oauthToken.accessToken?.length ?: 0}")
         return exchangeOAuthToken(oauthToken)
     }
 
