@@ -1,0 +1,6 @@
+🔧 API Compatibility Fix
+
+• Fixed Model Selection: Models now correctly found across all UI languages
+• Fixed GitHub Copilot API: Updated to new API endpoint after GitHub deprecated the old one
+• Resolves "Misdirected Request" errors when fetching models
+
