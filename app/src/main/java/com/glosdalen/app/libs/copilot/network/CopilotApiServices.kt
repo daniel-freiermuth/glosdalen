@@ -110,9 +110,9 @@ object CopilotApiConstants {
     const val OAUTH_SCOPES = "read:user user:email copilot models"
     
     // Headers
-    const val USER_AGENT = "GithubCopilot/1.155.0"
-    const val EDITOR_VERSION = "vscode/1.85.0"
-    const val EDITOR_PLUGIN_VERSION = "copilot/1.155.0"
+    const val USER_AGENT = "GithubCopilot/1.250.0"
+    const val EDITOR_VERSION = "vscode/1.96.0"
+    const val EDITOR_PLUGIN_VERSION = "copilot/1.250.0"
     
     // Timeouts
     const val CONNECT_TIMEOUT = 30L // seconds
