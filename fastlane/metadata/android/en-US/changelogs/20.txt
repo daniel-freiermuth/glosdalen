@@ -1,0 +1,10 @@
+🧠 Knowledge Mode & More Languages
+
+• New Knowledge Mode: Ask any question and let the AI suggest flashcards.
+• Expanded Language Support: Added all remaining DeepL languages
+• Whitespace Warnings: Get alerted about whitespace around deck level separators
+
+Breaking Changes:
+• Removed lang_code deck template variable
+• Removed foreign_local deck template variable
+
