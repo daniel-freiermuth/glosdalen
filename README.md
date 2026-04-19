@@ -2,6 +2,12 @@
 
 A Kotlin Android app for multi-language vocabulary lookup with seamless AnkiDroid integration. Support for 30+ languages including German, Swedish, English, French, Spanish, Italian, and many more.
 
+[<img src="https://f-droid.org/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/com.glosdalen.app/)
+
+Or download the latest APK from the [Releases Section](https://github.com/daniel-freiermuth/glosdalen/releases/latest).
+
 ## Features
 
 - **Multi-Language Support**: High-quality translation for 30+ languages
