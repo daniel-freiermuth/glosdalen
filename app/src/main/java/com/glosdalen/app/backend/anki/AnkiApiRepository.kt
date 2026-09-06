@@ -10,6 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,6 +31,7 @@ class AnkiApiRepository @Inject constructor(
     }
 
     private var cachedApi: AnkiContentApi? = null
+    private val audioFileCounter = AtomicLong(0)
 
     private fun getApi(): AnkiContentApi? {
         return try {
@@ -250,7 +252,7 @@ class AnkiApiRepository @Inject constructor(
         
         return try {
             // Generate a unique preferred name based on the file name
-            val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}"
+            val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}_${audioFileCounter.incrementAndGet()}"
             val soundTag = api.addAudio(audioFile, preferredName)
             
             // addAudio returns the formatted [sound:...] tag directly, or null if it failed
