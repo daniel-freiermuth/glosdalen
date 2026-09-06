@@ -17,6 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import retrofit2.Response
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Error types for ElevenLabs TTS operations.
@@ -458,18 +459,20 @@ class ElevenLabsRepository @Inject constructor(
                     onComplete()
                 }
                 
-                setOnErrorListener { _, what, extra ->
-                    Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
-                    stopPlayback()
-                    onError(ElevenLabsError.PlaybackError("Playback error: $what"))
-                    true
-                }
-                
                 // Use suspendCancellableCoroutine for prepare
                 suspendCancellableCoroutine { continuation ->
                     setOnPreparedListener {
                         continuation.resume(Unit)
                     }
+                    
+                    setOnErrorListener { _, what, extra ->
+                        Log.e(TAG, "MediaPlayer error during prepare: what=$what, extra=$extra")
+                        continuation.resumeWithException(
+                            ElevenLabsError.PlaybackError("Prepare error: $what")
+                        )
+                        true
+                    }
+                    
                     prepareAsync()
                     
                     continuation.invokeOnCancellation {
@@ -479,6 +482,14 @@ class ElevenLabsRepository @Inject constructor(
                             // Ignore
                         }
                     }
+                }
+                
+                // Restore error listener for the playback phase
+                setOnErrorListener { _, what, extra ->
+                    Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra")
+                    stopPlayback()
+                    onError(ElevenLabsError.PlaybackError("Playback error: $what"))
+                    true
                 }
                 
                 start()
