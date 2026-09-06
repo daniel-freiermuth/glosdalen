@@ -54,12 +54,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.glosdalen.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.glosdalen.app"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         
         // Static version code and name - F-Droid parses these, increment manually for each release
         versionCode = 22
@@ -217,8 +217,8 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     
     // Dependency Injection
-    implementation("com.google.dagger:hilt-android:2.56.2")
-    ksp("com.google.dagger:hilt-compiler:2.56.2")
+    implementation("com.google.dagger:hilt-android:2.60.1")
+    ksp("com.google.dagger:hilt-compiler:2.60.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
     // Coroutines
