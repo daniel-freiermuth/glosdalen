@@ -21,6 +21,12 @@ class AnkiApiInfoViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AnkiApiInfoUiState())
     val uiState: StateFlow<AnkiApiInfoUiState> = _uiState
 
+    init {
+        viewModelScope.launch {
+            updateDialogState()
+        }
+    }
+
     private suspend fun updateDialogState() {
         // Check repository state for installed vs permission
         val apiEndpointAvailable = ankiRepository.isApiEndpointAvailable()
