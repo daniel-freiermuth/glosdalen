@@ -205,7 +205,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
     // Kotlinx Serialization (for all API communication)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     implementation("com.squareup.retrofit2:converter-kotlinx-serialization:2.11.0")
     
     // Security (for Copilot library - EncryptedSharedPreferences)
