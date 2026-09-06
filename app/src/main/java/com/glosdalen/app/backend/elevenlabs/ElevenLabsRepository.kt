@@ -43,6 +43,7 @@ class ElevenLabsRepository @Inject constructor(
 ) {
     private var mediaPlayer: MediaPlayer? = null
     private var currentAudioFile: File? = null
+    private val playerLock = Any()
     
     companion object {
         private const val TAG = "ElevenLabsRepository"
@@ -386,8 +387,15 @@ class ElevenLabsRepository @Inject constructor(
      * Stop any currently playing audio.
      */
     fun stopPlayback() {
+        val player: MediaPlayer?
+        synchronized(playerLock) {
+            player = mediaPlayer
+            mediaPlayer = null
+            currentAudioFile = null
+        }
+        // Release outside the lock — only one thread can win the capture above
         try {
-            mediaPlayer?.apply {
+            player?.apply {
                 if (isPlaying) {
                     stop()
                 }
@@ -396,20 +404,18 @@ class ElevenLabsRepository @Inject constructor(
         } catch (e: Exception) {
             Log.w(TAG, "Error stopping playback", e)
         }
-        mediaPlayer = null
-        
-        // Don't delete cached files - keep them for reuse
-        currentAudioFile = null
     }
     
     /**
      * Check if audio is currently playing.
      */
     fun isPlaying(): Boolean {
-        return try {
-            mediaPlayer?.isPlaying == true
-        } catch (e: Exception) {
-            false
+        return synchronized(playerLock) {
+            try {
+                mediaPlayer?.isPlaying == true
+            } catch (e: Exception) {
+                false
+            }
         }
     }
     
@@ -433,7 +439,7 @@ class ElevenLabsRepository @Inject constructor(
         onError: (ElevenLabsError) -> Unit
     ) {
         try {
-            mediaPlayer = MediaPlayer().apply {
+            val newPlayer = MediaPlayer().apply {
                 setDataSource(file.absolutePath)
                 
                 setOnCompletionListener {
@@ -465,6 +471,9 @@ class ElevenLabsRepository @Inject constructor(
                 }
                 
                 start()
+            }
+            synchronized(playerLock) {
+                mediaPlayer = newPlayer
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to play audio", e)
