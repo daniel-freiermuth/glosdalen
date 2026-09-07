@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.deepl.Language
-import com.glosdalen.app.backend.deepl.SearchContext
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
 import kotlinx.coroutines.CoroutineScope
