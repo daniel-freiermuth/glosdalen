@@ -1,13 +1,7 @@
 package com.glosdalen.app.backend.anki
 
-import android.content.Context
 import android.util.Log
-import com.ichi2.anki.api.AddContentApi
-import com.glosdalen.app.domain.preferences.UserPreferences
-import kotlinx.coroutines.flow.first
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,10 +12,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class AnkiRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val apiRepository: AnkiApiRepository,
     private val intentRepository: AnkiIntentRepository,
-    private val userPreferences: UserPreferences
 ) {
 
     companion object {
@@ -65,28 +57,6 @@ class AnkiRepository @Inject constructor(
         if (intentAvailable) {
             Log.d(TAG, "Falling back to intent implementation")
             return intentRepository
-        }
-        
-        Log.w(TAG, "No AnkiDroid integration available")
-        throw AnkiError.AnkiDroidNotInstalled
-    }
-    
-    private suspend fun tryIntentFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiBackend {
-        if (intentAvailable) {
-            Log.d(TAG, "Using intent implementation (user preference)")
-            return intentRepository
-        }
-        
-        // Fall back to API if available
-        if (apiAvailable) {
-            Log.d(TAG, "Intent not available, trying API implementation...")
-            val hasPermission = apiRepository.hasApiPermission()
-            if (hasPermission) {
-                Log.d(TAG, "Using API implementation as fallback")
-                return apiRepository
-            } else {
-                Log.d(TAG, "API available but no permission, and intent unavailable")
-            }
         }
         
         Log.w(TAG, "No AnkiDroid integration available")
@@ -185,31 +155,6 @@ class AnkiRepository @Inject constructor(
         return intentRepository.getInstallAnkiDroidIntent()
     }
 
-    /**
-     * Check if both API and Intent methods are available
-     */
-    suspend fun areBothMethodsAvailable(): Boolean = withContext(Dispatchers.IO) {
-        val apiAvailable = apiRepository.isAnkiDroidAvailable()
-        val intentAvailable = intentRepository.isAnkiDroidAvailable()
-        return@withContext apiAvailable && intentAvailable
-    }
-    
-    /**
-     * Get list of available methods for user selection
-     */
-    suspend fun getAvailableMethods(): List<AnkiImplementationType> = withContext(Dispatchers.IO) {
-        val methods = mutableListOf<AnkiImplementationType>()
-        
-        if (apiRepository.isAnkiDroidAvailable()) {
-            methods.add(AnkiImplementationType.API)
-        }
-        
-        if (intentRepository.isAnkiDroidAvailable()) {
-            methods.add(AnkiImplementationType.INTENT)
-        }
-        
-        return@withContext methods
-    }
 }
 
 /**
