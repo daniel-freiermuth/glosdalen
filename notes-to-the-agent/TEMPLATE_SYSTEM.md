@@ -92,14 +92,14 @@ LaunchedEffect(selectedDeckName) {
 
 ### Template Resolution Algorithm
 ```kotlin
-fun resolveDeckName(templateString: String, searchContext: SearchContext): String {
+fun resolveDeckName(templateString: String, foreignLanguage: Language): String {
     var resolved = templateString
     
     // Language name substitution (lowercase then uppercase)
     resolved = resolved.replace("{foreign_native}", 
-        searchContext.foreignLanguage.nativeName.lowercase())
+        foreignLanguage.nativeName.lowercase())
     resolved = resolved.replace("{Foreign_native}", 
-        searchContext.foreignLanguage.nativeName)
+        foreignLanguage.nativeName)
     
     // Date substitution
     val now = LocalDate.now()

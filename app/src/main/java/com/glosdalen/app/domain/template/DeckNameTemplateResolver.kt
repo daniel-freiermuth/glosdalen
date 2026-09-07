@@ -1,9 +1,7 @@
 package com.glosdalen.app.domain.template
 
 import com.glosdalen.app.backend.deepl.Language
-import com.glosdalen.app.backend.deepl.SearchContext
 import java.time.LocalDate
-import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.Locale
 import javax.inject.Inject
