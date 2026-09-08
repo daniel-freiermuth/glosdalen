@@ -194,8 +194,10 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.0")
+    // Navigation 3 (Compose-native navigation with user-owned back stack)
+    implementation("androidx.navigation3:navigation3-runtime:1.1.7")
+    implementation("androidx.navigation3:navigation3-ui:1.1.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-navigation3:2.11.0")
     
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
@@ -214,7 +216,7 @@ dependencies {
     // Dependency Injection
     implementation("com.google.dagger:hilt-android:2.60.1")
     ksp("com.google.dagger:hilt-compiler:2.60.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
     
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")

@@ -35,19 +35,19 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
- import androidx.compose.runtime.getValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.glosdalen.app.ui.anki.AnkiApiInfoDialog
 import com.glosdalen.app.ui.anki.AnkiApiInfoViewModel
 import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
@@ -57,6 +57,12 @@ import com.glosdalen.app.ui.settings.SettingsScreen
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+
+// Navigation 3 route keys — type-safe replacements for string routes
+data object DeepLSearchRoute
+data object CopilotChatRoute
+data object CopilotKnowledgeRoute
+data object SettingsRoute
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,91 +83,84 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun GlosdalenApp() {
-    val navController = rememberNavController()
+    val backStack = remember { mutableStateListOf<Any>(DeepLSearchRoute) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val ankiInfoViewModel: AnkiApiInfoViewModel = hiltViewModel()
     val ankiInfoState by ankiInfoViewModel.uiState.collectAsState()
     val context = LocalContext.current
-    
-    // Observe current route as state
-    val currentRoute by navController.currentBackStackEntryFlow
-        .collectAsState(initial = navController.currentBackStackEntry)
-    
+
+    // Derive current route from the back stack (last item)
+    val currentRoute = backStack.lastOrNull()
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
                 AppDrawerContent(
-                    currentRoute = currentRoute?.destination?.route,
+                    currentRoute = currentRoute,
                     onNavigate = { route ->
                         scope.launch { drawerState.close() }
-                        navController.navigate(route) {
-                            // Clear back stack and navigate to the selected item
-                            popUpTo(0) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        // Replace the back stack with a single top-level destination
+                        backStack.clear()
+                        backStack.add(route)
                     }
                 )
             }
         }
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = "deepl-search"
-        ) {
-            composable("deepl-search") {
-                DeepLSearchScreen(
-                    onOpenDrawer = { scope.launch { drawerState.open() } },
-                    onNavigateToSettings = {
-                        if (navController.currentDestination?.route == "deepl-search") {
-                            navController.navigate("settings") {
-                                launchSingleTop = true
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator()
+            ),
+            entryProvider = entryProvider {
+                entry<DeepLSearchRoute> {
+                    DeepLSearchScreen(
+                        onOpenDrawer = { scope.launch { drawerState.open() } },
+                        onNavigateToSettings = {
+                            if (backStack.lastOrNull() is DeepLSearchRoute) {
+                                backStack.add(SettingsRoute)
                             }
                         }
-                    }
-                )
-            }
-            
-            composable("copilot-chat") {
-                CopilotChatSearchScreen(
-                    onOpenDrawer = { scope.launch { drawerState.open() } },
-                    onNavigateToSettings = {
-                        if (navController.currentDestination?.route == "copilot-chat") {
-                            navController.navigate("settings") {
-                                launchSingleTop = true
+                    )
+                }
+
+                entry<CopilotChatRoute> {
+                    CopilotChatSearchScreen(
+                        onOpenDrawer = { scope.launch { drawerState.open() } },
+                        onNavigateToSettings = {
+                            if (backStack.lastOrNull() is CopilotChatRoute) {
+                                backStack.add(SettingsRoute)
                             }
                         }
-                    }
-                )
-            }
-            
-            composable("copilot-knowledge") {
-                CopilotKnowledgeSearchScreen(
-                    onOpenDrawer = { scope.launch { drawerState.open() } },
-                    onNavigateToSettings = {
-                        if (navController.currentDestination?.route == "copilot-knowledge") {
-                            navController.navigate("settings") {
-                                launchSingleTop = true
+                    )
+                }
+
+                entry<CopilotKnowledgeRoute> {
+                    CopilotKnowledgeSearchScreen(
+                        onOpenDrawer = { scope.launch { drawerState.open() } },
+                        onNavigateToSettings = {
+                            if (backStack.lastOrNull() is CopilotKnowledgeRoute) {
+                                backStack.add(SettingsRoute)
                             }
                         }
-                    }
-                )
-            }
-            
-            composable("settings") {
-                SettingsScreen(
-                    onNavigateBack = {
-                        if (navController.currentDestination?.route == "settings") {
-                            navController.popBackStack()
+                    )
+                }
+
+                entry<SettingsRoute> {
+                    SettingsScreen(
+                        onNavigateBack = {
+                            if (backStack.lastOrNull() is SettingsRoute) {
+                                backStack.removeLastOrNull()
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
-        }
+        )
 
         // Global Anki API info dialog (shown only when needed)
         if (ankiInfoState.shouldShow) {
@@ -182,8 +181,8 @@ fun GlosdalenApp() {
 
 @Composable
 private fun AppDrawerContent(
-    currentRoute: String?,
-    onNavigate: (String) -> Unit,
+    currentRoute: Any?,
+    onNavigate: (Any) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -213,8 +212,8 @@ private fun AppDrawerContent(
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Search, contentDescription = null) },
             label = { Text("DeepL") },
-            selected = currentRoute == "deepl-search",
-            onClick = { onNavigate("deepl-search") },
+            selected = currentRoute is DeepLSearchRoute,
+            onClick = { onNavigate(DeepLSearchRoute) },
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
@@ -231,16 +230,16 @@ private fun AppDrawerContent(
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Star, contentDescription = null) },
             label = { Text("Copilot Language") },
-            selected = currentRoute == "copilot-chat",
-            onClick = { onNavigate("copilot-chat") },
+            selected = currentRoute is CopilotChatRoute,
+            onClick = { onNavigate(CopilotChatRoute) },
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Lightbulb, contentDescription = null) },
             label = { Text("General Knowledge") },
-            selected = currentRoute == "copilot-knowledge",
-            onClick = { onNavigate("copilot-knowledge") },
+            selected = currentRoute is CopilotKnowledgeRoute,
+            onClick = { onNavigate(CopilotKnowledgeRoute) },
             modifier = Modifier.padding(horizontal = 12.dp)
         )
         
@@ -248,8 +247,8 @@ private fun AppDrawerContent(
         // NavigationDrawerItem(
         //     icon = { Icon(Icons.Default.Translate, contentDescription = null) },
         //     label = { Text("Google Translate") },
-        //     selected = currentRoute == "google-search",
-        //     onClick = { onNavigate("google-search") },
+        //     selected = currentRoute is GoogleSearchRoute,
+        //     onClick = { onNavigate(GoogleSearchRoute) },
         //     modifier = Modifier.padding(horizontal = 12.dp),
         //     badge = { Text("Soon", style = MaterialTheme.typography.labelSmall) }
         // )
