@@ -99,18 +99,6 @@ class DeepLSearchViewModel @Inject constructor(
         )
     }
     
-    fun cycleForeignLanguage() {
-        viewModelScope.launch {
-            val currentForeign = foreignLanguage.first()
-            val availableLanguages = Language.values().filter { it != nativeLanguage.first() }
-            val currentIndex = availableLanguages.indexOf(currentForeign)
-            val nextIndex = (currentIndex + 1) % availableLanguages.size
-            val nextLanguage = availableLanguages[nextIndex]
-            
-            userPreferences.setForeignLanguage(nextLanguage)
-        }
-    }
-    
     fun refreshLanguageState() {
         viewModelScope.launch {
             val native = nativeLanguage.first()
@@ -391,14 +379,6 @@ class DeepLSearchViewModel @Inject constructor(
         searchWord()
     }
     
-    fun refreshAnkiStatus() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isAnkiDroidAvailable = ankiRepository.isAnkiDroidAvailable(),
-            )
-        }
-    }
-    
     /**
      * Speak the given text using ElevenLabs TTS.
      * @param text The text to speak
@@ -446,13 +426,6 @@ class DeepLSearchViewModel @Inject constructor(
     fun stopTts() {
         elevenLabsRepository.stopPlayback()
         _uiState.value = _uiState.value.copy(isTtsPlaying = false)
-    }
-    
-    /**
-     * Clear TTS error message.
-     */
-    fun clearTtsError() {
-        _uiState.value = _uiState.value.copy(ttsError = null)
     }
     
     override fun onCleared() {

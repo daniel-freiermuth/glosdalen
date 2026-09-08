@@ -224,14 +224,6 @@ class ElevenLabsSettingsViewModel @Inject constructor(
         }
     }
     
-    fun dismissError() {
-        _uiState.value = _uiState.value.copy(
-            apiKeyError = null,
-            voicesError = null,
-            testError = null
-        )
-    }
-    
     fun refreshVoices() {
         val apiKey = _uiState.value.apiKey.trim()
         if (apiKey.isNotBlank()) {

@@ -92,10 +92,6 @@ class AnkiSettingsViewModel @Inject constructor(
             }
         }
     }
-
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
-    }
 }
 
 data class AnkiSettingsUiState(
