@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.SearchContext
