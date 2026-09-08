@@ -98,13 +98,6 @@ class DeepLSettingsViewModel @Inject constructor(
             )
         }
     }
-    
-    fun clearApiKeyValidation() {
-        _uiState.value = _uiState.value.copy(
-            apiKeyValidated = false,
-            apiKeyError = null
-        )
-    }
 }
 
 data class DeepLSettingsUiState(
