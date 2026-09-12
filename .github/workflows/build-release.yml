@@ -18,18 +18,16 @@ jobs:
           java-version: '17'
 
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: wrapper
 
       # Run checks before building
       - name: Lint
-        run: gradle lintRelease
+        run: ./gradlew lintRelease
 
       - name: Test
-        run: gradle test
+        run: ./gradlew test
 
       - name: Build release APK
-        run: gradle assembleRelease
+        run: ./gradlew assembleRelease
 
       # Without signing secrets the APK is unsigned.
       # To produce a signed APK, add these repository secrets:

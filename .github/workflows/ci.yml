@@ -21,15 +21,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # The wrapper jar is not committed (*.jar in .gitignore).
-      # setup-gradle with gradle-version: wrapper reads the version from
-      # gradle/wrapper/gradle-wrapper.properties and installs it on PATH.
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: wrapper
 
       - name: Lint
-        run: gradle lintRelease
+        run: ./gradlew lintRelease
 
       - name: Test
-        run: gradle test
+        run: ./gradlew test
