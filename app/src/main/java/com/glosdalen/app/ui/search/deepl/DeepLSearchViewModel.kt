@@ -424,7 +424,7 @@ internal fun buildDeepLAnkiCard(
     }
 
     return AnkiCard(
-        modelName = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) "Basic (and reversed card)" else "Basic",
+        modelName = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) AnkiCard.REVERSED_CARD_MODEL_NAME else "Basic",
         fields = mapOf("Front" to frontSide, "Back" to backSide),
         deckName = deckName,
         tags = listOfNotNull("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, directionTag),
