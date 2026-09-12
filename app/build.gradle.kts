@@ -203,12 +203,12 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     
     // Networking
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.okhttp3:logging-interceptor:5.5.0")
     
     // Kotlinx Serialization (for all API communication)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-    implementation("com.squareup.retrofit2:converter-kotlinx-serialization:2.11.0")
+    implementation("com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0")
     
     // Security (for Copilot library - EncryptedSharedPreferences)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
