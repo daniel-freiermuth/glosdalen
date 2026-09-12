@@ -2,6 +2,7 @@
 
 package com.glosdalen.app.ui.search.copilot_knowledge
 
+import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
@@ -21,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -40,7 +40,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 fun CopilotKnowledgeSearchScreen(
     onOpenDrawer: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: CopilotKnowledgeViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
+    viewModel: CopilotKnowledgeViewModel = hiltViewModel(LocalActivity.current as ComponentActivity)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
