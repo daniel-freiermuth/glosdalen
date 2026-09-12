@@ -35,13 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.LocalActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import android.widget.Toast
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,7 +62,7 @@ import com.glosdalen.app.ui.search.deepl.DeepLSearchViewModel
 fun DeepLSearchScreen(
     onOpenDrawer: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: DeepLSearchViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
+    viewModel: DeepLSearchViewModel = hiltViewModel(LocalActivity.current as ComponentActivity)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val apiKey by viewModel.deepLApiKey.collectAsState("")

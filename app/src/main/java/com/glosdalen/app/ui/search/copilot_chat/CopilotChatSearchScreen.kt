@@ -2,6 +2,7 @@
 
 package com.glosdalen.app.ui.search.copilot_chat
 
+import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.foundation.Image
@@ -25,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -46,7 +46,7 @@ import com.glosdalen.app.backend.deepl.Language
 fun CopilotChatSearchScreen(
     onOpenDrawer: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: CopilotChatViewModel = hiltViewModel(LocalContext.current as ComponentActivity)
+    viewModel: CopilotChatViewModel = hiltViewModel(LocalActivity.current as ComponentActivity)
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val nativeLanguage by viewModel.nativeLanguage.collectAsState(Language.GERMAN)
