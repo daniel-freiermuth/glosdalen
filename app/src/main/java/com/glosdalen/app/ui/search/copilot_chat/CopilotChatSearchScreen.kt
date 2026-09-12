@@ -25,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalClipboardManager
+ import com.glosdalen.app.ui.components.rememberCopyToClipboard
+ import com.glosdalen.app.ui.components.rememberCopyToClipboard
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,7 +53,7 @@ fun CopilotChatSearchScreen(
     val foreignLanguage by viewModel.foreignLanguage.collectAsState(Language.SWEDISH)
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard = rememberCopyToClipboard()
     
     // Memoize target language calculation to prevent unnecessary recompositions
     val targetLanguage = remember(uiState.sourceLanguage, nativeLanguage, foreignLanguage) {
@@ -565,7 +565,7 @@ fun CopilotChatSearchScreen(
                                 }
                                 IconButton(
                                     onClick = {
-                                        clipboardManager.setText(AnnotatedString(parsed.directAnswer))
+                                        copyToClipboard(parsed.directAnswer)
                                     }
                                 ) {
                                     Icon(
@@ -840,7 +840,7 @@ fun CopilotChatSearchScreen(
                                 appendLine(parsed.additionalInfo)
                             }
                         }
-                        clipboardManager.setText(AnnotatedString(fullText))
+                        copyToClipboard(fullText)
                     },
                     modifier = Modifier.weight(1f)
                 ) {
