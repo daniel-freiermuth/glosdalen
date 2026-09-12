@@ -144,7 +144,7 @@ class AnkiApiRepository @Inject constructor(
             } else {
                 // Handle built-in models vs custom models
                 when (modelName) {
-                    "Basic (and reversed card)" -> {
+                    AnkiCard.REVERSED_CARD_MODEL_NAME -> {
                         // Find the built-in reversed model, tolerating case and localized names
                         val reversedModel = findReversedModel(models)
                         if (reversedModel != null) {
@@ -426,7 +426,7 @@ private val LOCALIZED_REVERSED_MODEL_NAMES: Set<String> = setOf(
  * localized names ([LOCALIZED_REVERSED_MODEL_NAMES]).
  */
 internal fun findReversedModel(models: Map<Long, String>): Map.Entry<Long, String>? {
-    models.entries.find { it.value.equals("Basic (and reversed card)", ignoreCase = true) }
+    models.entries.find { it.value.equals(AnkiCard.REVERSED_CARD_MODEL_NAME, ignoreCase = true) }
         ?.let { return it }
 
     return models.entries.find { it.value.lowercase() in LOCALIZED_REVERSED_MODEL_NAMES }
