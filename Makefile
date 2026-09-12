@@ -94,7 +94,7 @@ version:
 .PHONY: test
 test:
 	@echo "🧪 Running tests..."
-	./gradlew test testReleaseUnitTest
+	./gradlew test
 
 # Run lint checks
 .PHONY: lint
