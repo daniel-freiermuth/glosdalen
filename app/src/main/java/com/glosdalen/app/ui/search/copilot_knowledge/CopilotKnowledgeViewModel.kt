@@ -380,7 +380,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 KnowledgeCardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic (and reversed card)",
+                            modelName = AnkiCard.REVERSED_CARD_MODEL_NAME,
                             fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "knowledge", "copilot", "bidirectional")
