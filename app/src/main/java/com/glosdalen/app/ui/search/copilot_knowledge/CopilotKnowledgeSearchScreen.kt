@@ -21,10 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalClipboardManager
+ import com.glosdalen.app.ui.components.rememberCopyToClipboard
+ import com.glosdalen.app.ui.components.rememberCopyToClipboard
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,7 +45,7 @@ fun CopilotKnowledgeSearchScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard = rememberCopyToClipboard()
     
     // Recheck authentication status when screen is resumed
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -478,7 +478,7 @@ fun CopilotKnowledgeSearchScreen(
                             )
                             IconButton(
                                 onClick = {
-                                    clipboardManager.setText(AnnotatedString(parsed.directAnswer))
+                                    copyToClipboard(parsed.directAnswer)
                                 }
                             ) {
                                 Icon(
@@ -739,7 +739,7 @@ fun CopilotKnowledgeSearchScreen(
                                 appendLine(parsed.additionalInfo)
                             }
                         }
-                        clipboardManager.setText(AnnotatedString(fullText))
+                        copyToClipboard(fullText)
                     },
                     modifier = Modifier.weight(1f)
                 ) {
