@@ -153,45 +153,6 @@ class CopilotStorage @Inject constructor(
         return@withContext age < maxAgeMs
     }
 
-    // ================================
-    // User Preferences
-    // ================================
-
-    suspend fun saveUserPreferences(prefs: UserPreferences) = withContext(Dispatchers.IO) {
-        try {
-            val prefsJson = json.encodeToString(prefs)
-            regularPrefs.edit()
-                .putString(KEY_USER_PREFERENCES, prefsJson)
-                .apply()
-        } catch (e: Exception) {
-            throw StorageException.SaveFailed(KEY_USER_PREFERENCES, e)
-        }
-    }
-
-    suspend fun loadUserPreferences(): UserPreferences? = withContext(Dispatchers.IO) {
-        try {
-            val prefsJson = regularPrefs.getString(KEY_USER_PREFERENCES, null)
-            if (prefsJson != null) {
-                json.decodeFromString<UserPreferences>(prefsJson)
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            throw StorageException.LoadFailed(KEY_USER_PREFERENCES, e)
-        }
-    }
-
-    // ================================
-    // Data Management
-    // ================================
-
-    suspend fun clearOAuthToken() = withContext(Dispatchers.IO) {
-        encryptedPrefs.edit()
-            .remove(KEY_OAUTH_TOKEN)
-            .remove(KEY_OAUTH_TOKEN_SAVED_AT)
-            .apply()
-    }
-
     suspend fun clearCopilotToken() = withContext(Dispatchers.IO) {
         try {
             encryptedPrefs.edit()
@@ -203,17 +164,6 @@ class CopilotStorage @Inject constructor(
         }
     }
 
-    suspend fun clearModelCache() = withContext(Dispatchers.IO) {
-        try {
-            regularPrefs.edit()
-                .remove(KEY_MODELS_CACHE)
-                .remove(KEY_MODELS_CACHE_TIMESTAMP)
-                .apply()
-        } catch (e: Exception) {
-            throw StorageException.SaveFailed("clear_model_cache", e)
-        }
-    }
-
     suspend fun clearAllData() = withContext(Dispatchers.IO) {
         try {
             encryptedPrefs.edit().clear().apply()
@@ -221,43 +171,6 @@ class CopilotStorage @Inject constructor(
         } catch (e: Exception) {
             throw StorageException.SaveFailed("clear_all_data", e)
         }
-    }
-
-    // ================================
-    // Storage Statistics
-    // ================================
-
-    suspend fun getStorageInfo(): StorageInfo = withContext(Dispatchers.IO) {
-        val hasOAuthToken = encryptedPrefs.contains(KEY_OAUTH_TOKEN)
-        val hasCopilotToken = encryptedPrefs.contains(KEY_COPILOT_TOKEN)
-        val hasModelCache = regularPrefs.contains(KEY_MODELS_CACHE)
-        val hasUserPrefs = regularPrefs.contains(KEY_USER_PREFERENCES)
-
-        val oauthTokenAge = if (hasOAuthToken) {
-            val savedAt = encryptedPrefs.getLong(KEY_OAUTH_TOKEN_SAVED_AT, 0)
-            if (savedAt > 0) timeProvider.currentTimeMillis() - savedAt else null
-        } else null
-
-        val copilotTokenAge = if (hasCopilotToken) {
-            val savedAt = encryptedPrefs.getLong(KEY_COPILOT_TOKEN_SAVED_AT, 0)
-            if (savedAt > 0) timeProvider.currentTimeMillis() - savedAt else null
-        } else null
-
-        val modelCacheAge = if (hasModelCache) {
-            val timestamp = regularPrefs.getLong(KEY_MODELS_CACHE_TIMESTAMP, 0)
-            if (timestamp > 0) timeProvider.currentTimeMillis() - timestamp else null
-        } else null
-
-        StorageInfo(
-            hasOAuthToken = hasOAuthToken,
-            hasCopilotToken = hasCopilotToken,
-            hasModelCache = hasModelCache,
-            hasUserPreferences = hasUserPrefs,
-            oauthTokenAge = oauthTokenAge,
-            copilotTokenAge = copilotTokenAge,
-            modelCacheAge = modelCacheAge,
-            isModelCacheValid = modelCacheAge?.let { it < MODEL_CACHE_DURATION } ?: false
-        )
     }
 
     companion object {
@@ -273,7 +186,6 @@ class CopilotStorage @Inject constructor(
         private const val KEY_COPILOT_TOKEN_SAVED_AT = "copilot_token_saved_at"
         private const val KEY_MODELS_CACHE = "models_cache"
         private const val KEY_MODELS_CACHE_TIMESTAMP = "models_cache_timestamp"
-        private const val KEY_USER_PREFERENCES = "user_preferences"
 
         // Cache duration - models are cached for 1 hour
         private const val MODEL_CACHE_DURATION = 60 * 60 * 1000L
@@ -293,25 +205,6 @@ data class CachedModels(
         return age < maxAgeMs
     }
 }
-
-data class UserPreferences(
-    val preferredModel: String? = null,
-    val preferFreeModels: Boolean = true,
-    val maxTokens: Int = 150,
-    val temperature: Double = 0.1,
-    val enableDebugLogging: Boolean = false
-)
-
-data class StorageInfo(
-    val hasOAuthToken: Boolean,
-    val hasCopilotToken: Boolean,
-    val hasModelCache: Boolean,
-    val hasUserPreferences: Boolean,
-    val oauthTokenAge: Long? = null,
-    val copilotTokenAge: Long? = null,
-    val modelCacheAge: Long? = null,
-    val isModelCacheValid: Boolean
-)
 
 // ================================
 // Storage Exceptions
