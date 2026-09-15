@@ -311,12 +311,3 @@ data class CopilotConfiguration(
     val connectionTimeout: Long = CopilotApiConstants.CONNECT_TIMEOUT,
     val readTimeout: Long = CopilotApiConstants.READ_TIMEOUT
 )
-
-data class CopilotStatus(
-    val isAuthenticated: Boolean,
-    val hasValidTokens: Boolean,
-    val totalModels: Int,
-    val freeModels: Int,
-    val storageInfo: StorageInfo
-)
-
