@@ -90,8 +90,8 @@ fun GlosdalenTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        darkTheme -> LightColorScheme
-        else -> DarkColorScheme
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
     }
 
     MaterialTheme(
