@@ -18,9 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.platform.LocalClipboardManager
+import com.glosdalen.app.ui.components.rememberCopyToClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontFamily
@@ -219,7 +218,7 @@ private fun DeviceCodeSection(
     onOpenGitHub: () -> Unit
 ) {
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard = rememberCopyToClipboard()
     var codeCopied by remember { mutableStateOf(false) }
     
     Card {
@@ -263,7 +262,7 @@ private fun DeviceCodeSection(
                     
                     OutlinedButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(userCode))
+                            copyToClipboard(userCode)
                             codeCopied = true
                         },
                         modifier = Modifier.padding(start = 8.dp)
