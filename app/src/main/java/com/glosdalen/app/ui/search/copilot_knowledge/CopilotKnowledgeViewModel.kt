@@ -7,6 +7,7 @@ import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.CopilotException
+import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -425,7 +426,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
             }
             
             // Try to extract JSON from response (in case it's wrapped in markdown)
-            val jsonContent = extractJsonFromResponse(response)
+            val jsonContent = LlmJsonExtractor.extractJsonObject(response)
             
             val parsedJson = json.decodeFromString<KnowledgeJsonResponse>(jsonContent)
             
@@ -444,25 +445,6 @@ class CopilotKnowledgeViewModel @Inject constructor(
         } catch (e: Exception) {
             // If parsing fails, return null and show raw response
             null
-        }
-    }
-    
-    private fun extractJsonFromResponse(response: String): String {
-        // Look for JSON block in markdown code fences
-        val jsonBlockRegex = "```(?:json)?\\s*([\\s\\S]*?)```".toRegex()
-        val match = jsonBlockRegex.find(response)
-        
-        return if (match != null) {
-            match.groupValues[1].trim()
-        } else {
-            // Try to find JSON object directly
-            val start = response.indexOf('{')
-            val end = response.lastIndexOf('}')
-            if (start != -1 && end != -1 && end > start) {
-                response.substring(start, end + 1)
-            } else {
-                response
-            }
         }
     }
     
