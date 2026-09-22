@@ -11,6 +11,7 @@ import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.CopilotException
+import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -610,7 +611,7 @@ class CopilotChatViewModel @Inject constructor(
             }
             
             // Try to extract JSON from the response (in case LLM added extra text)
-            val jsonContent = extractJsonFromResponse(response)
+            val jsonContent = LlmJsonExtractor.extractJsonObject(response)
             
             // Parse JSON response
             val copilotResponse = json.decodeFromString<CopilotJsonResponse>(jsonContent)
@@ -639,50 +640,6 @@ class CopilotChatViewModel @Inject constructor(
                 additionalInfo = ""
             )
         }
-    }
-    
-    /**
-     * Extract JSON content from response, handling cases where LLM adds extra text
-     */
-    private fun extractJsonFromResponse(response: String): String {
-        val trimmed = response.trim()
-        
-        // If response starts with {, assume it's pure JSON
-        if (trimmed.startsWith("{")) {
-            // Find the matching closing brace
-            var braceCount = 0
-            var endIndex = -1
-            for (i in trimmed.indices) {
-                when (trimmed[i]) {
-                    '{' -> braceCount++
-                    '}' -> {
-                        braceCount--
-                        if (braceCount == 0) {
-                            endIndex = i
-                            break
-                        }
-                    }
-                }
-            }
-            return if (endIndex != -1) trimmed.substring(0, endIndex + 1) else trimmed
-        }
-        
-        // Try to find JSON block in code fence
-        val jsonBlockRegex = "```(?:json)?\\s*\\n(\\{[\\s\\S]*?\\})\\s*\\n```".toRegex()
-        val match = jsonBlockRegex.find(trimmed)
-        if (match != null) {
-            return match.groupValues[1]
-        }
-        
-        // Try to find any JSON object
-        val jsonObjectRegex = "(\\{[\\s\\S]*\\})".toRegex()
-        val objectMatch = jsonObjectRegex.find(trimmed)
-        if (objectMatch != null) {
-            return objectMatch.groupValues[1]
-        }
-        
-        // Return as-is and let JSON parser fail
-        return trimmed
     }
     
     /**
