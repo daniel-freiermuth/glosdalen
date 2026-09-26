@@ -1,13 +1,11 @@
-# Conventional Commits & Automatic Versioning
+# Conventional Commits & Versioning
 
-Glossordalen uses **Conventional Commits** with automatic semantic versioning powered by the **axion-release-plugin**.
-
-## 🚀 How It Works
-
-Your commit messages automatically determine version bumps:
+Glosdalen uses **Conventional Commits**. Versions are bumped manually in `app/build.gradle.kts`
+(`versionCode` + `versionName`); pushing the bump to `main` tags and releases automatically
+(see `notes-to-the-agent/BUILD_CONFIGURATION.md`). Use commit types to pick the bump:
 
 - **`feat:`** → **Minor** version bump (1.0.0 → 1.1.0)
-- **`fix:`** → **Patch** version bump (1.0.0 → 1.0.1) 
+- **`fix:`** → **Patch** version bump (1.0.0 → 1.0.1)
 - **`BREAKING CHANGE:`** → **Major** version bump (1.0.0 → 2.0.0)
 
 ## 📝 Commit Message Format
@@ -57,18 +55,12 @@ BREAKING CHANGE: API endpoints have changed from /api/v1/ to /api/v2/
 
 ### Check Current Version
 ```bash
-./gradlew currentVersion
+make version
 ```
 
 ### Create Release
-```bash
-./gradlew release
-```
-
-### Manual Version Bump
-```bash
-./gradlew markNextVersion -Prelease.version=1.2.0
-```
+Bump `versionCode` (+1) and `versionName` in `app/build.gradle.kts`, commit, and push to `main`.
+CI creates the `v<versionName>` tag and publishes the signed `release.apk`.
 
 ## 🎯 Best Practices
 
@@ -78,16 +70,3 @@ BREAKING CHANGE: API endpoints have changed from /api/v1/ to /api/v2/
 4. **Atomic Commits**: One logical change per commit
 5. **Test Before Commit**: Ensure builds pass
 
-## 📊 Version History
-
-- **v1.0.0**: Initial release with German-Swedish translation
-- Future versions will be automatically generated based on your commits!
-
-## 🛠️ Technical Details
-
-- **Plugin**: [axion-release-plugin](https://github.com/allegro/axion-release-plugin)
-- **Version Source**: Git tags + commit count
-- **Build Integration**: Automatic `versionName` and `versionCode` in `build.gradle.kts`
-- **Tag Format**: `v1.0.0` (semantic versioning with 'v' prefix)
-
-Happy coding with automated versioning! 🎉

@@ -154,58 +154,33 @@ When encountering build issues:
 - **Size ~11MB** indicates all dependencies included
 - **No JdkImageTransform errors** confirms Java compatibility
 
-## 🚀 Release Automation System
+## 🚀 Release Process (CI-driven)
 
-### Makefile-Based Release Pipeline
-The project includes a comprehensive Makefile for automated build and release management:
+Releases are fully automated on GitHub Actions; `versionName`/`versionCode` in
+`app/build.gradle.kts` are the single source of truth (F-Droid parses them too).
 
-**Key Commands:**
+1. Bump `versionCode` (+1) and `versionName` in `app/build.gradle.kts`, commit, push to `main` on the `github` remote.
+2. `.github/workflows/auto-tag.yml` creates tag `v<versionName>` if it doesn't exist, then calls `build-release.yml`.
+3. `build-release.yml` lints, tests, builds with the keystore from repo secrets
+   (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), verifies the APK's
+   versionName equals the tag and the signature, and publishes `release.apk` to the GitHub Release.
+4. F-Droid (`fdroiddata/metadata/com.glosdalen.app.yml`: `Binaries: …/v%v/release.apk`,
+   `AllowedAPKSigningKeys`) rebuilds from the tag and publishes our signed APK only if it's
+   reproducible, i.e. identical except for the signature.
+
+### Reproducibility invariants (breaking these blocks F-Droid updates)
+- The build must see a clean git tree; a dirty tree appends `-DIRTY` and uses the wall-clock `BUILD_DATE`. Never commit build-generated files (e.g. `.gradle/`).
+- `GIT_HASH` uses `git rev-parse --short`, whose length depends on repo size, so CI clones full history.
+- `BUILD_DATE` = HEAD commit time; F-Droid supplies the same via `SOURCE_DATE_EPOCH`.
+- The release asset must be named `release.apk`, signed with key SHA-256 `02907bd6…3836a`.
+
+### Local builds
 ```bash
-make help           # Show all available commands
-make version        # Display current version from SCM
-make release        # Full release: clean, test, lint, tag, build, distribute
-make build-debug    # Build debug APK with versioned naming
-make build-release  # Build release APK (no tagging)
-make sync-apks      # Sync APKs to Nextcloud (if configured)
+make build-release  # signed if keystore.properties exists; copies to apks/glosdalen-<version>.apk
+make build-debug    # debug APK with versioned naming
+make sync-apks      # sync apks/ to Nextcloud (if configured)
 ```
-
-**Release Process (`make release`):**
-1. Clean build artifacts
-2. Run tests and lint checks  
-3. Create SCM release tag (`./gradlew release`)
-4. Build release APK
-5. Copy to `apks/` with format: `glosdalen-<version>.apk`
-6. Sync to cloud storage (if available)
-
-**Version Management:**
-- Version extracted from SCM via `./gradlew currentVersion`
-- Automatic tagging with axion-release plugin
-- Semantic versioning (v1.7.0 format)
-- APKs named with version for easy identification
-
-**APK Organization:**
-```
-apks/
-├── glosdalen-1.6.0.apk          # Previous releases
-├── glosdalen-1.7.0.apk          # Current release  
-└── ...
-```
-
-### SCM Version Configuration
-Uses axion-release plugin in `build.gradle.kts`:
-```kotlin
-scmVersion {
-    tag {
-        prefix.set("v")
-        versionSeparator.set("")
-    }
-    versionCreator { version, _ ->
-        version.replace("^v".toRegex(), "")
-    }
-}
-```
+`../build_all_releases.py` rebuilds APKs for past tags into `../release-apks/`.
 
 ## ⚠️ Warning: Fragile Configuration
 This build configuration required multiple iterations to achieve stability. Any version bumps should be tested carefully and documented here if successful.
-
-The Makefile system is production-ready and should be used for all releases to ensure consistency.

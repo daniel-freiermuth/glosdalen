@@ -5,8 +5,8 @@
 APP_NAME := glosdalen
 APKS_DIR := apks
 
-# Get version from Gradle (clean output)
-VERSION := $(shell ./gradlew currentVersion -q | grep "Project version:" | cut -d' ' -f3)
+# Version from app/build.gradle.kts (single source of truth; CI tags v<versionName> on bump)
+VERSION := $(shell sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts)
 
 # APK paths
 RELEASE_APK_PATH := app/build/outputs/apk/release/app-release.apk
@@ -22,7 +22,7 @@ help:
 	@echo "Glosdalen Android App Build System"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  release       - Create a full release (tag, build, copy APK)"
+	@echo "  (releases: bump versionCode/versionName in app/build.gradle.kts and push to main)"
 	@echo "  build-release - Build release APK only"
 	@echo "  build-debug   - Build debug APK"
 	@echo "  install-debug - Install debug APK to connected device"
@@ -32,18 +32,6 @@ help:
 	@echo "  lint          - Run lint checks"
 	@echo ""
 	@echo "Current version: $(VERSION)"
-
-# Full release process
-.PHONY: release
-release: clean test lint
-	@echo "🚀 Starting release process for $(APP_NAME) v$(VERSION)..."
-	
-	# Create release tag and push
-	@echo "📋 Creating release tag..."
-	./gradlew release
-	
-	make build-release
-	make sync-apks
 
 # Build release APK only (no tagging)
 .PHONY: build-release
@@ -133,10 +121,4 @@ show-film: shifted
 
 save-film: shifted
 	gource shifted.log --log-format custom -o - --auto-skip-seconds 1 --max-file-lag 1 | ffmpeg -y -f image2pipe -vcodec ppm -i - -vcodec libx265 -preset veryslow -crf 23 gource.mp4
-
-# Verify release readiness
-.PHONY: verify-release
-verify-release:
-	@echo "🔍 Verifying release readiness..."
-	./gradlew verifyRelease
 File: makefile

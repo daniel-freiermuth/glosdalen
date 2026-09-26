@@ -84,7 +84,7 @@ See `BUILD_CONFIGURATION.md` for detailed build setup and troubleshooting.
 - ✅ **Ready for Production**: Feature-complete with professional UI/UX
 
 ## 📋 Next Steps for Continuation
-1. **Release Management**: Use `make release` for automated releases
+1. **Release Management**: Bump `versionCode`/`versionName` in `app/build.gradle.kts` and push to `main`; CI tags and releases (see BUILD_CONFIGURATION.md)
 2. **Device Testing**: Install APK and test with real DeepL API key
 3. **AnkiDroid Testing**: Verify card creation with actual AnkiDroid app
 4. **Template System**: Explore advanced template variables and patterns

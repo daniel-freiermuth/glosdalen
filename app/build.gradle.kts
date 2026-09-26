@@ -11,38 +11,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    id("pl.allegro.tech.build.axion-release")
     kotlin("plugin.serialization")
 }
 
 // Global excludes to remove non-deterministic baseline profile installer library (transitively pulled by lifecycle/activity)
 configurations.configureEach {
     exclude(group = "androidx.profileinstaller", module = "profileinstaller")
-}
-
-scmVersion {
-    tag {
-        prefix.set("v")
-        versionSeparator.set("")
-    }
-    versionCreator { version, _ ->
-        // Remove 'v' prefix if present for clean version names
-        version.replace("^v".toRegex(), "")
-    }
-    
-    // Configure semantic versioning - since we have feat: commits, use minor increment
-    branchVersionIncrementer = mapOf(
-        "main" to "incrementMinor"
-    )
-    repository {
-        pushTagsOnly.set(false)
-    }
-    localOnly.set(true)  // Don't auto-push, create local release only
-    checks {
-        aheadOfRemote.set(false)
-        uncommittedChanges.set(false)
-    }
-
 }
 
 val keystoreProperties = Properties()
