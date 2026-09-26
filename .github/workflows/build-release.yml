@@ -3,6 +3,13 @@ name: Build Release
 on:
   push:
     tags: ['v*']
+  # Invoked by auto-tag.yml: tags pushed with GITHUB_TOKEN don't trigger push events
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag to build and release
+        required: true
+        type: string
 
 jobs:
   build:
@@ -11,6 +18,8 @@ jobs:
       contents: write  # needed to create GitHub Releases
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - uses: actions/setup-java@v4
         with:
@@ -26,37 +35,52 @@ jobs:
       - name: Test
         run: ./gradlew test
 
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::KEYSTORE_BASE64 secret missing; refusing to publish an unsigned release"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > release-key.jks
+          {
+            echo "storeFile=release-key.jks"
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } > keystore.properties
+
       - name: Build release APK
         run: ./gradlew assembleRelease
 
-      # Without signing secrets the APK is unsigned.
-      # To produce a signed APK, add these repository secrets:
-      #   KEYSTORE_BASE64  - base64-encoded .jks/.keystore file
-      #   KEYSTORE_PASSWORD
-      #   KEY_ALIAS
-      #   KEY_PASSWORD
-      # Then add a step before assembleRelease that writes keystore.properties:
-      #
-      #   - name: Decode keystore
-      #     env:
-      #       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-      #     run: |
-      #       echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
-      #       cat > keystore.properties <<EOF
-      #       storeFile=release.keystore
-      #       storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-      #       keyAlias=${{ secrets.KEY_ALIAS }}
-      #       keyPassword=${{ secrets.KEY_PASSWORD }}
-      #       EOF
+      - name: Verify APK signature
+        run: |
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner"
+          for apk in app/build/outputs/apk/release/*.apk; do
+            "$APKSIGNER" verify --print-certs "$apk"
+          done
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f release-key.jks keystore.properties
+
+      # Match the asset name used by all previous GitHub releases
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk release.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: app/build/outputs/apk/release/*.apk
+          path: release.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: release.apk
           generate_release_notes: true

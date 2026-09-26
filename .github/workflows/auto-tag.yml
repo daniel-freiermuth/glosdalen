@@ -1,0 +1,54 @@
+name: Auto Tag
+
+# Creates v<versionName> when versionName in app/build.gradle.kts changes on main,
+# then runs the release build for that tag.
+on:
+  push:
+    branches: [main]
+    paths: ['app/build.gradle.kts']
+
+concurrency:
+  group: auto-tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      created: ${{ steps.tag.outputs.created }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create tag if version is new
+        id: tag
+        run: |
+          VERSION=$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts)
+          if [ -z "$VERSION" ] || [ "$(printf '%s\n' "$VERSION" | wc -l)" -ne 1 ]; then
+            echo "::error::Could not parse a single versionName from app/build.gradle.kts"
+            exit 1
+          fi
+          TAG="v$VERSION"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            echo "Tag $TAG already exists; nothing to do"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build-release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}
+    secrets: inherit
