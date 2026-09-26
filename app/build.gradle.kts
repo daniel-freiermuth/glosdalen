@@ -209,10 +209,6 @@ dependencies {
     // Kotlinx Serialization (for all API communication)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     implementation("com.squareup.retrofit2:converter-kotlinx-serialization:3.0.0")
-    
-    // Security (for Copilot library - EncryptedSharedPreferences)
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    
     // Dependency Injection
     implementation("com.google.dagger:hilt-android:2.60.1")
     ksp("com.google.dagger:hilt-compiler:2.60.1")
