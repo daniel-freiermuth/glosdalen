@@ -66,6 +66,52 @@ data class ParsedCopilotResponse(
 ) : CopilotParsedResponse<FlashCard>
 
 /**
+ * Parse a raw LLM response into [ParsedCopilotResponse].
+ *
+ * Blank language codes become null. If the response cannot be parsed, the error and
+ * raw response are returned as the direct answer so the user still sees something.
+ */
+internal fun parseCopilotResponse(response: String): ParsedCopilotResponse? {
+    return try {
+        // Configure JSON parser to be lenient
+        val json = Json { 
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+        
+        // Try to extract JSON from the response (in case LLM added extra text)
+        val jsonContent = LlmJsonExtractor.extractJsonObject(response)
+        
+        // Parse JSON response
+        val copilotResponse = json.decodeFromString<CopilotJsonResponse>(jsonContent)
+        
+        // Convert to internal representation
+        ParsedCopilotResponse(
+            directAnswer = copilotResponse.answer,
+            directAnswerLanguageCode = copilotResponse.answerLanguage.takeIf { it.isNotBlank() },
+            cards = copilotResponse.flashcards.map { flashcard ->
+                FlashCard(
+                    frontSide = flashcard.front,
+                    frontLanguageCode = flashcard.frontLanguage.takeIf { it.isNotBlank() },
+                    backSide = flashcard.back,
+                    backLanguageCode = flashcard.backLanguage.takeIf { it.isNotBlank() },
+                    note = flashcard.note
+                )
+            },
+            additionalInfo = copilotResponse.explanation
+        )
+    } catch (e: Exception) {
+        // Robust fallback: if JSON parsing fails, return response as-is
+        // This ensures the user still sees something even if the LLM doesn't follow format
+        ParsedCopilotResponse(
+            directAnswer = "Error parsing response: ${e.message}\n\nRaw response:\n$response",
+            cards = emptyList(),
+            additionalInfo = ""
+        )
+    }
+}
+
+/**
  * Card direction for Copilot Chat mode
  * Generic front/back directions since cards are already defined by the LLM
  */
@@ -322,7 +368,7 @@ class CopilotChatViewModel @Inject constructor(
                 
                 result.fold(
                     onSuccess = { response ->
-                        val parsed = parseResponse(response)
+                        val parsed = parseCopilotResponse(response)
                         _uiState.update { 
                             it.copy(
                                 response = response,
@@ -590,46 +636,6 @@ class CopilotChatViewModel @Inject constructor(
                         )
                     }
                 }
-            )
-        }
-    }
-    
-    private fun parseResponse(response: String): ParsedCopilotResponse? {
-        return try {
-            // Configure JSON parser to be lenient
-            val json = Json { 
-                ignoreUnknownKeys = true
-                isLenient = true
-            }
-            
-            // Try to extract JSON from the response (in case LLM added extra text)
-            val jsonContent = LlmJsonExtractor.extractJsonObject(response)
-            
-            // Parse JSON response
-            val copilotResponse = json.decodeFromString<CopilotJsonResponse>(jsonContent)
-            
-            // Convert to internal representation
-            ParsedCopilotResponse(
-                directAnswer = copilotResponse.answer,
-                directAnswerLanguageCode = copilotResponse.answerLanguage.takeIf { it.isNotBlank() },
-                cards = copilotResponse.flashcards.map { flashcard ->
-                    FlashCard(
-                        frontSide = flashcard.front,
-                        frontLanguageCode = flashcard.frontLanguage.takeIf { it.isNotBlank() },
-                        backSide = flashcard.back,
-                        backLanguageCode = flashcard.backLanguage.takeIf { it.isNotBlank() },
-                        note = flashcard.note
-                    )
-                },
-                additionalInfo = copilotResponse.explanation
-            )
-        } catch (e: Exception) {
-            // Robust fallback: if JSON parsing fails, return response as-is
-            // This ensures the user still sees something even if the LLM doesn't follow format
-            ParsedCopilotResponse(
-                directAnswer = "Error parsing response: ${e.message}\n\nRaw response:\n$response",
-                cards = emptyList(),
-                additionalInfo = ""
             )
         }
     }
