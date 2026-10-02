@@ -1,5 +1,9 @@
 package com.glosdalen.app.ui.search.copilot_knowledge
 
+import com.glosdalen.app.ui.search.components.CopilotFlashCardContent
+import com.glosdalen.app.ui.search.components.CopilotParsedResponse
+import com.glosdalen.app.ui.search.components.CopilotSearchActions
+import com.glosdalen.app.ui.search.components.CopilotSearchUiState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
@@ -37,17 +41,17 @@ data class KnowledgeFlashCardJson(
  * Internal representation used by the UI
  */
 data class KnowledgeFlashCard(
-    val frontSide: String,
-    val backSide: String,
-    val note: String = ""
-)
+    override val frontSide: String,
+    override val backSide: String,
+    override val note: String = ""
+) : CopilotFlashCardContent
 
 data class ParsedKnowledgeResponse(
-    val directAnswer: String,
-    val cards: List<KnowledgeFlashCard>,
-    val additionalInfo: String,
+    override val directAnswer: String,
+    override val cards: List<KnowledgeFlashCard>,
+    override val additionalInfo: String,
     val suggestedDeck: String
-)
+) : CopilotParsedResponse<KnowledgeFlashCard>
 
 /**
  * Card direction for Knowledge mode
@@ -61,32 +65,32 @@ enum class KnowledgeCardDirection {
 }
 
 data class CopilotKnowledgeUiState(
-    val query: String = "",
-    val contextQuery: String = "",
-    val isContextExpanded: Boolean = false,
-    val response: String = "",
-    val parsedResponse: ParsedKnowledgeResponse? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isAuthenticated: Boolean = false,
-    val isAdditionalInfoExpanded: Boolean = false,
-    val isCreatingCard: Boolean = false,
-    val createdCardIndices: Set<Int> = emptySet(),
-    val isAnkiDroidAvailable: Boolean = false,
-    val selectedCardDirection: KnowledgeCardDirection = KnowledgeCardDirection.FRONT_TO_BACK,
-    val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
-    val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
+    override val query: String = "",
+    override val contextQuery: String = "",
+    override val isContextExpanded: Boolean = false,
+    override val response: String = "",
+    override val parsedResponse: ParsedKnowledgeResponse? = null,
+    override val isLoading: Boolean = false,
+    override val error: String? = null,
+    override val isAuthenticated: Boolean = false,
+    override val isAdditionalInfoExpanded: Boolean = false,
+    override val isCreatingCard: Boolean = false,
+    override val createdCardIndices: Set<Int> = emptySet(),
+    override val isAnkiDroidAvailable: Boolean = false,
+    override val selectedCardDirection: KnowledgeCardDirection = KnowledgeCardDirection.FRONT_TO_BACK,
+    override val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
+    override val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
     val isLoadingModels: Boolean = false,
     val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE,
-    val showIntroDialog: Boolean = false
-)
+    override val showIntroDialog: Boolean = false
+) : CopilotSearchUiState<ParsedKnowledgeResponse, KnowledgeCardDirection>
 
 @HiltViewModel
 class CopilotKnowledgeViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val copilot: CopilotChat,
     private val ankiRepository: AnkiRepository
-) : ViewModel() {
+) : ViewModel(), CopilotSearchActions<KnowledgeCardDirection> {
     
     private val _uiState = MutableStateFlow(CopilotKnowledgeUiState())
     val uiState: StateFlow<CopilotKnowledgeUiState> = _uiState.asStateFlow()
@@ -113,7 +117,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun updateQuery(query: String) {
+    override fun updateQuery(query: String) {
         _uiState.update { 
             it.copy(
                 query = query,
@@ -125,15 +129,15 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun updateContextQuery(context: String) {
+    override fun updateContextQuery(context: String) {
         _uiState.update { it.copy(contextQuery = context) }
     }
     
-    fun toggleAdditionalInfo() {
+    override fun toggleAdditionalInfo() {
         _uiState.update { it.copy(isAdditionalInfoExpanded = !it.isAdditionalInfoExpanded) }
     }
     
-    fun toggleContextExpanded() {
+    override fun toggleContextExpanded() {
         _uiState.update { 
             val newExpandedState = !it.isContextExpanded
             it.copy(
@@ -145,7 +149,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun recheckAuthenticationStatus() {
+    override fun recheckAuthenticationStatus() {
         viewModelScope.launch {
             val isAuth = copilot.isAuthenticated()
             _uiState.update { it.copy(isAuthenticated = isAuth) }
@@ -157,14 +161,14 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun dismissIntroDialog(showAgain: Boolean) {
+    override fun dismissIntroDialog(showAgain: Boolean) {
         viewModelScope.launch {
             userPreferences.setShowCopilotKnowledgeIntroDialog(showAgain)
             _uiState.update { it.copy(showIntroDialog = false) }
         }
     }
     
-    fun sendQuery() {
+    override fun sendQuery() {
         val query = _uiState.value.query
         if (query.isBlank()) return
         
@@ -289,12 +293,12 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun cancelQuery() {
+    override fun cancelQuery() {
         queryJob?.cancel()
         _uiState.update { it.copy(isLoading = false) }
     }
     
-    fun clearResponse() {
+    override fun clearResponse() {
         _uiState.update { 
             it.copy(
                 response = "",
@@ -305,7 +309,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun updateCardDirection(direction: KnowledgeCardDirection) {
+    override fun updateCardDirection(direction: KnowledgeCardDirection) {
         _uiState.update { 
             it.copy(
                 selectedCardDirection = direction,
@@ -314,7 +318,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun createAnkiCard(cardIndex: Int) {
+    override fun createAnkiCard(cardIndex: Int) {
         val parsed = _uiState.value.parsedResponse ?: return
         if (cardIndex !in parsed.cards.indices) return
         
@@ -459,7 +463,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
-    fun selectModel(modelId: String) {
+    override fun selectModel(modelId: String) {
         viewModelScope.launch {
             userPreferences.setCopilotSelectedModel(modelId)
             _uiState.update { it.copy(selectedModelId = modelId) }

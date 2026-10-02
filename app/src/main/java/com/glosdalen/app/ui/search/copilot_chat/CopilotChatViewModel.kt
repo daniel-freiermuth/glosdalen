@@ -1,5 +1,9 @@
 package com.glosdalen.app.ui.search.copilot_chat
 
+import com.glosdalen.app.ui.search.components.CopilotFlashCardContent
+import com.glosdalen.app.ui.search.components.CopilotParsedResponse
+import com.glosdalen.app.ui.search.components.CopilotSearchActions
+import com.glosdalen.app.ui.search.components.CopilotSearchUiState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
@@ -47,19 +51,19 @@ data class FlashCardJson(
  * Internal representation used by the UI
  */
 data class FlashCard(
-    val frontSide: String,
+    override val frontSide: String,
     val frontLanguageCode: String? = null,
-    val backSide: String,
+    override val backSide: String,
     val backLanguageCode: String? = null,
-    val note: String = ""
-)
+    override val note: String = ""
+) : CopilotFlashCardContent
 
 data class ParsedCopilotResponse(
-    val directAnswer: String,
+    override val directAnswer: String,
     val directAnswerLanguageCode: String? = null,
-    val cards: List<FlashCard>,
-    val additionalInfo: String
-)
+    override val cards: List<FlashCard>,
+    override val additionalInfo: String
+) : CopilotParsedResponse<FlashCard>
 
 /**
  * Card direction for Copilot Chat mode
@@ -72,30 +76,30 @@ enum class CopilotCardDirection {
 }
 
 data class CopilotChatUiState(
-    val query: String = "",
+    override val query: String = "",
     val sourceLanguage: Language = Language.GERMAN,
-    val contextQuery: String = "",
-    val isContextExpanded: Boolean = false,
-    val response: String = "",
-    val parsedResponse: ParsedCopilotResponse? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isAuthenticated: Boolean = false,
-    val isAdditionalInfoExpanded: Boolean = false,
-    val isCreatingCard: Boolean = false,
-    val createdCardIndices: Set<Int> = emptySet(), // Track which cards have been created
-    val isAnkiDroidAvailable: Boolean = false,
-    val selectedCardDirection: CopilotCardDirection = CopilotCardDirection.FRONT_TO_BACK,
-    val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
-    val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
+    override val contextQuery: String = "",
+    override val isContextExpanded: Boolean = false,
+    override val response: String = "",
+    override val parsedResponse: ParsedCopilotResponse? = null,
+    override val isLoading: Boolean = false,
+    override val error: String? = null,
+    override val isAuthenticated: Boolean = false,
+    override val isAdditionalInfoExpanded: Boolean = false,
+    override val isCreatingCard: Boolean = false,
+    override val createdCardIndices: Set<Int> = emptySet(), // Track which cards have been created
+    override val isAnkiDroidAvailable: Boolean = false,
+    override val selectedCardDirection: CopilotCardDirection = CopilotCardDirection.FRONT_TO_BACK,
+    override val availableModels: List<com.glosdalen.app.libs.copilot.models.CopilotModel> = emptyList(),
+    override val selectedModelId: String = com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL,
     val isLoadingModels: Boolean = false,
     val temperature: Float = com.glosdalen.app.domain.preferences.CopilotPreferences.DEFAULT_TEMPERATURE,
-    val showIntroDialog: Boolean = false,
+    override val showIntroDialog: Boolean = false,
     // TTS state
     val isTtsConfigured: Boolean = false,
     val isTtsPlaying: Boolean = false,
     val ttsError: String? = null
-)
+) : CopilotSearchUiState<ParsedCopilotResponse, CopilotCardDirection>
 
 @HiltViewModel
 class CopilotChatViewModel @Inject constructor(
@@ -104,7 +108,7 @@ class CopilotChatViewModel @Inject constructor(
     private val ankiRepository: AnkiRepository,
     private val templateResolver: DeckNameTemplateResolver,
     private val elevenLabsRepository: ElevenLabsRepository
-) : ViewModel() {
+) : ViewModel(), CopilotSearchActions<CopilotCardDirection> {
     
     private val _uiState = MutableStateFlow(CopilotChatUiState())
     val uiState: StateFlow<CopilotChatUiState> = _uiState.asStateFlow()
@@ -154,7 +158,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun updateQuery(query: String) {
+    override fun updateQuery(query: String) {
         _uiState.update { 
             it.copy(
                 query = query,
@@ -189,7 +193,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun updateContextQuery(context: String) {
+    override fun updateContextQuery(context: String) {
         _uiState.update { 
             it.copy(
                 contextQuery = context,
@@ -199,7 +203,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun toggleContextExpanded() {
+    override fun toggleContextExpanded() {
         val newExpandedState = !_uiState.value.isContextExpanded
         _uiState.update { 
             it.copy(
@@ -234,7 +238,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun recheckAuthenticationStatus() {
+    override fun recheckAuthenticationStatus() {
         viewModelScope.launch {
             val isAuth = copilot.isAuthenticated()
             _uiState.update { it.copy(isAuthenticated = isAuth) }
@@ -246,14 +250,14 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun dismissIntroDialog(showAgain: Boolean) {
+    override fun dismissIntroDialog(showAgain: Boolean) {
         viewModelScope.launch {
             userPreferences.setShowCopilotLanguageIntroDialog(showAgain)
             _uiState.update { it.copy(showIntroDialog = false) }
         }
     }
     
-    fun sendQuery() {
+    override fun sendQuery() {
         val query = _uiState.value.query
         if (query.isBlank()) return
         
@@ -349,7 +353,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun cancelQuery() {
+    override fun cancelQuery() {
         queryJob?.cancel()
         queryJob = null
         _uiState.update { 
@@ -425,7 +429,7 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun clearResponse() {
+    override fun clearResponse() {
         _uiState.update { it.copy(
             response = "", 
             parsedResponse = null, 
@@ -435,11 +439,11 @@ class CopilotChatViewModel @Inject constructor(
         ) }
     }
     
-    fun toggleAdditionalInfo() {
+    override fun toggleAdditionalInfo() {
         _uiState.update { it.copy(isAdditionalInfoExpanded = !it.isAdditionalInfoExpanded) }
     }
     
-    fun updateCardDirection(direction: CopilotCardDirection) {
+    override fun updateCardDirection(direction: CopilotCardDirection) {
         _uiState.update { it.copy(
             selectedCardDirection = direction,
             createdCardIndices = emptySet() // Reset created cards when direction changes
@@ -469,14 +473,14 @@ class CopilotChatViewModel @Inject constructor(
         }
     }
     
-    fun selectModel(modelId: String) {
+    override fun selectModel(modelId: String) {
         viewModelScope.launch {
             userPreferences.setCopilotSelectedModel(modelId)
             _uiState.update { it.copy(selectedModelId = modelId) }
         }
     }
     
-    fun createAnkiCard(cardIndex: Int) {
+    override fun createAnkiCard(cardIndex: Int) {
         val parsed = _uiState.value.parsedResponse ?: return
         
         if (cardIndex < 0 || cardIndex >= parsed.cards.size) {

@@ -5,9 +5,11 @@ package com.glosdalen.app.ui.search.components
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
@@ -20,10 +22,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.glosdalen.app.domain.preferences.CopilotPreferences
 import com.glosdalen.app.libs.copilot.models.CopilotModel
 import com.glosdalen.app.ui.components.SplitButton
@@ -33,8 +38,388 @@ import com.glosdalen.app.ui.components.SplitButton
  * (Copilot Language and General Knowledge).
  */
 
+/**
+ * Complete Copilot search screen: intro dialog, top app bar, auth hint, query input,
+ * send/loading/error states and the parsed response with a per-card "Add to Anki" button.
+ * Screen-specific content goes into the slot parameters.
+ *
+ * @param title screen title, also used as the intro dialog's feature name
+ * @param cardDirections entries of the "Add to Anki" dropdown
+ * @param cardDirectionButtonLabel label of the selected direction on the "Add to Anki" button
+ * @param cardDirectionItemLabel label of a direction in the "Add to Anki" dropdown
+ * @param queryHeader content above the query field
+ * @param answerActions buttons placed before the answer's copy button
+ * @param flashcardsHeader content between the flashcards title and the first card
+ * @param frontActions content trailing a card's "Front:" label
+ * @param backActions content trailing a card's "Back:" label
+ */
 @Composable
-fun CopilotAuthRequiredCard(onNavigateToSettings: () -> Unit) {
+fun <C : CopilotFlashCardContent, R : CopilotParsedResponse<C>, D> CopilotSearchScreenContent(
+    uiState: CopilotSearchUiState<R, D>,
+    actions: CopilotSearchActions<D>,
+    title: String,
+    introDescription: String,
+    introFeatures: List<String>,
+    introDisclaimer: String,
+    queryLabel: String,
+    queryPlaceholder: String,
+    contextPlaceholder: String,
+    cardDirections: List<D>,
+    cardDirectionButtonLabel: (D) -> String,
+    cardDirectionItemLabel: (D) -> String,
+    onOpenDrawer: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    queryHeader: @Composable ColumnScope.() -> Unit = {},
+    answerActions: @Composable (R) -> Unit = {},
+    flashcardsHeader: @Composable (R) -> Unit = {},
+    frontActions: @Composable (C) -> Unit = {},
+    backActions: @Composable (C) -> Unit = {}
+) {
+    // Recheck authentication status when screen is resumed
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        actions.recheckAuthenticationStatus()
+    }
+    
+    if (uiState.showIntroDialog) {
+        CopilotIntroDialog(
+            featureName = title,
+            description = introDescription,
+            features = introFeatures,
+            disclaimer = introDisclaimer,
+            onDismiss = actions::dismissIntroDialog,
+            onNavigateToSettings = onNavigateToSettings
+        )
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SearchTopAppBar(
+            title = title,
+            onOpenDrawer = onOpenDrawer,
+            onNavigateToSettings = onNavigateToSettings
+        )
+        
+        if (!uiState.isAuthenticated) {
+            CopilotAuthRequiredCard(onNavigateToSettings = onNavigateToSettings)
+        }
+        
+        CopilotQueryCard(
+            query = uiState.query,
+            onQueryChange = actions::updateQuery,
+            queryLabel = queryLabel,
+            queryPlaceholder = queryPlaceholder,
+            isLoading = uiState.isLoading,
+            onSend = actions::sendQuery,
+            contextQuery = uiState.contextQuery,
+            onContextQueryChange = actions::updateContextQuery,
+            contextPlaceholder = contextPlaceholder,
+            isContextExpanded = uiState.isContextExpanded,
+            onToggleContextExpanded = actions::toggleContextExpanded,
+            header = queryHeader
+        )
+        
+        if (uiState.query.isNotEmpty() && !uiState.isLoading && uiState.error == null) {
+            CopilotSendButton(
+                isRequery = uiState.response.isNotEmpty(),
+                availableModels = uiState.availableModels,
+                selectedModelId = uiState.selectedModelId,
+                onSend = actions::sendQuery,
+                onSelectModel = actions::selectModel
+            )
+        }
+        
+        if (uiState.isLoading) {
+            CopilotLoadingCard(onCancel = actions::cancelQuery)
+        }
+        
+        uiState.error?.let { error ->
+            CopilotErrorCard(
+                error = error,
+                availableModels = uiState.availableModels,
+                selectedModelId = uiState.selectedModelId,
+                onRetry = actions::sendQuery,
+                onSelectModel = actions::selectModel
+            )
+        }
+        
+        uiState.parsedResponse?.let { parsed ->
+            if (parsed.directAnswer.isNotBlank()) {
+                CopilotAnswerCard(
+                    answer = parsed.directAnswer,
+                    actions = { answerActions(parsed) }
+                )
+            }
+            
+            if (parsed.cards.isNotEmpty()) {
+                CopilotFlashcardsCard(
+                    cards = parsed.cards,
+                    header = { flashcardsHeader(parsed) },
+                    frontActions = frontActions,
+                    backActions = backActions,
+                    cardActions = { index ->
+                        CopilotCreateCardButton(
+                            directions = cardDirections,
+                            selectedDirection = uiState.selectedCardDirection,
+                            buttonLabel = cardDirectionButtonLabel,
+                            itemLabel = cardDirectionItemLabel,
+                            isCreatingCard = uiState.isCreatingCard,
+                            isAnkiDroidAvailable = uiState.isAnkiDroidAvailable,
+                            hasCardBeenCreated = index in uiState.createdCardIndices,
+                            onCreateCard = { actions.createAnkiCard(index) },
+                            onDirectionChange = actions::updateCardDirection
+                        )
+                    }
+                )
+            }
+            
+            if (parsed.additionalInfo.isNotBlank()) {
+                CopilotAdditionalInfoCard(
+                    additionalInfo = parsed.additionalInfo,
+                    isExpanded = uiState.isAdditionalInfoExpanded,
+                    onToggleExpanded = actions::toggleAdditionalInfo
+                )
+            }
+            
+            CopilotResponseActionsRow(
+                clipboardText = { buildCopilotClipboardText(parsed) },
+                onClear = actions::clearResponse
+            )
+        }
+    }
+}
+
+/** "Answer" card with a copy button; [actions] are placed before the copy button. */
+@Composable
+private fun CopilotAnswerCard(
+    answer: String,
+    actions: @Composable () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Answer",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+                Row {
+                    actions()
+                    IconButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(answer))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copy answer",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            SelectionContainer {
+                Text(
+                    text = answer,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
+}
+
+/** "Proposed Flashcards" card listing every card with its sides, note and [cardActions]. */
+@Composable
+private fun <C : CopilotFlashCardContent> CopilotFlashcardsCard(
+    cards: List<C>,
+    header: @Composable () -> Unit,
+    frontActions: @Composable (C) -> Unit,
+    backActions: @Composable (C) -> Unit,
+    cardActions: @Composable (index: Int) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Proposed Flashcards (${cards.size})",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            header()
+            
+            cards.forEachIndexed { index, card ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Card ${index + 1}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        CopilotCardSide(label = "Front:", text = card.frontSide) {
+                            frontActions(card)
+                        }
+                        
+                        CopilotCardSide(label = "Back:", text = card.backSide) {
+                            backActions(card)
+                        }
+                        
+                        if (card.note.isNotBlank()) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Note:",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                SelectionContainer {
+                                    Text(
+                                        text = card.note,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontStyle = FontStyle.Italic
+                                    )
+                                }
+                            }
+                        }
+                        
+                        cardActions(index)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** One side of a flashcard: [label] with trailing [actions], above the selectable [text]. */
+@Composable
+private fun CopilotCardSide(
+    label: String,
+    text: String,
+    actions: @Composable () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            actions()
+        }
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            SelectionContainer {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+    }
+}
+
+/** "Add to Anki" split button whose dropdown selects the card direction. */
+@Composable
+private fun <D> CopilotCreateCardButton(
+    directions: List<D>,
+    selectedDirection: D,
+    buttonLabel: (D) -> String,
+    itemLabel: (D) -> String,
+    isCreatingCard: Boolean,
+    isAnkiDroidAvailable: Boolean,
+    hasCardBeenCreated: Boolean,
+    onCreateCard: () -> Unit,
+    onDirectionChange: (D) -> Unit
+) {
+    Column {
+        SplitButton(
+            mainButtonContent = {
+                if (isCreatingCard) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text("Creating...")
+                    }
+                } else if (hasCardBeenCreated) {
+                    Text("Card Created ✓")
+                } else {
+                    Text("Add to Anki (${buttonLabel(selectedDirection)})")
+                }
+            },
+            dropdownItems = directions,
+            selectedItem = selectedDirection,
+            enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
+            onMainClick = onCreateCard,
+            onItemSelect = onDirectionChange,
+            itemLabel = itemLabel,
+            dropdownButtonContentDescription = "Card direction options"
+        )
+        
+        if (!isAnkiDroidAvailable) {
+            Text(
+                text = "⚠️ AnkiDroid not available",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CopilotAuthRequiredCard(onNavigateToSettings: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer
@@ -80,7 +465,7 @@ fun CopilotAuthRequiredCard(onNavigateToSettings: () -> Unit) {
  * Query card: optional [header], the query field and the expandable context field.
  */
 @Composable
-fun CopilotQueryCard(
+private fun CopilotQueryCard(
     query: String,
     onQueryChange: (String) -> Unit,
     queryLabel: String,
@@ -208,7 +593,7 @@ private fun modelDisplayName(
 
 /** Send/Re-query split button whose dropdown selects the Copilot model. */
 @Composable
-fun CopilotSendButton(
+private fun CopilotSendButton(
     isRequery: Boolean,
     availableModels: List<CopilotModel>,
     selectedModelId: String,
@@ -273,7 +658,7 @@ fun CopilotSendButton(
 }
 
 @Composable
-fun CopilotLoadingCard(onCancel: () -> Unit) {
+private fun CopilotLoadingCard(onCancel: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -310,7 +695,7 @@ fun CopilotLoadingCard(onCancel: () -> Unit) {
 
 /** Error card with a "Try Again" split button whose dropdown selects the Copilot model. */
 @Composable
-fun CopilotErrorCard(
+private fun CopilotErrorCard(
     error: String,
     availableModels: List<CopilotModel>,
     selectedModelId: String,
@@ -393,7 +778,7 @@ fun CopilotErrorCard(
 
 /** Expandable "Additional Information" card. */
 @Composable
-fun CopilotAdditionalInfoCard(
+private fun CopilotAdditionalInfoCard(
     additionalInfo: String,
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit
@@ -447,41 +832,33 @@ fun CopilotAdditionalInfoCard(
  * Plain-text rendering of a Copilot response (answer, flashcards, additional info)
  * used by the "Copy All" action.
  */
-fun <C> buildCopilotClipboardText(
-    directAnswer: String,
-    cards: List<C>,
-    additionalInfo: String,
-    front: (C) -> String,
-    back: (C) -> String,
-    note: (C) -> String
-): String = buildString {
-    if (directAnswer.isNotBlank()) {
+private fun buildCopilotClipboardText(response: CopilotParsedResponse<*>): String = buildString {
+    if (response.directAnswer.isNotBlank()) {
         appendLine("ANSWER:")
-        appendLine(directAnswer)
+        appendLine(response.directAnswer)
         appendLine()
     }
-    if (cards.isNotEmpty()) {
+    if (response.cards.isNotEmpty()) {
         appendLine("FLASHCARDS:")
-        cards.forEachIndexed { index, card ->
+        response.cards.forEachIndexed { index, card ->
             appendLine("${index + 1}.")
-            appendLine("Front: ${front(card)}")
-            appendLine("Back: ${back(card)}")
-            val cardNote = note(card)
-            if (cardNote.isNotBlank()) {
-                appendLine("Note: $cardNote")
+            appendLine("Front: ${card.frontSide}")
+            appendLine("Back: ${card.backSide}")
+            if (card.note.isNotBlank()) {
+                appendLine("Note: ${card.note}")
             }
             appendLine()
         }
     }
-    if (additionalInfo.isNotBlank()) {
+    if (response.additionalInfo.isNotBlank()) {
         appendLine("ADDITIONAL INFORMATION:")
-        appendLine(additionalInfo)
+        appendLine(response.additionalInfo)
     }
 }
 
 /** "Copy All" and "Clear" buttons shown below a Copilot response. */
 @Composable
-fun CopilotResponseActionsRow(
+private fun CopilotResponseActionsRow(
     clipboardText: () -> String,
     onClear: () -> Unit
 ) {
@@ -528,7 +905,7 @@ fun CopilotResponseActionsRow(
  * @param features bullet points listed under "Features:"
  */
 @Composable
-fun CopilotIntroDialog(
+private fun CopilotIntroDialog(
     featureName: String,
     description: String,
     features: List<String>,
