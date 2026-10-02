@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -48,7 +47,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.glosdalen.app.backend.deepl.*
-import com.glosdalen.app.ui.search.components.ForeignLanguageDropdown
+import com.glosdalen.app.ui.search.components.LanguageDirectionToggle
 import com.glosdalen.app.ui.search.components.SearchTopAppBar
 
 import com.glosdalen.app.ui.search.deepl.DeepLSearchViewModel
@@ -178,44 +177,14 @@ fun DeepLSearchScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Language Toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Native Language (left, fixed)
-                        Text(
-                            text = nativeLanguage.displayName,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        
-                        // Direction Arrow (center)
-                        IconButton(
-                            onClick = {
-                                viewModel.updateSourceLanguage(targetLanguage)
-                            }
-                        ) {
-                            Icon(
-                                imageVector = if (uiState.sourceLanguage == nativeLanguage) {
-                                    Icons.AutoMirrored.Filled.ArrowForward
-                                } else {
-                                    Icons.AutoMirrored.Filled.ArrowBack
-                                },
-                                contentDescription = "Change translation direction"
-                            )
-                        }
-                        
-                        // Foreign Language (right, clickable dropdown)
-                        ForeignLanguageDropdown(
-                            currentLanguage = foreignLanguage,
-                            availableLanguages = Language.values().filter { it != nativeLanguage }.sortedBy { it.displayName },
-                            onLanguageSelect = { language ->
-                                viewModel.updateForeignLanguage(language)
-                            }
-                        )
-                    }
+                    LanguageDirectionToggle(
+                        nativeLanguage = nativeLanguage,
+                        foreignLanguage = foreignLanguage,
+                        isNativeSource = uiState.sourceLanguage == nativeLanguage,
+                        toggleContentDescription = "Change translation direction",
+                        onToggleDirection = { viewModel.updateSourceLanguage(targetLanguage) },
+                        onForeignLanguageSelect = viewModel::updateForeignLanguage
+                    )
                     
                     // Search Input
                     OutlinedTextField(

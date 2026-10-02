@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
@@ -57,8 +59,55 @@ fun SearchTopAppBar(
     }
 }
 
+/**
+ * Native language (fixed), direction arrow and foreign-language dropdown.
+ *
+ * @param isNativeSource whether the query is currently written in [nativeLanguage]
+ */
 @Composable
-fun ForeignLanguageDropdown(
+fun LanguageDirectionToggle(
+    nativeLanguage: Language,
+    foreignLanguage: Language,
+    isNativeSource: Boolean,
+    toggleContentDescription: String,
+    onToggleDirection: () -> Unit,
+    onForeignLanguageSelect: (Language) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Native Language (left, fixed)
+        Text(
+            text = nativeLanguage.displayName,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+        
+        // Direction Arrow (center)
+        IconButton(onClick = onToggleDirection) {
+            Icon(
+                imageVector = if (isNativeSource) {
+                    Icons.AutoMirrored.Filled.ArrowForward
+                } else {
+                    Icons.AutoMirrored.Filled.ArrowBack
+                },
+                contentDescription = toggleContentDescription
+            )
+        }
+        
+        // Foreign Language (right, clickable dropdown)
+        ForeignLanguageDropdown(
+            currentLanguage = foreignLanguage,
+            availableLanguages = Language.values().filter { it != nativeLanguage }.sortedBy { it.displayName },
+            onLanguageSelect = onForeignLanguageSelect
+        )
+    }
+}
+
+@Composable
+private fun ForeignLanguageDropdown(
     currentLanguage: Language,
     availableLanguages: List<Language>,
     onLanguageSelect: (Language) -> Unit,
