@@ -157,31 +157,8 @@ class AnkiApiRepository @Inject constructor(
                 // Handle built-in models vs custom models
                 when (modelName) {
                     "Basic (and reversed card)" -> {
-                        // Try case-insensitive match first
-                        val caseInsensitiveMatch = models.entries.find { 
-                            it.value.equals(modelName, ignoreCase = true) 
-                        }
-                        if (caseInsensitiveMatch != null) {
-                            android.util.Log.d("AnkiApiRepository", "Found case-insensitive model match: ${caseInsensitiveMatch.value}")
-                            return@withContext Result.success(caseInsensitiveMatch.key)
-                        }
-                        
-                        // Try to find a model that indicates bidirectional/reversed cards
-                        // Handles various localized versions:
-                        // - English: "Basic (and reversed card)"
-                        // - German: "Einfach (beide Richtungen)"
-                        // - Other languages with "reversed", "both", "directions", etc.
-                        val reversedModel = models.entries.find { modelEntry ->
-                            val name = modelEntry.value.lowercase()
-                            name.contains("reversed") ||
-                            name.contains("beide richtungen") ||  // German
-                            name.contains("both directions") ||
-                            name.contains("inverso") ||           // Spanish/Italian
-                            name.contains("inversé") ||           // French
-                            name.contains("omgekeerd") ||         // Dutch
-                            (name.contains("basic") && name.contains("reverse")) ||
-                            (name.contains("einfach") && name.contains("richtung"))  // German partial
-                        }
+                        // Find the built-in reversed model, tolerating case and localized names
+                        val reversedModel = findReversedModel(models)
                         if (reversedModel != null) {
                             android.util.Log.d("AnkiApiRepository", "Found reversed model variant: ${reversedModel.value}")
                             return@withContext Result.success(reversedModel.key)
@@ -357,5 +334,31 @@ class AnkiApiRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(AnkiError.ApiError("Error retrieving models: ${e.message}"))
         }
+    }
+}
+
+/**
+ * Locate AnkiDroid's built-in "Basic (and reversed card)" model in [models] (id -> name).
+ *
+ * Tries a case-insensitive match on the English name first, then falls back to
+ * localized variants:
+ * - English: "Basic (and reversed card)"
+ * - German: "Einfach (beide Richtungen)"
+ * - Other languages with "reversed", "both", "directions", etc.
+ */
+internal fun findReversedModel(models: Map<Long, String>): Map.Entry<Long, String>? {
+    models.entries.find { it.value.equals("Basic (and reversed card)", ignoreCase = true) }
+        ?.let { return it }
+
+    return models.entries.find { modelEntry ->
+        val name = modelEntry.value.lowercase()
+        name.contains("reversed") ||
+        name.contains("beide richtungen") ||  // German
+        name.contains("both directions") ||
+        name.contains("inverso") ||           // Spanish/Italian
+        name.contains("inversé") ||           // French
+        name.contains("omgekeerd") ||         // Dutch
+        (name.contains("basic") && name.contains("reverse")) ||
+        (name.contains("einfach") && name.contains("richtung"))  // German partial
     }
 }
