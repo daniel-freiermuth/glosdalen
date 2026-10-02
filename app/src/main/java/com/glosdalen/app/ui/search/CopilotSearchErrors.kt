@@ -23,23 +23,4 @@ internal object CopilotSearchErrors {
             "Rate limited. Please try again later."
         else -> error.message ?: "Failed to get response from Copilot"
     }
-
-    /**
-     * Message for a failed Anki card creation.
-     */
-    fun ankiFailure(error: Throwable): String {
-        val message = error.message ?: return "Failed to create Anki card"
-        return when {
-            message.contains("permission", ignoreCase = true) ->
-                "AnkiDroid permission required. Please grant access in settings."
-            message.contains("not installed", ignoreCase = true) ->
-                "AnkiDroid is not installed. Please install it from the Play Store."
-            message.contains("deck", ignoreCase = true) ->
-                "Failed to create deck. Please check AnkiDroid settings."
-            message.contains("model", ignoreCase = true) ||
-            message.contains("reversed", ignoreCase = true) ->
-                "Card type not found. Please open AnkiDroid first to initialize note types."
-            else -> "Error when creating card: $message"
-        }
-    }
 }
