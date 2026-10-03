@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.glosdalen.app.backend.deepl.Language
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
