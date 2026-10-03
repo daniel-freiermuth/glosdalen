@@ -26,12 +26,10 @@ class AnkiApiRepository @Inject constructor(
 
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
-        private const val APP_MODEL_NAME = "Glosdalen Basic"
     }
 
     private var cachedApi: AddContentApi? = null
     private var cachedDeckId: Long? = null
-    private var cachedModelId: Long? = null
 
     private fun getApi(): AddContentApi? {
         return try {
@@ -134,7 +132,8 @@ class AnkiApiRepository @Inject constructor(
     /**
      * Ensure the required note type/model exists, create if necessary
      */
-    suspend fun ensureModelExists(modelName: String): Result<Long> = withContext(Dispatchers.IO) {
+    suspend fun ensureModelExists(noteType: AnkiNoteType): Result<Long> = withContext(Dispatchers.IO) {
+        val modelName = noteType.modelName
         return@withContext try {
             val api = getApi() ?: run {
                 android.util.Log.e("AnkiApiRepository", "Failed to get API instance")
@@ -155,8 +154,8 @@ class AnkiApiRepository @Inject constructor(
                 Result.success(existingModel.key)
             } else {
                 // Handle built-in models vs custom models
-                when (modelName) {
-                    "Basic (and reversed card)" -> {
+                when (noteType) {
+                    AnkiNoteType.BASIC_AND_REVERSED -> {
                         // Try case-insensitive match first
                         val caseInsensitiveMatch = models.entries.find { 
                             it.value.equals(modelName, ignoreCase = true) 
@@ -191,8 +190,8 @@ class AnkiApiRepository @Inject constructor(
                         android.util.Log.e("AnkiApiRepository", "Built-in model '$modelName' not found in AnkiDroid. Available models: ${models.values.toList()}")
                         Result.failure(AnkiError.ModelCreationFailed("Reversed card model not found. Please open AnkiDroid and ensure default note types are available, or try creating a card manually first."))
                     }
-                    else -> {
-                        // Create new basic model with Front/Back fields for custom models
+                    AnkiNoteType.BASIC -> {
+                        // Create new basic model with Front/Back fields
                         val modelId = api.addNewBasicModel(modelName)
                         if (modelId != null) {
                             Result.success(modelId)
@@ -209,19 +208,6 @@ class AnkiApiRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get or create the basic two-field model for vocabulary cards
-     */
-    suspend fun getOrCreateBasicModel(): Result<Long> {
-        if (cachedModelId != null) {
-            return Result.success(cachedModelId!!)
-        }
-        
-        return ensureModelExists(APP_MODEL_NAME).onSuccess { modelId ->
-            cachedModelId = modelId
-        }
-    }
-
     override suspend fun createCard(card: AnkiCard): Result<Unit> {
         // Delegate to batch implementation for consistency and efficiency
         return createCards(listOf(card))
@@ -233,13 +219,13 @@ class AnkiApiRepository @Inject constructor(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
             )
 
-            // Group cards by deck and model for batch operations  
-            val cardsByDeckAndModel = cards.groupBy { 
-                Pair(it.deckName, it.modelName) 
+            // Group cards by deck and note type for batch operations
+            val cardsByDeckAndNoteType = cards.groupBy {
+                Pair(it.deckName, it.noteType)
             }
-            
-            for ((deckModelPair, deckCards) in cardsByDeckAndModel) {
-                val (deckName, modelName) = deckModelPair
+
+            for ((deckNoteTypePair, deckCards) in cardsByDeckAndNoteType) {
+                val (deckName, noteType) = deckNoteTypePair
                 
                 // Ensure deck exists
                 val deckResult = ensureDeckExists(deckName)
@@ -247,21 +233,17 @@ class AnkiApiRepository @Inject constructor(
                     return@withContext Result.failure(it)
                 }
 
-                // Ensure model exists - use the model specified in the cards
-                val modelResult = ensureModelExists(modelName)
+                // Ensure model exists - use the note type specified in the cards
+                val modelResult = ensureModelExists(noteType)
                 val modelId = modelResult.getOrElse { 
                     return@withContext Result.failure(it)
                 }
 
                 // Prepare notes for batch addition
                 val notes = deckCards.map { card ->
-                    // Add audio files to AnkiDroid's media collection if present
-                    val frontField = card.fields["Front"] ?: ""
-                    val backField = card.fields["Back"] ?: ""
-                    
                     // Add audio tags if audio files are provided
-                    val frontWithAudio = addAudioTag(api, frontField, card.audioFiles["Front"])
-                    val backWithAudio = addAudioTag(api, backField, card.audioFiles["Back"])
+                    val frontWithAudio = addAudioTag(api, card.front, card.frontAudio)
+                    val backWithAudio = addAudioTag(api, card.back, card.backAudio)
                     
                     arrayOf(frontWithAudio, backWithAudio)
                 }
