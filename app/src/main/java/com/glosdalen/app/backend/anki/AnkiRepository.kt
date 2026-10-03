@@ -21,7 +21,7 @@ class AnkiRepository @Inject constructor(
     }
 
     /**
-     * Determine the best available AnkiDroid integration method based on user preference
+     * Determine the best available AnkiDroid integration method
      */
     private suspend fun getBestAvailableRepository(): AnkiBackend = withContext(Dispatchers.IO) {
         // Check availability of both methods
