@@ -148,13 +148,6 @@ class AnkiRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get install AnkiDroid intent for when AnkiDroid is not available
-     */
-    suspend fun getInstallAnkiDroidIntent(): android.content.Intent? {
-        return intentRepository.getInstallAnkiDroidIntent()
-    }
-
 }
 
 /**
