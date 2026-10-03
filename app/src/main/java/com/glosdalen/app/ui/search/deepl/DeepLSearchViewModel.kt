@@ -236,8 +236,9 @@ class DeepLSearchViewModel @Inject constructor(
             
             // Create cards based on user's direction preference
             val cardsToCreate = when (cardDirection) {
-                DeepLCardDirection.VIA_INTENT -> {
-                    // Check user preference for which side should be front
+                DeepLCardDirection.VIA_INTENT, DeepLCardDirection.BOTH_DIRECTIONS -> {
+                    // Check user preference for which side should be front;
+                    // audio always goes on the foreign language side
                     val frontPref = userPreferences.getFrontPreference().first()
                     val (frontSide, backSide) = when (frontPref) {
                         com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
@@ -245,22 +246,26 @@ class DeepLSearchViewModel @Inject constructor(
                         com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
                             Pair(foreignWord, nativeWord)
                     }
-                    
-                    // Add audio to the foreign language side
                     val (frontAudio, backAudio) = when (frontPref) {
                         com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
                             Pair(null, foreignAudioFile)
                         com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
                             Pair(foreignAudioFile, null)
                     }
+                    val baseTags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code)
+                    val (noteType, tags) = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) {
+                        Pair(AnkiNoteType.BASIC_AND_REVERSED, baseTags + "bidirectional")
+                    } else {
+                        Pair(AnkiNoteType.BASIC, baseTags)
+                    }
                     
                     listOf(
                         AnkiCard(
-                            noteType = AnkiNoteType.BASIC,
+                            noteType = noteType,
                             front = frontSide,
                             back = backSide,
                             deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code),
+                            tags = tags,
                             frontAudio = frontAudio,
                             backAudio = backAudio
                         )
@@ -287,36 +292,6 @@ class DeepLSearchViewModel @Inject constructor(
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native"),
                             frontAudio = foreignAudioFile
-                        )
-                    )
-                }
-                DeepLCardDirection.BOTH_DIRECTIONS -> {
-                    // Check user preference for which side should be front
-                    val frontPref = userPreferences.getFrontPreference().first()
-                    val (frontSide, backSide) = when (frontPref) {
-                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                            Pair(nativeWord, foreignWord)
-                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                            Pair(foreignWord, nativeWord)
-                    }
-                    
-                    // Add audio to the foreign language side
-                    val (frontAudio, backAudio) = when (frontPref) {
-                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                            Pair(null, foreignAudioFile)
-                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                            Pair(foreignAudioFile, null)
-                    }
-                    
-                    listOf(
-                        AnkiCard(
-                            noteType = AnkiNoteType.BASIC_AND_REVERSED,
-                            front = frontSide,
-                            back = backSide,
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional"),
-                            frontAudio = frontAudio,
-                            backAudio = backAudio
                         )
                     )
                 }
