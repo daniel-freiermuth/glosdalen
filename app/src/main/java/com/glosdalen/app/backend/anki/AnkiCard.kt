@@ -2,12 +2,23 @@ package com.glosdalen.app.backend.anki
 
 import java.io.File
 
+/**
+ * Note types the app creates. [modelName] is the English built-in AnkiDroid name;
+ * lookup of localized variants is handled by AnkiApiRepository.ensureModelExists.
+ */
+enum class AnkiNoteType(val modelName: String) {
+    BASIC("Basic"),
+    BASIC_AND_REVERSED("Basic (and reversed card)")
+}
+
 data class AnkiCard(
-    val modelName: String,
-    val fields: Map<String, String>,
+    val noteType: AnkiNoteType,
+    val front: String,
+    val back: String,
     val tags: List<String> = emptyList(),
     val deckName: String,
-    val audioFiles: Map<String, File> = emptyMap() // Map of field name to audio file
+    val frontAudio: File? = null,
+    val backAudio: File? = null
 )
 
 sealed class AnkiError : Exception() {

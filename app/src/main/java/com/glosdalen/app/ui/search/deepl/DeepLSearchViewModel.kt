@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiError
+import com.glosdalen.app.backend.anki.AnkiNoteType
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
@@ -246,51 +247,46 @@ class DeepLSearchViewModel @Inject constructor(
                     }
                     
                     // Add audio to the foreign language side
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) {
-                        when (frontPref) {
-                            com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                                audioFiles["Back"] = foreignAudioFile
-                            com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                                audioFiles["Front"] = foreignAudioFile
-                        }
+                    val (frontAudio, backAudio) = when (frontPref) {
+                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
+                            Pair(null, foreignAudioFile)
+                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
+                            Pair(foreignAudioFile, null)
                     }
                     
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to frontSide, "Back" to backSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = frontSide,
+                            back = backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code),
-                            audioFiles = audioFiles
+                            frontAudio = frontAudio,
+                            backAudio = backAudio
                         )
                     )
                 }
                 DeepLCardDirection.NATIVE_TO_FOREIGN -> {
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) audioFiles["Back"] = foreignAudioFile
-                    
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
+                            noteType = AnkiNoteType.BASIC,
+                            front = nativeWord,
+                            back = foreignWord,
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign"),
-                            audioFiles = audioFiles
+                            backAudio = foreignAudioFile
                         )
                     )
                 }
                 DeepLCardDirection.FOREIGN_TO_NATIVE -> {
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) audioFiles["Front"] = foreignAudioFile
-                    
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
+                            noteType = AnkiNoteType.BASIC,
+                            front = foreignWord,
+                            back = nativeWord,
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native"),
-                            audioFiles = audioFiles
+                            frontAudio = foreignAudioFile
                         )
                     )
                 }
@@ -305,23 +301,22 @@ class DeepLSearchViewModel @Inject constructor(
                     }
                     
                     // Add audio to the foreign language side
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) {
-                        when (frontPref) {
-                            com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                                audioFiles["Back"] = foreignAudioFile
-                            com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                                audioFiles["Front"] = foreignAudioFile
-                        }
+                    val (frontAudio, backAudio) = when (frontPref) {
+                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
+                            Pair(null, foreignAudioFile)
+                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
+                            Pair(foreignAudioFile, null)
                     }
                     
                     listOf(
                         AnkiCard(
-                            modelName = "Basic (and reversed card)",
-                            fields = mapOf("Front" to frontSide, "Back" to backSide),
+                            noteType = AnkiNoteType.BASIC_AND_REVERSED,
+                            front = frontSide,
+                            back = backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional"),
-                            audioFiles = audioFiles
+                            frontAudio = frontAudio,
+                            backAudio = backAudio
                         )
                     )
                 }

@@ -3,6 +3,7 @@ package com.glosdalen.app.ui.search.copilot_chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
+import com.glosdalen.app.backend.anki.AnkiNoteType
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
@@ -531,10 +532,6 @@ class CopilotChatViewModel @Inject constructor(
                 }
             } else null
             
-            val audioFiles = mutableMapOf<String, java.io.File>()
-            if (frontAudioFile != null) audioFiles["Front"] = frontAudioFile
-            if (backAudioFile != null) audioFiles["Back"] = backAudioFile
-            
             // Create cards based on direction
             val cardsToCreate = when (cardDirection) {
                 CopilotCardDirection.VIA_INTENT -> {
@@ -542,33 +539,39 @@ class CopilotChatViewModel @Inject constructor(
                     // AnkiDroid will handle the UI for user to choose direction
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code),
-                            audioFiles = audioFiles
+                            frontAudio = frontAudioFile,
+                            backAudio = backAudioFile
                         )
                     )
                 }
                 CopilotCardDirection.FRONT_TO_BACK -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code),
-                            audioFiles = audioFiles
+                            frontAudio = frontAudioFile,
+                            backAudio = backAudioFile
                         )
                     )
                 }
                 CopilotCardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic (and reversed card)",
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC_AND_REVERSED,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "copilot", native.code, foreign.code, "bidirectional"),
-                            audioFiles = audioFiles
+                            frontAudio = frontAudioFile,
+                            backAudio = backAudioFile
                         )
                     )
                 }
