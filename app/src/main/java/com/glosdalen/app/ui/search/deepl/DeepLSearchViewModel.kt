@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiError
+import com.glosdalen.app.backend.anki.AnkiNoteType
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
@@ -422,11 +423,7 @@ internal fun buildDeepLAnkiCard(
     val (frontSide, backSide) = if (foreignOnFront) foreignWord to nativeWord else nativeWord to foreignWord
 
     // The audio is generated for the foreign word, so it goes on the foreign side
-    val audioFiles = if (foreignAudioFile == null) {
-        emptyMap()
-    } else {
-        mapOf((if (foreignOnFront) "Front" else "Back") to foreignAudioFile)
-    }
+    val (frontAudio, backAudio) = if (foreignOnFront) foreignAudioFile to null else null to foreignAudioFile
 
     val directionTag = when (cardDirection) {
         DeepLCardDirection.VIA_INTENT -> null
@@ -436,11 +433,13 @@ internal fun buildDeepLAnkiCard(
     }
 
     return AnkiCard(
-        modelName = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) AnkiCard.REVERSED_CARD_MODEL_NAME else "Basic",
-        fields = mapOf("Front" to frontSide, "Back" to backSide),
+        noteType = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) AnkiNoteType.BASIC_AND_REVERSED else AnkiNoteType.BASIC,
+        front = frontSide,
+        back = backSide,
         deckName = deckName,
         tags = listOfNotNull("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, directionTag),
-        audioFiles = audioFiles
+        frontAudio = frontAudio,
+        backAudio = backAudio
     )
 }
 
