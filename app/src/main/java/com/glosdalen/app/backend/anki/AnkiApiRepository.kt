@@ -26,12 +26,9 @@ class AnkiApiRepository @Inject constructor(
 
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
-        private const val APP_MODEL_NAME = "Glosdalen Basic"
     }
 
     private var cachedApi: AddContentApi? = null
-    private var cachedDeckId: Long? = null
-    private var cachedModelId: Long? = null
 
     private fun getApi(): AddContentApi? {
         return try {
@@ -59,15 +56,6 @@ class AnkiApiRepository @Inject constructor(
                 PackageManager.PERMISSION_GRANTED
         android.util.Log.d("AnkiApiRepository", "API permission check: $hasPermission")
         return@withContext hasPermission
-    }
-
-    /**
-     * Request API permission from the user
-     */
-    suspend fun requestApiPermission(): Boolean = withContext(Dispatchers.IO) {
-        // Permission request is handled automatically by AddContentApi when needed
-        // This method indicates whether permission will be requested
-        !hasApiPermission()
     }
 
     /**
@@ -209,19 +197,6 @@ class AnkiApiRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get or create the basic two-field model for vocabulary cards
-     */
-    suspend fun getOrCreateBasicModel(): Result<Long> {
-        if (cachedModelId != null) {
-            return Result.success(cachedModelId!!)
-        }
-        
-        return ensureModelExists(APP_MODEL_NAME).onSuccess { modelId ->
-            cachedModelId = modelId
-        }
-    }
-
     override suspend fun createCard(card: AnkiCard): Result<Unit> {
         // Delegate to batch implementation for consistency and efficiency
         return createCards(listOf(card))
@@ -340,22 +315,6 @@ class AnkiApiRepository @Inject constructor(
             Result.success(decks)
         } catch (e: Exception) {
             Result.failure(AnkiError.ApiError("Error retrieving decks: ${e.message}"))
-        }
-    }
-
-    /**
-     * Get list of available note types/models in AnkiDroid
-     */
-    suspend fun getAvailableModels(): Result<Map<Long, String>> = withContext(Dispatchers.IO) {
-        return@withContext try {
-            val api = getApi() ?: return@withContext Result.failure(
-                AnkiError.ApiNotAvailable("AnkiDroid API not available")
-            )
-            
-            val models = api.modelList
-            Result.success(models)
-        } catch (e: Exception) {
-            Result.failure(AnkiError.ApiError("Error retrieving models: ${e.message}"))
         }
     }
 }
