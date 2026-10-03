@@ -17,7 +17,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.style.TextAlign
 import com.glosdalen.app.BuildConfig
-import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.deepl.Language
 
 @OptIn(ExperimentalMaterial3Api::class)
