@@ -1,5 +1,6 @@
 package com.glosdalen.app.ui.search.deepl
 
+import com.glosdalen.app.backend.anki.AnkiNoteType
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.backend.deepl.Translation
 import com.glosdalen.app.backend.deepl.VocabularyEntry
@@ -116,17 +117,17 @@ class DeepLSearchViewModelTest {
         fun `direction and front preference decide note type, sides, audio field and tags`(
             direction: DeepLCardDirection,
             frontPreference: FrontPreference,
-            expectedModel: String,
+            expectedNoteType: AnkiNoteType,
             foreignOnFront: Boolean,
             directionTag: String?
         ) {
             val card = build(direction, frontPreference)
 
             val (front, back) = if (foreignOnFront) foreignWord to nativeWord else nativeWord to foreignWord
-            val audioField = if (foreignOnFront) "Front" else "Back"
-            assertEquals(expectedModel, card.modelName)
-            assertEquals(mapOf("Front" to front, "Back" to back), card.fields)
-            assertEquals(mapOf(audioField to audio), card.audioFiles)
+            assertEquals(expectedNoteType, card.noteType)
+            assertEquals(front to back, card.front to card.back)
+            val expectedAudio = if (foreignOnFront) audio to null else null to audio
+            assertEquals(expectedAudio, card.frontAudio to card.backAudio)
             assertEquals(
                 listOfNotNull("glosdalen", "vocab", native.code, foreign.code, directionTag),
                 card.tags
@@ -138,7 +139,8 @@ class DeepLSearchViewModelTest {
         fun `no audio file leaves the note without audio`() {
             for (direction in DeepLCardDirection.entries) {
                 for (pref in FrontPreference.entries) {
-                    assertTrue(build(direction, pref, audioFile = null).audioFiles.isEmpty(), "$direction / $pref")
+                    val card = build(direction, pref, audioFile = null)
+                    assertTrue(card.frontAudio == null && card.backAudio == null, "$direction / $pref")
                 }
             }
         }
@@ -148,15 +150,15 @@ class DeepLSearchViewModelTest {
         @JvmStatic
         fun layouts(): Stream<Arguments> = Stream.of(
             // Fixed directions ignore the front preference.
-            Arguments.of(DeepLCardDirection.NATIVE_TO_FOREIGN, FrontPreference.NATIVE, "Basic", false, "native-to-foreign"),
-            Arguments.of(DeepLCardDirection.NATIVE_TO_FOREIGN, FrontPreference.FOREIGN, "Basic", false, "native-to-foreign"),
-            Arguments.of(DeepLCardDirection.FOREIGN_TO_NATIVE, FrontPreference.NATIVE, "Basic", true, "foreign-to-native"),
-            Arguments.of(DeepLCardDirection.FOREIGN_TO_NATIVE, FrontPreference.FOREIGN, "Basic", true, "foreign-to-native"),
+            Arguments.of(DeepLCardDirection.NATIVE_TO_FOREIGN, FrontPreference.NATIVE, AnkiNoteType.BASIC, false, "native-to-foreign"),
+            Arguments.of(DeepLCardDirection.NATIVE_TO_FOREIGN, FrontPreference.FOREIGN, AnkiNoteType.BASIC, false, "native-to-foreign"),
+            Arguments.of(DeepLCardDirection.FOREIGN_TO_NATIVE, FrontPreference.NATIVE, AnkiNoteType.BASIC, true, "foreign-to-native"),
+            Arguments.of(DeepLCardDirection.FOREIGN_TO_NATIVE, FrontPreference.FOREIGN, AnkiNoteType.BASIC, true, "foreign-to-native"),
             // Intent and bidirectional cards follow the front preference.
-            Arguments.of(DeepLCardDirection.VIA_INTENT, FrontPreference.NATIVE, "Basic", false, null),
-            Arguments.of(DeepLCardDirection.VIA_INTENT, FrontPreference.FOREIGN, "Basic", true, null),
-            Arguments.of(DeepLCardDirection.BOTH_DIRECTIONS, FrontPreference.NATIVE, "Basic (and reversed card)", false, "bidirectional"),
-            Arguments.of(DeepLCardDirection.BOTH_DIRECTIONS, FrontPreference.FOREIGN, "Basic (and reversed card)", true, "bidirectional"),
+            Arguments.of(DeepLCardDirection.VIA_INTENT, FrontPreference.NATIVE, AnkiNoteType.BASIC, false, null),
+            Arguments.of(DeepLCardDirection.VIA_INTENT, FrontPreference.FOREIGN, AnkiNoteType.BASIC, true, null),
+            Arguments.of(DeepLCardDirection.BOTH_DIRECTIONS, FrontPreference.NATIVE, AnkiNoteType.BASIC_AND_REVERSED, false, "bidirectional"),
+            Arguments.of(DeepLCardDirection.BOTH_DIRECTIONS, FrontPreference.FOREIGN, AnkiNoteType.BASIC_AND_REVERSED, true, "bidirectional"),
         )
     }
 }

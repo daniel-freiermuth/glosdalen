@@ -13,14 +13,16 @@ class AddNotesCheckedTest {
 
     private val cards = listOf(
         AnkiCard(
-            modelName = "Basic",
-            fields = mapOf("Front" to "hund", "Back" to "dog"),
+            noteType = AnkiNoteType.BASIC,
+            front = "hund",
+            back = "dog",
             tags = listOf("glosdalen", "vocab", "sv", "en"),
             deckName = "Deck"
         ),
         AnkiCard(
-            modelName = "Basic",
-            fields = mapOf("Front" to "katt", "Back" to "cat"),
+            noteType = AnkiNoteType.BASIC,
+            front = "katt",
+            back = "cat",
             tags = listOf("glosdalen", "vocab", "sv", "en", "bidirectional"),
             deckName = "Deck"
         )

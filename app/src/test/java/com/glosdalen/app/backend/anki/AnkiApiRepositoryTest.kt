@@ -71,19 +71,19 @@ class AnkiApiRepositoryTest {
     )
 
     private fun card(
-        front: String? = "Hund",
-        back: String? = "dog",
+        front: String = "Hund",
+        back: String = "dog",
         deck: String = "German",
-        model: String = BASIC_MODEL,
-        audio: Map<String, File> = emptyMap()
+        noteType: AnkiNoteType = AnkiNoteType.BASIC,
+        frontAudio: File? = null,
+        backAudio: File? = null
     ) = AnkiCard(
-        modelName = model,
-        fields = buildMap {
-            front?.let { put("Front", it) }
-            back?.let { put("Back", it) }
-        },
+        noteType = noteType,
+        front = front,
+        back = back,
         deckName = deck,
-        audioFiles = audio
+        frontAudio = frontAudio,
+        backAudio = backAudio
     )
 
     private fun createCards(api: AnkiContentApi?, vararg cards: AnkiCard): Result<Unit> =
@@ -140,15 +140,6 @@ class AnkiApiRepositoryTest {
                 notesByDeck
             )
         }
-
-        @Test
-        fun `missing Front and Back fields are sent as empty strings`() {
-            val api = FakeAnkiContentApi()
-
-            createCards(api, card(front = null, back = null))
-
-            assertEquals(listOf(listOf("", "")), api.addNotesCalls.single().notes)
-        }
     }
 
     @Nested
@@ -186,7 +177,7 @@ class AnkiApiRepositoryTest {
         fun `missing reversed note type fails with ModelCreationFailed and adds no notes`() {
             val api = FakeAnkiContentApi()
 
-            val result = createCards(api, card(model = "Basic (and reversed card)"))
+            val result = createCards(api, card(noteType = AnkiNoteType.BASIC_AND_REVERSED))
 
             assertTrue(result.exceptionOrNull() is AnkiError.ModelCreationFailed, "$result")
             assertTrue(api.addNotesCalls.isEmpty())
@@ -222,9 +213,8 @@ class AnkiApiRepositoryTest {
         @Test
         fun `sound tags are appended to each field with a space`() {
             val api = FakeAnkiContentApi()
-            val audio = mapOf("Front" to audioFile("front.mp3"), "Back" to audioFile("back.mp3"))
 
-            createCards(api, card("Hund", "dog", audio = audio))
+            createCards(api, card("Hund", "dog", frontAudio = audioFile("front.mp3"), backAudio = audioFile("back.mp3")))
 
             assertEquals(
                 listOf(listOf("Hund [sound:front.mp3]", "dog [sound:back.mp3]")),
@@ -235,9 +225,8 @@ class AnkiApiRepositoryTest {
         @Test
         fun `front and back audio added in the same millisecond get distinct media names`() {
             val api = FakeAnkiContentApi()
-            val audio = mapOf("Front" to audioFile("front.mp3"), "Back" to audioFile("back.mp3"))
 
-            createCards(api, card("Hund", "dog", audio = audio))
+            createCards(api, card("Hund", "dog", frontAudio = audioFile("front.mp3"), backAudio = audioFile("back.mp3")))
 
             assertEquals(2, api.audioPreferredNames.toSet().size, "${api.audioPreferredNames}")
         }
@@ -246,7 +235,7 @@ class AnkiApiRepositoryTest {
         fun `sound tag replaces a blank field instead of being appended`() {
             val api = FakeAnkiContentApi()
 
-            createCards(api, card(front = " ", audio = mapOf("Front" to audioFile("front.mp3"))))
+            createCards(api, card(front = " ", frontAudio = audioFile("front.mp3")))
 
             assertEquals(listOf(listOf("[sound:front.mp3]", "dog")), api.addNotesCalls.single().notes)
         }
@@ -255,7 +244,7 @@ class AnkiApiRepositoryTest {
         fun `audio rejected by AnkiDroid keeps the original text`() {
             val api = FakeAnkiContentApi().apply { audioResult = { null } }
 
-            createCards(api, card(audio = mapOf("Front" to audioFile("front.mp3"))))
+            createCards(api, card(frontAudio = audioFile("front.mp3")))
 
             assertEquals(listOf(listOf("Hund", "dog")), api.addNotesCalls.single().notes)
         }
@@ -264,7 +253,7 @@ class AnkiApiRepositoryTest {
         fun `audio copy failure keeps the original text and still adds the note`() {
             val api = FakeAnkiContentApi().apply { audioResult = { throw IllegalArgumentException("no provider") } }
 
-            val result = createCards(api, card(audio = mapOf("Front" to audioFile("front.mp3"))))
+            val result = createCards(api, card(frontAudio = audioFile("front.mp3")))
 
             assertTrue(result.isSuccess, "$result")
             assertEquals(listOf(listOf("Hund", "dog")), api.addNotesCalls.single().notes)
@@ -274,7 +263,7 @@ class AnkiApiRepositoryTest {
         fun `audio file that no longer exists is skipped`() {
             val api = FakeAnkiContentApi()
 
-            createCards(api, card(audio = mapOf("Front" to File(dir, "deleted.mp3"))))
+            createCards(api, card(frontAudio = File(dir, "deleted.mp3")))
 
             assertEquals(listOf(listOf("Hund", "dog")), api.addNotesCalls.single().notes)
         }
