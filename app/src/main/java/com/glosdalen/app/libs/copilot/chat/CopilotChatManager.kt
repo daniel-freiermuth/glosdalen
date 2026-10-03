@@ -87,40 +87,6 @@ class CopilotChatManager @Inject constructor(
     }
 
     /**
-     * Send multiple requests in batch (for efficiency)
-     */
-    suspend fun sendBatchRequests(requests: List<ChatRequest>): Result<List<ChatResponse>> {
-        if (requests.isEmpty()) {
-            return emptyList<ChatResponse>().asSuccess()
-        }
-
-        // Validate all requests first
-        for (request in requests) {
-            val validationResult = validateChatRequest(request)
-            if (validationResult.isFailure) {
-                return Result.failure(validationResult.exceptionOrNull()!!)
-            }
-        }
-
-        // Execute requests sequentially (could be made parallel in future)
-        val responses = mutableListOf<ChatResponse>()
-        
-        for (request in requests) {
-            val result = sendChatRequest(request)
-            if (result.isSuccess) {
-                responses.add(result.getOrThrow())
-            } else {
-                return Result.failure(result.exceptionOrNull()!!)
-            }
-            
-            // Small delay between requests to be respectful
-            delay(100)
-        }
-
-        return Result.success(responses)
-    }
-
-    /**
      * Future: Streaming chat support
      */
     suspend fun sendStreamingMessage(
@@ -365,54 +331,5 @@ class CopilotChatManager @Inject constructor(
             // Retry other errors once
             else -> attempt == 0
         }
-    }
-}
-
-// ================================
-// Chat Utilities
-// ================================
-
-object ChatUtils {
-    
-    /**
-     * Estimate token count for text (rough approximation)
-     */
-    fun estimateTokenCount(text: String): Int {
-        // Rough estimation: 1 token ≈ 4 characters for English
-        // This is not accurate but gives a ballpark figure
-        return (text.length / 4).coerceAtLeast(1)
-    }
-
-    /**
-     * Truncate message to fit within token limits
-     */
-    fun truncateToTokenLimit(text: String, maxTokens: Int): String {
-        val estimatedTokens = estimateTokenCount(text)
-        if (estimatedTokens <= maxTokens) {
-            return text
-        }
-
-        // Truncate to approximate character limit
-        val maxChars = maxTokens * 4
-        return if (text.length > maxChars) {
-            text.take(maxChars - 3) + "..."
-        } else {
-            text
-        }
-    }
-
-    /**
-     * Create a formatted prompt with optional system context
-     */
-    fun createFormattedPrompt(
-        userMessage: String,
-        systemContext: String? = null,
-        additionalInstructions: String? = null
-    ): String {
-        val basePrompt = userMessage
-        val contextPart = if (systemContext != null) "\n\nContext: $systemContext" else ""
-        val instructionsPart = if (additionalInstructions != null) "\n\n$additionalInstructions" else ""
-        
-        return "$basePrompt$contextPart$instructionsPart"
     }
 }
