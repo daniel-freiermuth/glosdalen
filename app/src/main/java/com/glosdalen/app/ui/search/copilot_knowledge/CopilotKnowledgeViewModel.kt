@@ -7,6 +7,7 @@ import com.glosdalen.app.ui.search.components.CopilotSearchUiState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
+import com.glosdalen.app.backend.anki.AnkiNoteType
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import com.glosdalen.app.domain.preferences.UserPreferences
@@ -414,8 +415,9 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 KnowledgeCardDirection.VIA_INTENT -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "knowledge", "copilot")
                         )
@@ -424,8 +426,9 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 KnowledgeCardDirection.FRONT_TO_BACK -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "knowledge", "copilot")
                         )
@@ -434,8 +437,9 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 KnowledgeCardDirection.BACK_TO_FRONT -> {
                     listOf(
                         AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to card.backSide, "Back" to card.frontSide),
+                            noteType = AnkiNoteType.BASIC,
+                            front = card.backSide,
+                            back = card.frontSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "knowledge", "copilot", "reversed")
                         )
@@ -444,8 +448,9 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 KnowledgeCardDirection.BOTH_DIRECTIONS -> {
                     listOf(
                         AnkiCard(
-                            modelName = AnkiCard.REVERSED_CARD_MODEL_NAME,
-                            fields = mapOf("Front" to card.frontSide, "Back" to card.backSide),
+                            noteType = AnkiNoteType.BASIC_AND_REVERSED,
+                            front = card.frontSide,
+                            back = card.backSide,
                             deckName = deckName,
                             tags = listOf("glosdalen", "knowledge", "copilot", "bidirectional")
                         )
