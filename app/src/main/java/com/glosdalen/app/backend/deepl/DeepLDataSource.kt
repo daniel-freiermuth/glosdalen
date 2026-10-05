@@ -13,7 +13,7 @@ class DeepLDataSource @Inject constructor(
 ) {
     
     val supportedLanguagePairs = run {
-        val languages = Language.values().toList()
+        val languages = Language.entries
         val pairs = mutableSetOf<Pair<Language, Language>>()
         
         // Add all bidirectional language pairs

@@ -34,7 +34,7 @@ class LanguageInstructionsViewModel @Inject constructor(
     // All languages with their instruction status
     val languageStatuses: StateFlow<Map<Language, Boolean>> = userPreferences.getAllLanguageInstructions()
         .map { instructionsMap ->
-            Language.values().associateWith { language ->
+            Language.entries.associateWith { language ->
                 instructionsMap[language]?.isNotBlank() == true
             }
         }

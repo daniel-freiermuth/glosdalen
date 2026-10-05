@@ -429,7 +429,7 @@ private fun CreateCardButtonWithDropdown(
                 Text("Create Card ($cardDirectionText)")
             }
         },
-        dropdownItems = DeepLCardDirection.values().toList(),
+        dropdownItems = DeepLCardDirection.entries,
         selectedItem = selectedCardDirection,
         enabled = !isCreatingCard && isAnkiDroidAvailable && !hasCardBeenCreated,
         onMainClick = onCreateCard,
