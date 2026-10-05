@@ -102,7 +102,7 @@ class LanguageInstructionsPreferences @Inject constructor(
                     val data = json.decodeFromString<LanguageInstructionsData>(jsonString)
                     // Convert string keys back to Language enum
                     data.instructions.mapNotNull { (code, instructions) ->
-                        Language.values().find { it.code == code }?.let { it to instructions }
+                        Language.entries.find { it.code == code }?.let { it to instructions }
                     }.toMap()
                 } catch (e: Exception) {
                     emptyMap()
