@@ -10,15 +10,15 @@ data class AnkiCard(
     val audioFiles: Map<String, File> = emptyMap() // Map of field name to audio file
 )
 
-sealed class AnkiError : Exception() {
-    object AnkiDroidNotInstalled : AnkiError()
-    data class IntentFailed(val reason: String?) : AnkiError()
+sealed class AnkiError(message: String?) : Exception(message) {
+    object AnkiDroidNotInstalled : AnkiError("AnkiDroid is not installed")
+    data class IntentFailed(val reason: String?) : AnkiError(reason)
     
     // API-specific errors
-    data class ApiNotAvailable(val reason: String) : AnkiError()
-    data class PermissionDenied(val reason: String) : AnkiError()
-    data class ApiError(val reason: String) : AnkiError()
-    data class DeckCreationFailed(val reason: String) : AnkiError()
-    data class ModelCreationFailed(val reason: String) : AnkiError()
-    data class CardCreationFailed(val reason: String) : AnkiError()
+    data class ApiNotAvailable(val reason: String) : AnkiError(reason)
+    data class PermissionDenied(val reason: String) : AnkiError(reason)
+    data class ApiError(val reason: String) : AnkiError(reason)
+    data class DeckCreationFailed(val reason: String) : AnkiError(reason)
+    data class ModelCreationFailed(val reason: String) : AnkiError(reason)
+    data class CardCreationFailed(val reason: String) : AnkiError(reason)
 }
