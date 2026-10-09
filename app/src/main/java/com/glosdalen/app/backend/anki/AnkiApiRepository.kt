@@ -3,6 +3,7 @@ package com.glosdalen.app.backend.anki
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.glosdalen.app.libs.copilot.util.TimeProvider
@@ -25,6 +26,7 @@ class AnkiApiRepository @Inject constructor(
 ) : AnkiBackend {
 
     companion object {
+        private const val TAG = "AnkiApiRepository"
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
         private const val APP_MODEL_NAME = "Glosdalen Basic"
     }
@@ -47,7 +49,7 @@ class AnkiApiRepository @Inject constructor(
     override suspend fun isAnkiDroidAvailable(): Boolean = withContext(Dispatchers.IO) {
         val packageName = AddContentApi.getAnkiDroidPackageName(context)
         val apiAvailable = getApi() != null
-        android.util.Log.d("AnkiApiRepository", "AnkiDroid package: $packageName, API available: $apiAvailable")
+        Log.d(TAG, "AnkiDroid package: $packageName, API available: $apiAvailable")
         return@withContext packageName != null && apiAvailable
     }
 
@@ -57,7 +59,7 @@ class AnkiApiRepository @Inject constructor(
     suspend fun hasApiPermission(): Boolean = withContext(Dispatchers.IO) {
         val hasPermission = ContextCompat.checkSelfPermission(context, PERMISSION_READ_WRITE_DATABASE) == 
                 PackageManager.PERMISSION_GRANTED
-        android.util.Log.d("AnkiApiRepository", "API permission check: $hasPermission")
+        Log.d(TAG, "API permission check: $hasPermission")
         return@withContext hasPermission
     }
 
@@ -78,13 +80,13 @@ class AnkiApiRepository @Inject constructor(
             val api = getApi() ?: return@withContext false
             // This should trigger the permission dialog if not already granted
             api.deckList
-            android.util.Log.d("AnkiApiRepository", "Permission request triggered successfully")
+            Log.d(TAG, "Permission request triggered successfully")
             hasApiPermission()
         } catch (e: SecurityException) {
-            android.util.Log.d("AnkiApiRepository", "Security exception during permission request: ${e.message}")
+            Log.d(TAG, "Security exception during permission request: ${e.message}")
             false
         } catch (e: Exception) {
-            android.util.Log.d("AnkiApiRepository", "Exception during permission request: ${e.message}")
+            Log.d(TAG, "Exception during permission request: ${e.message}")
             false
         }
     }
@@ -95,7 +97,7 @@ class AnkiApiRepository @Inject constructor(
     suspend fun ensureDeckExists(deckName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: run {
-                android.util.Log.e("AnkiApiRepository", "Failed to get API instance")
+                Log.e(TAG, "Failed to get API instance")
                 return@withContext Result.failure(
                     AnkiError.ApiNotAvailable("AnkiDroid API not available")
                 )
@@ -103,7 +105,7 @@ class AnkiApiRepository @Inject constructor(
 
             // Validate deck name - reject if it has whitespace around ::
             if (deckName.contains(Regex("\\s+::|::\\s+"))) {
-                android.util.Log.e("AnkiApiRepository", "Invalid deck name with whitespace around '::': '$deckName'")
+                Log.e(TAG, "Invalid deck name with whitespace around '::': '$deckName'")
                 return@withContext Result.failure(
                     AnkiError.DeckCreationFailed("Invalid deck name: whitespace not allowed around '::' separator. Please check your deck name template.")
                 )
@@ -121,12 +123,12 @@ class AnkiApiRepository @Inject constructor(
                 if (deckId != null) {
                     Result.success(deckId)
                 } else {
-                    android.util.Log.e("AnkiApiRepository", "Failed to create deck '$deckName' - API returned null")
+                    Log.e(TAG, "Failed to create deck '$deckName' - API returned null")
                     Result.failure(AnkiError.DeckCreationFailed("Failed to create deck: $deckName"))
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AnkiApiRepository", "Exception in ensureDeckExists for '$deckName': ${e.message}", e)
+            Log.e(TAG, "Exception in ensureDeckExists for '$deckName': ${e.message}", e)
             Result.failure(AnkiError.ApiError("Error managing deck: ${e.message}"))
         }
     }
@@ -137,7 +139,7 @@ class AnkiApiRepository @Inject constructor(
     suspend fun ensureModelExists(modelName: String): Result<Long> = withContext(Dispatchers.IO) {
         return@withContext try {
             val api = getApi() ?: run {
-                android.util.Log.e("AnkiApiRepository", "Failed to get API instance")
+                Log.e(TAG, "Failed to get API instance")
                 return@withContext Result.failure(
                     AnkiError.ApiNotAvailable("AnkiDroid API not available")
                 )
@@ -145,13 +147,13 @@ class AnkiApiRepository @Inject constructor(
 
             // Check if model already exists
             val models = api.modelList
-            android.util.Log.d("AnkiApiRepository", "Available models: ${models.values.toList()}")
+            Log.d(TAG, "Available models: ${models.values.toList()}")
             
             // First try exact match
             val existingModel = models.entries.find { it.value == modelName }
             
             if (existingModel != null) {
-                android.util.Log.d("AnkiApiRepository", "Found exact model match: ${existingModel.value}")
+                Log.d(TAG, "Found exact model match: ${existingModel.value}")
                 Result.success(existingModel.key)
             } else {
                 // Handle built-in models vs custom models
@@ -162,7 +164,7 @@ class AnkiApiRepository @Inject constructor(
                             it.value.equals(modelName, ignoreCase = true) 
                         }
                         if (caseInsensitiveMatch != null) {
-                            android.util.Log.d("AnkiApiRepository", "Found case-insensitive model match: ${caseInsensitiveMatch.value}")
+                            Log.d(TAG, "Found case-insensitive model match: ${caseInsensitiveMatch.value}")
                             return@withContext Result.success(caseInsensitiveMatch.key)
                         }
                         
@@ -183,12 +185,12 @@ class AnkiApiRepository @Inject constructor(
                             (name.contains("einfach") && name.contains("richtung"))  // German partial
                         }
                         if (reversedModel != null) {
-                            android.util.Log.d("AnkiApiRepository", "Found reversed model variant: ${reversedModel.value}")
+                            Log.d(TAG, "Found reversed model variant: ${reversedModel.value}")
                             return@withContext Result.success(reversedModel.key)
                         }
                         
                         // Log available models for debugging
-                        android.util.Log.e("AnkiApiRepository", "Built-in model '$modelName' not found in AnkiDroid. Available models: ${models.values.toList()}")
+                        Log.e(TAG, "Built-in model '$modelName' not found in AnkiDroid. Available models: ${models.values.toList()}")
                         Result.failure(AnkiError.ModelCreationFailed("Reversed card model not found. Please open AnkiDroid and ensure default note types are available, or try creating a card manually first."))
                     }
                     else -> {
@@ -197,14 +199,14 @@ class AnkiApiRepository @Inject constructor(
                         if (modelId != null) {
                             Result.success(modelId)
                         } else {
-                            android.util.Log.e("AnkiApiRepository", "Failed to create model '$modelName' - API returned null")
+                            Log.e(TAG, "Failed to create model '$modelName' - API returned null")
                             Result.failure(AnkiError.ModelCreationFailed("Failed to create model: $modelName"))
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("AnkiApiRepository", "Exception in ensureModelExists for '$modelName': ${e.message}", e)
+            Log.e(TAG, "Exception in ensureModelExists for '$modelName': ${e.message}", e)
             Result.failure(AnkiError.ApiError("Error managing model: ${e.message}"))
         }
     }
@@ -311,18 +313,18 @@ class AnkiApiRepository @Inject constructor(
             
             // addMediaFromUri returns the formatted [sound:...] tag directly, or null if it failed
             if (soundTag != null) {
-                android.util.Log.d("AnkiApiRepository", "Successfully added audio: $soundTag")
+                Log.d(TAG, "Successfully added audio: $soundTag")
                 if (fieldText.isNotBlank()) {
                     "$fieldText $soundTag"
                 } else {
                     soundTag
                 }
             } else {
-                android.util.Log.w("AnkiApiRepository", "addMediaFromUri returned null for: ${audioFile.name}")
+                Log.w(TAG, "addMediaFromUri returned null for: ${audioFile.name}")
                 fieldText
             }
         } catch (e: Exception) {
-            android.util.Log.w("AnkiApiRepository", "Failed to add audio file: ${e.message}", e)
+            Log.w(TAG, "Failed to add audio file: ${e.message}", e)
             fieldText // Return original text if audio addition fails
         }
     }
