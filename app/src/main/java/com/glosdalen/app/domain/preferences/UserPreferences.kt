@@ -34,7 +34,7 @@ class UserPreferences @Inject constructor(
     fun getNativeLanguage(): Flow<Language> {
         return dataStore.data.map { preferences ->
             val languageCode = preferences[NATIVE_LANGUAGE] ?: "DE" // Default to German
-            Language.values().find { it.code == languageCode } ?: Language.GERMAN
+            Language.entries.find { it.code == languageCode } ?: Language.GERMAN
         }
     }
     
@@ -47,7 +47,7 @@ class UserPreferences @Inject constructor(
     fun getForeignLanguage(): Flow<Language> {
         return dataStore.data.map { preferences ->
             val languageCode = preferences[FOREIGN_LANGUAGE] ?: "SV" // Default to Swedish
-            Language.values().find { it.code == languageCode } ?: Language.SWEDISH
+            Language.entries.find { it.code == languageCode } ?: Language.SWEDISH
         }
     }
     

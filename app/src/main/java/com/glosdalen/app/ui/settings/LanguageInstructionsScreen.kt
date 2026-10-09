@@ -119,7 +119,7 @@ private fun LanguageListScreen(
             }
             
             // Language list
-            items(Language.values().sortedBy { it.displayName }) { language ->
+            items(Language.entries.sortedBy { it.displayName }) { language ->
                 LanguageListItem(
                     language = language,
                     hasCustomSettings = languageStatuses[language] == true,

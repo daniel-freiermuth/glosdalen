@@ -100,7 +100,7 @@ fun LanguageDirectionToggle(
         // Foreign Language (right, clickable dropdown)
         ForeignLanguageDropdown(
             currentLanguage = foreignLanguage,
-            availableLanguages = Language.values().filter { it != nativeLanguage }.sortedBy { it.displayName },
+            availableLanguages = Language.entries.filter { it != nativeLanguage }.sortedBy { it.displayName },
             onLanguageSelect = onForeignLanguageSelect
         )
     }
