@@ -58,9 +58,13 @@ class CopilotStorage @Inject constructor(
     // Keystore Encryption
     // ================================
 
-    private fun getOrCreateKey(): SecretKey {
+    /**
+     * Serialized process-wide: two first-time callers would otherwise both see no key and
+     * both generate one under [KEY_ALIAS], the second replacing (and invalidating) the first.
+     */
+    private fun getOrCreateKey(): SecretKey = synchronized(KEY_LOCK) {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        keyStore.getKey(KEY_ALIAS, null)?.let { return it as SecretKey }
+        (keyStore.getKey(KEY_ALIAS, null) as SecretKey?)?.let { return@synchronized it }
 
         val keyGenerator = KeyGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_AES,
@@ -76,7 +80,7 @@ class CopilotStorage @Inject constructor(
                 .setKeySize(256)
                 .build()
         )
-        return keyGenerator.generateKey()
+        keyGenerator.generateKey()
     }
 
     /**
@@ -224,13 +228,14 @@ class CopilotStorage @Inject constructor(
     companion object {
         // Android Keystore constants
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-        private const val KEY_ALIAS = "copilot_storage_key"
+        internal const val KEY_ALIAS = "copilot_storage_key"
         private const val AES_GCM_TRANSFORMATION = "AES/GCM/NoPadding"
         private const val GCM_IV_LENGTH = 12
         private const val GCM_TAG_BITS = 128
+        private val KEY_LOCK = Any()
 
         // Storage file names
-        private const val SECURE_PREFS_NAME = "copilot_keystore_prefs"
+        internal const val SECURE_PREFS_NAME = "copilot_keystore_prefs"
         private const val REGULAR_PREFS_NAME = "copilot_regular_prefs"
 
         // Legacy file names from EncryptedSharedPreferences (deleted on migration)
