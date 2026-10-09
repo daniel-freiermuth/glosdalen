@@ -2,8 +2,12 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="settings.preferences_pb" />
+        <!-- Encrypted with a Keystore key that never leaves the device; unreadable after restore -->
+        <exclude domain="sharedpref" path="copilot_keystore_prefs.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="settings.preferences_pb" />
+        <!-- Encrypted with a Keystore key that never leaves the device; unreadable after restore -->
+        <exclude domain="sharedpref" path="copilot_keystore_prefs.xml" />
     </device-transfer>
 </data-extraction-rules>
