@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import com.glosdalen.app.ui.components.SplitButton
+import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -101,19 +102,8 @@ fun DeepLSearchScreen(
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
-                val error = result.exceptionOrNull()
-                val errorMessage = when {
-                    error?.message?.contains("permission", ignoreCase = true) == true -> 
-                        "AnkiDroid permission required. Please grant access in settings."
-                    error?.message?.contains("not installed", ignoreCase = true) == true -> 
-                        "AnkiDroid is not installed. Please install it from the Play Store."
-                    error?.message?.contains("deck", ignoreCase = true) == true -> 
-                        "Failed to create deck. Please check AnkiDroid settings."
-                    error?.message?.contains("model", ignoreCase = true) == true ||
-                    error?.message?.contains("reversed", ignoreCase = true) == true -> 
-                        "Card type not found. Please open AnkiDroid first to initialize note types."
-                    else -> "Error when creating card: ${error?.message ?: "Unknown error"}"
-                }
+                val errorMessage = result.exceptionOrNull()?.toCardCreationErrorMessage()
+                    ?: "Error when creating card: Unknown error"
                 Toast.makeText(
                     context, 
                     errorMessage, 

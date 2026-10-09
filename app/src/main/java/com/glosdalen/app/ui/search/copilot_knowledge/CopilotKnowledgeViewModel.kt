@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiRepository
+import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
@@ -401,7 +402,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                     _uiState.update { 
                         it.copy(
                             isCreatingCard = false,
-                            error = CopilotSearchErrors.ankiFailure(error)
+                            error = error.toCardCreationErrorMessage()
                         )
                     }
                 }
