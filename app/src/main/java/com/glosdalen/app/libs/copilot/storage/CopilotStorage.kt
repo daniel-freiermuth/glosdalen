@@ -114,6 +114,20 @@ class CopilotStorage @Inject constructor(
     }
 
     /**
+     * Encrypts [plaintext] and stores it under [key], with the save time under [savedAtKey].
+     * The write holds [SECURE_PREFS_LOCK] so it cannot interleave with [readEncrypted]'s discard.
+     */
+    private fun writeEncrypted(key: String, savedAtKey: String, plaintext: String) {
+        val encrypted = encrypt(plaintext)
+        synchronized(SECURE_PREFS_LOCK) {
+            securePrefs.edit()
+                .putString(key, encrypted)
+                .putLong(savedAtKey, timeProvider.currentTimeMillis())
+                .apply()
+        }
+    }
+
+    /**
      * Returns the decrypted value stored under [key], or null if there is none.
      *
      * A value the current Keystore key cannot decrypt is permanently unreadable — e.g. the
@@ -128,7 +142,12 @@ class CopilotStorage @Inject constructor(
         } catch (e: Exception) {
             if (e !is AEADBadTagException && e !is IllegalArgumentException) throw e
             Log.w(TAG, "Discarding unreadable $key", e)
-            securePrefs.edit().remove(key).remove(savedAtKey).apply()
+            synchronized(SECURE_PREFS_LOCK) {
+                // A save may have replaced the value since it was read; only drop the one that failed.
+                if (securePrefs.getString(key, null) == encoded) {
+                    securePrefs.edit().remove(key).remove(savedAtKey).apply()
+                }
+            }
             null
         }
     }
@@ -139,11 +158,7 @@ class CopilotStorage @Inject constructor(
 
     suspend fun saveOAuthToken(token: OAuthToken) = withContext(Dispatchers.IO) {
         try {
-            val encrypted = encrypt(json.encodeToString(token))
-            securePrefs.edit()
-                .putString(KEY_OAUTH_TOKEN, encrypted)
-                .putLong(KEY_OAUTH_TOKEN_SAVED_AT, timeProvider.currentTimeMillis())
-                .apply()
+            writeEncrypted(KEY_OAUTH_TOKEN, KEY_OAUTH_TOKEN_SAVED_AT, json.encodeToString(token))
         } catch (e: Exception) {
             throw StorageException.SaveFailed(KEY_OAUTH_TOKEN, e)
         }
@@ -165,11 +180,7 @@ class CopilotStorage @Inject constructor(
 
     suspend fun saveCopilotToken(token: CopilotToken) = withContext(Dispatchers.IO) {
         try {
-            val encrypted = encrypt(json.encodeToString(token))
-            securePrefs.edit()
-                .putString(KEY_COPILOT_TOKEN, encrypted)
-                .putLong(KEY_COPILOT_TOKEN_SAVED_AT, timeProvider.currentTimeMillis())
-                .apply()
+            writeEncrypted(KEY_COPILOT_TOKEN, KEY_COPILOT_TOKEN_SAVED_AT, json.encodeToString(token))
         } catch (e: Exception) {
             throw StorageException.SaveFailed(KEY_COPILOT_TOKEN, e)
         }
@@ -257,6 +268,9 @@ class CopilotStorage @Inject constructor(
         private const val GCM_IV_LENGTH = 12
         private const val GCM_TAG_BITS = 128
         private val KEY_LOCK = Any()
+
+        /** Guards secure-prefs token writes against a concurrent discard of an unreadable value. */
+        private val SECURE_PREFS_LOCK = Any()
 
         // Storage file names
         internal const val SECURE_PREFS_NAME = "copilot_keystore_prefs"
