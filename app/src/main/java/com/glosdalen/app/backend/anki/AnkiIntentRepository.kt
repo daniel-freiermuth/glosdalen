@@ -3,7 +3,6 @@ package com.glosdalen.app.backend.anki
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,22 +54,6 @@ class AnkiIntentRepository @Inject constructor(
         }
     }
 
-    /**
-     * Check if AnkiDroid can handle ACTION_SEND intents
-     */
-    suspend fun canHandleActionSend(): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val intent = Intent(ACTION_SEND).apply {
-                type = TYPE_TEXT_PLAIN
-                setPackage(ANKIDROID_PACKAGE)
-            }
-            val resolveInfo = context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-            return@withContext resolveInfo != null
-        } catch (e: Exception) {
-            return@withContext false
-        }
-    }
-
     override suspend fun createCard(card: AnkiCard): Result<Unit> {
         return createCardViaIntent(card)
     }
@@ -115,19 +98,5 @@ class AnkiIntentRepository @Inject constructor(
         }
         
         Result.success(Unit)
-    }
-
-    /**
-     * Get intent for installing AnkiDroid from Play Store
-     */
-    suspend fun getInstallAnkiDroidIntent(): Intent? = withContext(Dispatchers.IO) {
-        return@withContext try {
-            Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("market://details?id=$ANKIDROID_PACKAGE")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-        } catch (e: Exception) {
-            null
-        }
     }
 }
