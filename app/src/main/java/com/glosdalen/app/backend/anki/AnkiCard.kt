@@ -8,7 +8,12 @@ data class AnkiCard(
     val tags: List<String> = emptyList(),
     val deckName: String,
     val audioFiles: Map<String, File> = emptyMap() // Map of field name to audio file
-)
+) {
+    companion object {
+        /** Built-in AnkiDroid model name for bidirectional (front↔back) cards. */
+        const val REVERSED_CARD_MODEL_NAME = "Basic (and reversed card)"
+    }
+}
 
 sealed class AnkiError : Exception() {
     object AnkiDroidNotInstalled : AnkiError()
