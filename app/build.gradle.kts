@@ -156,7 +156,7 @@ composeCompiler {
 
 dependencies {
     // AnkiDroid API
-    implementation("com.github.ankidroid:Anki-Android:api-v1.1.0")
+    implementation("com.github.ankidroid:Anki-Android:2.23.3")
     
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
