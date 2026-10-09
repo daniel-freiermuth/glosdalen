@@ -100,6 +100,24 @@ class CopilotStorageTest {
         }
     }
 
+    @Test
+    fun discardingUnreadableTokenKeepsTokenSavedConcurrently() = runBlocking {
+        val freshToken = copilotToken.copy(token = "tid=fresh-copilot-token;exp=9999999999")
+        repeat(CONCURRENCY_ROUNDS) { round ->
+            resetState()
+            CopilotStorage(context, timeProvider).saveCopilotToken(copilotToken)
+            deleteKeystoreKey()
+
+            // Readers discard the now-unreadable token while a writer stores a fresh one.
+            val writer = CopilotStorage(context, timeProvider)
+            val readers = List(PARALLEL_WRITERS - 1) { CopilotStorage(context, timeProvider) }
+            (readers.map { async(Dispatchers.IO) { it.loadCopilotToken() } } +
+                async(Dispatchers.IO) { writer.saveCopilotToken(freshToken) }).awaitAll()
+
+            assertEquals("round $round", freshToken, CopilotStorage(context, timeProvider).loadCopilotToken())
+        }
+    }
+
     private fun securePrefs() =
         context.getSharedPreferences(CopilotStorage.SECURE_PREFS_NAME, Context.MODE_PRIVATE)
 
