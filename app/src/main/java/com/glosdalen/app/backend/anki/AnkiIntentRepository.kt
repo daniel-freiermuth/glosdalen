@@ -86,13 +86,13 @@ class AnkiIntentRepository @Inject constructor(
         return@withContext try {
             val intent = Intent(ACTION_SEND).apply {
                 type = TYPE_TEXT_PLAIN
-                putExtra(Intent.EXTRA_TEXT, card.fields["Back"] ?: "")
-                putExtra(Intent.EXTRA_SUBJECT, card.fields["Front"] ?: "")
+                putExtra(Intent.EXTRA_TEXT, card.back)
+                putExtra(Intent.EXTRA_SUBJECT, card.front)
                 setPackage(ANKIDROID_PACKAGE)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             
-            android.util.Log.d("AnkiIntentRepository", "Starting AnkiDroid intent with Front: ${card.fields["Front"]}, Back: ${card.fields["Back"]}")
+            android.util.Log.d("AnkiIntentRepository", "Starting AnkiDroid intent with Front: ${card.front}, Back: ${card.back}")
             context.startActivity(intent)
             Result.success(Unit)
             
