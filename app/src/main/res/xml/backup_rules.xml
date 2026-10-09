@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="sharedpref" path="settings.preferences_pb" />
+    <!-- Encrypted with a Keystore key that never leaves the device; unreadable after restore -->
+    <exclude domain="sharedpref" path="copilot_keystore_prefs.xml" />
 </full-backup-content>

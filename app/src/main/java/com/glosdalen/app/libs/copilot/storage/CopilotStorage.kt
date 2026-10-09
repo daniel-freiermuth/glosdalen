@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +13,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.KeyStore
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -97,16 +99,38 @@ class CopilotStorage @Inject constructor(
 
     /**
      * Decrypts a Base64 string produced by [encrypt].
-     * Throws on decryption failure (corrupt data, wrong key, tampered ciphertext).
+     * Throws [AEADBadTagException] when the current key cannot authenticate the ciphertext
+     * (key lost or replaced, tampered data) and [IllegalArgumentException] on malformed input.
      */
     private fun decrypt(encoded: String): String {
         val combined = Base64.decode(encoded, Base64.NO_WRAP)
+        require(combined.size > GCM_IV_LENGTH) { "Encrypted value shorter than its IV" }
         val iv = combined.copyOfRange(0, GCM_IV_LENGTH)
         val ciphertext = combined.copyOfRange(GCM_IV_LENGTH, combined.size)
 
         val cipher = Cipher.getInstance(AES_GCM_TRANSFORMATION)
         cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(), GCMParameterSpec(GCM_TAG_BITS, iv))
         return String(cipher.doFinal(ciphertext), Charsets.UTF_8)
+    }
+
+    /**
+     * Returns the decrypted value stored under [key], or null if there is none.
+     *
+     * A value the current Keystore key cannot decrypt is permanently unreadable — e.g. the
+     * prefs file came back from a backup or device transfer without its key, or the key was
+     * wiped. It is removed and reported as absent so callers re-obtain the token instead of
+     * failing on every load. Other (possibly transient) Keystore errors still propagate.
+     */
+    private fun readEncrypted(key: String, savedAtKey: String): String? {
+        val encoded = securePrefs.getString(key, null) ?: return null
+        return try {
+            decrypt(encoded)
+        } catch (e: Exception) {
+            if (e !is AEADBadTagException && e !is IllegalArgumentException) throw e
+            Log.w(TAG, "Discarding unreadable $key", e)
+            securePrefs.edit().remove(key).remove(savedAtKey).apply()
+            null
+        }
     }
 
     // ================================
@@ -127,9 +151,8 @@ class CopilotStorage @Inject constructor(
 
     suspend fun loadOAuthToken(): OAuthToken? = withContext(Dispatchers.IO) {
         try {
-            val encrypted = securePrefs.getString(KEY_OAUTH_TOKEN, null)
+            val tokenJson = readEncrypted(KEY_OAUTH_TOKEN, KEY_OAUTH_TOKEN_SAVED_AT)
                 ?: return@withContext null
-            val tokenJson = decrypt(encrypted)
             json.decodeFromString<OAuthToken>(tokenJson)
         } catch (e: Exception) {
             throw StorageException.LoadFailed(KEY_OAUTH_TOKEN, e)
@@ -154,9 +177,8 @@ class CopilotStorage @Inject constructor(
 
     suspend fun loadCopilotToken(): CopilotToken? = withContext(Dispatchers.IO) {
         try {
-            val encrypted = securePrefs.getString(KEY_COPILOT_TOKEN, null)
+            val tokenJson = readEncrypted(KEY_COPILOT_TOKEN, KEY_COPILOT_TOKEN_SAVED_AT)
                 ?: return@withContext null
-            val tokenJson = decrypt(encrypted)
             json.decodeFromString<CopilotToken>(tokenJson)
         } catch (e: Exception) {
             throw StorageException.LoadFailed(KEY_COPILOT_TOKEN, e)
@@ -226,6 +248,8 @@ class CopilotStorage @Inject constructor(
 
 
     companion object {
+        private const val TAG = "CopilotStorage"
+
         // Android Keystore constants
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
         internal const val KEY_ALIAS = "copilot_storage_key"
