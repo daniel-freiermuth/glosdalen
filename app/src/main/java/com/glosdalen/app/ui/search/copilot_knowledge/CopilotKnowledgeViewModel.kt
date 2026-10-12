@@ -54,6 +54,40 @@ data class ParsedKnowledgeResponse(
 ) : CopilotParsedResponse<KnowledgeFlashCard>
 
 /**
+ * Parses the raw LLM reply for a general knowledge query into the form shown by the UI.
+ */
+internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? {
+    return try {
+        // Configure JSON parser to be lenient
+        val json = Json { 
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+        
+        // Try to extract JSON from response (in case it's wrapped in markdown)
+        val jsonContent = LlmJsonExtractor.extractJsonObject(response)
+        
+        val parsedJson = json.decodeFromString<KnowledgeJsonResponse>(jsonContent)
+        
+        ParsedKnowledgeResponse(
+            directAnswer = parsedJson.answer,
+            cards = parsedJson.flashcards.map { 
+                KnowledgeFlashCard(
+                    frontSide = it.front,
+                    backSide = it.back,
+                    note = it.note
+                )
+            },
+            additionalInfo = parsedJson.explanation,
+            suggestedDeck = parsedJson.suggestedDeck
+        )
+    } catch (e: Exception) {
+        // If parsing fails, return null and show raw response
+        null
+    }
+}
+
+/**
  * Card direction for Knowledge mode
  * Generic front/back directions since cards are already defined by the LLM
  */
@@ -220,7 +254,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 
                 result.fold(
                     onSuccess = { response ->
-                        val parsed = parseResponse(response)
+                        val parsed = parseKnowledgeResponse(response)
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
@@ -406,37 +440,6 @@ class CopilotKnowledgeViewModel @Inject constructor(
                     }
                 }
             )
-        }
-    }
-    
-    private fun parseResponse(response: String): ParsedKnowledgeResponse? {
-        return try {
-            // Configure JSON parser to be lenient
-            val json = Json { 
-                ignoreUnknownKeys = true
-                isLenient = true
-            }
-            
-            // Try to extract JSON from response (in case it's wrapped in markdown)
-            val jsonContent = LlmJsonExtractor.extractJsonObject(response)
-            
-            val parsedJson = json.decodeFromString<KnowledgeJsonResponse>(jsonContent)
-            
-            ParsedKnowledgeResponse(
-                directAnswer = parsedJson.answer,
-                cards = parsedJson.flashcards.map { 
-                    KnowledgeFlashCard(
-                        frontSide = it.front,
-                        backSide = it.back,
-                        note = it.note
-                    )
-                },
-                additionalInfo = parsedJson.explanation,
-                suggestedDeck = parsedJson.suggestedDeck
-            )
-        } catch (e: Exception) {
-            // If parsing fails, return null and show raw response
-            null
         }
     }
     
