@@ -1,7 +1,6 @@
 package com.glosdalen.app.ui.search.copilot_knowledge
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -18,8 +17,7 @@ class KnowledgeResponseParserTest {
             """{"answer":"Paris","flashcards":[{"front":"Capital of France?","back":"Paris"}],"explanation":"x","suggestedDeck":"Geo"}"""
         )
 
-        assertNotNull(parsed)
-        assertEquals("Paris", parsed!!.directAnswer)
+        assertEquals("Paris", parsed.directAnswer)
         assertEquals(listOf(KnowledgeFlashCard("Capital of France?", "Paris")), parsed.cards)
         assertEquals("Geo", parsed.suggestedDeck)
     }
@@ -30,8 +28,7 @@ class KnowledgeResponseParserTest {
 
         val parsed = parseKnowledgeResponse(raw)
 
-        assertNotNull(parsed, "unparseable reply must still yield visible content")
-        assertTrue(parsed!!.directAnswer.contains(raw), "answer should contain the raw reply: ${parsed.directAnswer}")
+        assertTrue(parsed.directAnswer.contains(raw), "answer should contain the raw reply: ${parsed.directAnswer}")
         assertTrue(parsed.cards.isEmpty())
     }
 
@@ -41,8 +38,7 @@ class KnowledgeResponseParserTest {
 
         val parsed = parseKnowledgeResponse(raw)
 
-        assertNotNull(parsed, "reply without 'answer' must still yield visible content")
-        assertTrue(parsed!!.directAnswer.contains(raw), "answer should contain the raw reply: ${parsed.directAnswer}")
+        assertTrue(parsed.directAnswer.contains(raw), "answer should contain the raw reply: ${parsed.directAnswer}")
         assertTrue(parsed.cards.isEmpty())
     }
 }

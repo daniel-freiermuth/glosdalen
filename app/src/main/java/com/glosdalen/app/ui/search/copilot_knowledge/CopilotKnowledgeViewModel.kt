@@ -56,7 +56,7 @@ data class ParsedKnowledgeResponse(
 /**
  * Parses the raw LLM reply for a general knowledge query into the form shown by the UI.
  */
-internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? {
+internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse {
     return try {
         // Configure JSON parser to be lenient
         val json = Json { 
@@ -82,8 +82,13 @@ internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? 
             suggestedDeck = parsedJson.suggestedDeck
         )
     } catch (e: Exception) {
-        // If parsing fails, return null and show raw response
-        null
+        // If parsing fails, show the raw response so the user still sees something
+        ParsedKnowledgeResponse(
+            directAnswer = "Error parsing response: ${e.message}\n\nRaw response:\n$response",
+            cards = emptyList(),
+            additionalInfo = "",
+            suggestedDeck = ""
+        )
     }
 }
 
