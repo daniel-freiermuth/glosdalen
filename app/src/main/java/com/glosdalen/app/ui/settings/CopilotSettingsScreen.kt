@@ -6,8 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -59,121 +57,104 @@ fun CopilotSettingsScreen(
         onNavigateBack()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    SettingsScreenScaffold(
+        title = { Text("GitHub Copilot") },
+        onNavigateBack = onNavigateBack
     ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("GitHub Copilot") },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Error message
-            uiState.errorMessage?.let { error ->
-                ErrorCard(
-                    message = error,
-                    onDismiss = viewModel::clearError
+        // Error message
+        uiState.errorMessage?.let { error ->
+            ErrorCard(
+                message = error,
+                onDismiss = viewModel::clearError
+            )
+        }
+            
+        // Main content based on auth state
+        when (val state = uiState.authState) {
+            is AuthState.NotAuthenticated -> {
+                NotAuthenticatedSection(
+                    onSignIn = viewModel::startAuthentication
                 )
             }
-            
-            // Main content based on auth state
-            when (val state = uiState.authState) {
-                is AuthState.NotAuthenticated -> {
-                    NotAuthenticatedSection(
-                        onSignIn = viewModel::startAuthentication
-                    )
-                }
                 
-                is AuthState.RequestingDeviceCode -> {
-                    LoadingSection(message = "Requesting device code...")
-                }
-                
-                is AuthState.WaitingForUser -> {
-                    DeviceCodeSection(
-                        userCode = state.userCode,
-                        verificationUri = state.verificationUri,
-                        expiresIn = state.expiresIn,
-                        isPolling = state.isPolling,
-                        onCancel = viewModel::cancelAuthentication,
-                        onOpenGitHub = viewModel::startPolling
-                    )
-                }
-                
-                is AuthState.Authenticated -> {
-                    AuthenticatedSection(
-                        onLogout = viewModel::logout,
-                        onRefresh = viewModel::checkAuthenticationStatus
-                    )
-                    
-                    // Language Mode Instructions Section
-                    InstructionsSection(
-                        title = "Language Mode Instructions",
-                        description = "Customize instructions for Copilot Language mode (vocabulary and translation queries).",
-                        instructions = languageInstructions,
-                        defaultInstructions = com.glosdalen.app.domain.preferences.CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS,
-                        onInstructionsChange = viewModel::updateLanguageInstructions,
-                        onResetToDefault = viewModel::resetToDefaultLanguageInstructions
-                    )
-                    
-                    // Knowledge Mode Instructions Section
-                    InstructionsSection(
-                        title = "General Knowledge Instructions",
-                        description = "Customize instructions for General Knowledge mode (study flashcards for any topic).",
-                        instructions = knowledgeInstructions,
-                        defaultInstructions = com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS,
-                        onInstructionsChange = viewModel::updateKnowledgeInstructions,
-                        onResetToDefault = viewModel::resetToDefaultKnowledgeInstructions
-                    )
-                    
-                    // Knowledge Mode Deck Template Section
-                    DeckTemplateSection(
-                        deckTemplate = knowledgeDeckTemplate,
-                        onDeckTemplateChange = viewModel::updateKnowledgeDeckTemplate
-                    )
-                    
-                    // Language-Specific Instructions Section
-                    LanguageInstructionsNavigationCard(
-                        onNavigate = onNavigateToLanguageInstructions
-                    )
-                    
-                    // Temperature Section
-                    TemperatureSection(
-                        temperature = temperature,
-                        onTemperatureChange = viewModel::updateTemperature
-                    )
-                    
-                    // Model Selection Section
-                    ModelSelectionSection(
-                        availableModels = uiState.availableModels,
-                        selectedModelId = selectedModelId,
-                        isLoading = uiState.isLoadingModels,
-                        onModelSelect = viewModel::selectModel,
-                        onRefreshModels = viewModel::refreshModels
-                    )
-                }
-                
-                is AuthState.Error -> {
-                    ErrorSection(
-                        onRetry = viewModel::startAuthentication,
-                        onCancel = viewModel::cancelAuthentication
-                    )
-                }
+            is AuthState.RequestingDeviceCode -> {
+                LoadingSection(message = "Requesting device code...")
             }
-            
-            // Info section
-            CopilotInfoSection()
+                
+            is AuthState.WaitingForUser -> {
+                DeviceCodeSection(
+                    userCode = state.userCode,
+                    verificationUri = state.verificationUri,
+                    expiresIn = state.expiresIn,
+                    isPolling = state.isPolling,
+                    onCancel = viewModel::cancelAuthentication,
+                    onOpenGitHub = viewModel::startPolling
+                )
+            }
+                
+            is AuthState.Authenticated -> {
+                AuthenticatedSection(
+                    onLogout = viewModel::logout,
+                    onRefresh = viewModel::checkAuthenticationStatus
+                )
+                    
+                // Language Mode Instructions Section
+                InstructionsSection(
+                    title = "Language Mode Instructions",
+                    description = "Customize instructions for Copilot Language mode (vocabulary and translation queries).",
+                    instructions = languageInstructions,
+                    defaultInstructions = com.glosdalen.app.domain.preferences.CopilotLanguagePreferences.DEFAULT_LANGUAGE_INSTRUCTIONS,
+                    onInstructionsChange = viewModel::updateLanguageInstructions,
+                    onResetToDefault = viewModel::resetToDefaultLanguageInstructions
+                )
+                    
+                // Knowledge Mode Instructions Section
+                InstructionsSection(
+                    title = "General Knowledge Instructions",
+                    description = "Customize instructions for General Knowledge mode (study flashcards for any topic).",
+                    instructions = knowledgeInstructions,
+                    defaultInstructions = com.glosdalen.app.domain.preferences.CopilotKnowledgePreferences.DEFAULT_KNOWLEDGE_INSTRUCTIONS,
+                    onInstructionsChange = viewModel::updateKnowledgeInstructions,
+                    onResetToDefault = viewModel::resetToDefaultKnowledgeInstructions
+                )
+                    
+                // Knowledge Mode Deck Template Section
+                DeckTemplateSection(
+                    deckTemplate = knowledgeDeckTemplate,
+                    onDeckTemplateChange = viewModel::updateKnowledgeDeckTemplate
+                )
+                    
+                // Language-Specific Instructions Section
+                LanguageInstructionsNavigationCard(
+                    onNavigate = onNavigateToLanguageInstructions
+                )
+                    
+                // Temperature Section
+                TemperatureSection(
+                    temperature = temperature,
+                    onTemperatureChange = viewModel::updateTemperature
+                )
+                    
+                // Model Selection Section
+                ModelSelectionSection(
+                    availableModels = uiState.availableModels,
+                    selectedModelId = selectedModelId,
+                    isLoading = uiState.isLoadingModels,
+                    onModelSelect = viewModel::selectModel,
+                    onRefreshModels = viewModel::refreshModels
+                )
+            }
+                
+            is AuthState.Error -> {
+                ErrorSection(
+                    onRetry = viewModel::startAuthentication,
+                    onCancel = viewModel::cancelAuthentication
+                )
+            }
         }
+            
+        // Info section
+        CopilotInfoSection()
     }
 }
 
