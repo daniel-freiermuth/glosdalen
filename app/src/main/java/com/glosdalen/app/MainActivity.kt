@@ -24,6 +24,7 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,6 +69,9 @@ data object SettingsRoute
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // targetSdk 35+ always draws edge-to-edge; this makes the system-bar icons
+        // follow light/dark mode. Each screen applies the window insets itself.
+        enableEdgeToEdge()
         setContent {
             GlosdalenTheme {
                 Surface(
