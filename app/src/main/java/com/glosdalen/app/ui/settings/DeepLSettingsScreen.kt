@@ -4,10 +4,6 @@ package com.glosdalen.app.ui.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -29,35 +25,18 @@ fun DeepLSettingsScreen(
         onNavigateBack()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    SettingsScreenScaffold(
+        title = { Text("DeepL Settings") },
+        onNavigateBack = onNavigateBack
     ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("DeepL Settings") },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
+        // DeepL API Configuration Section
+        DeepLSettingsSection(
+            uiState = uiState,
+            onApiKeyChange = viewModel::updateApiKey,
+            onValidateApiKey = viewModel::validateAndSaveApiKey,
+            onModelTypeChange = viewModel::updateDeepLModelType,
+            onEnableMultipleFormalitiesChange = viewModel::updateEnableMultipleFormalities,
+            onFrontPreferenceChange = viewModel::updateFrontPreference
         )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // DeepL API Configuration Section
-            DeepLSettingsSection(
-                uiState = uiState,
-                onApiKeyChange = viewModel::updateApiKey,
-                onValidateApiKey = viewModel::validateAndSaveApiKey,
-                onModelTypeChange = viewModel::updateDeepLModelType,
-                onEnableMultipleFormalitiesChange = viewModel::updateEnableMultipleFormalities,
-                onFrontPreferenceChange = viewModel::updateFrontPreference
-            )
-        }
     }
 }

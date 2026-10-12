@@ -7,8 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -200,66 +198,50 @@ private fun LanguageDetailScreen(
 ) {
     val currentInstructions by viewModel.currentInstructions.collectAsState()
     
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { 
-                Column {
-                    Text(language.displayName)
-                    Text(
-                        text = language.nativeName,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Instructions editor
-            InstructionsEditorSection(
-                language = language,
-                instructions = currentInstructions,
-                onInstructionsChange = viewModel::updateInstructions,
-                onLoadDefault = viewModel::loadDefaultInstructions,
-                onClear = viewModel::clearInstructions,
-                hasDefaultInstructions = viewModel.getDefaultInstructions().isNotBlank()
-            )
-            
-            // Placeholder for future per-language settings
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+    SettingsScreenScaffold(
+        title = { 
+            Column {
+                Text(language.displayName)
+                Text(
+                    text = language.nativeName,
+                    style = MaterialTheme.typography.bodySmall
                 )
+            }
+        },
+        onNavigateBack = onNavigateBack
+    ) {
+        // Instructions editor
+        InstructionsEditorSection(
+            language = language,
+            instructions = currentInstructions,
+            onInstructionsChange = viewModel::updateInstructions,
+            onLoadDefault = viewModel::loadDefaultInstructions,
+            onClear = viewModel::clearInstructions,
+            hasDefaultInstructions = viewModel.getDefaultInstructions().isNotBlank()
+        )
+            
+        // Placeholder for future per-language settings
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Additional Settings",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "More language-specific settings will be available here in the future.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = "Additional Settings",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "More language-specific settings will be available here in the future.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

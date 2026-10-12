@@ -4,10 +4,6 @@ package com.glosdalen.app.ui.settings
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -28,32 +24,15 @@ fun AnkiSettingsScreen(
         onNavigateBack()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    SettingsScreenScaffold(
+        title = { Text("AnkiDroid Settings") },
+        onNavigateBack = onNavigateBack
     ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("AnkiDroid Settings") },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
+        // AnkiDroid Integration
+        AnkiSettingsSection(
+            nativeLanguage = uiState.nativeLanguage,
+            foreignLanguage = uiState.foreignLanguage,
+            templateResolver = viewModel.templateResolver
         )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // AnkiDroid Integration
-            AnkiSettingsSection(
-                nativeLanguage = uiState.nativeLanguage,
-                foreignLanguage = uiState.foreignLanguage,
-                templateResolver = viewModel.templateResolver
-            )
-        }
     }
 }

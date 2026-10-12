@@ -6,11 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Refresh
@@ -130,65 +127,48 @@ private fun MainSettingsScreen(
         onNavigateBack()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    SettingsScreenScaffold(
+        title = { Text("Settings") },
+        onNavigateBack = onNavigateBack
     ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("Settings") },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
+        // Language Configuration Section (General Setting)
+        LanguageConfigurationSection(
+            selectedLanguage = uiState.nativeLanguage,
+            onLanguageSelected = viewModel::updateNativeLanguage
         )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Language Configuration Section (General Setting)
-            LanguageConfigurationSection(
-                selectedLanguage = uiState.nativeLanguage,
-                onLanguageSelected = viewModel::updateNativeLanguage
-            )
             
-            // DeepL Settings Navigation Card
-            SettingsNavigationCard(
-                title = "DeepL",
-                description = "API key and translation quality settings",
-                onClick = onNavigateToDeepL
-            )
+        // DeepL Settings Navigation Card
+        SettingsNavigationCard(
+            title = "DeepL",
+            description = "API key and translation quality settings",
+            onClick = onNavigateToDeepL
+        )
             
-            // AnkiDroid Settings Navigation Card
-            SettingsNavigationCard(
-                title = "AnkiDroid",
-                description = "Integration method, deck selection, and card templates",
-                onClick = onNavigateToAnki
-            )
+        // AnkiDroid Settings Navigation Card
+        SettingsNavigationCard(
+            title = "AnkiDroid",
+            description = "Integration method, deck selection, and card templates",
+            onClick = onNavigateToAnki
+        )
             
-            // GitHub Copilot Settings Navigation Card
-            SettingsNavigationCard(
-                title = "GitHub Copilot",
-                description = "AI-powered translation suggestions and language-specific instructions",
-                onClick = onNavigateToCopilot
-            )
+        // GitHub Copilot Settings Navigation Card
+        SettingsNavigationCard(
+            title = "GitHub Copilot",
+            description = "AI-powered translation suggestions and language-specific instructions",
+            onClick = onNavigateToCopilot
+        )
             
-            // ElevenLabs TTS Settings Navigation Card
-            SettingsNavigationCard(
-                title = "ElevenLabs TTS",
-                description = "Text-to-speech voice settings for pronunciation",
-                onClick = onNavigateToElevenLabs
-            )
+        // ElevenLabs TTS Settings Navigation Card
+        SettingsNavigationCard(
+            title = "ElevenLabs TTS",
+            description = "Text-to-speech voice settings for pronunciation",
+            onClick = onNavigateToElevenLabs
+        )
             
-            Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
             
-            // About section
-            AboutSection()
-        }
+        // About section
+        AboutSection()
     }
 }
 

@@ -7,11 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import com.glosdalen.app.ui.components.screenBodyVerticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,69 +34,53 @@ fun ElevenLabsSettingsScreen(
         onNavigateBack()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
+    SettingsScreenScaffold(
+        title = { Text("ElevenLabs TTS") },
+        onNavigateBack = onNavigateBack
     ) {
-        TopAppBar(
-            title = { Text("ElevenLabs TTS") },
-            navigationIcon = {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
+        // Info Card
+        InfoCard()
+            
+        // API Key Section
+        ApiKeySection(
+            apiKey = uiState.apiKey,
+            isValidating = uiState.isValidatingApiKey,
+            isValidated = uiState.apiKeyValidated,
+            isConfigured = uiState.isConfigured,
+            error = uiState.apiKeyError,
+            subscriptionTier = uiState.subscriptionTier,
+            characterUsage = uiState.characterUsage,
+            onApiKeyChange = viewModel::updateApiKey,
+            onValidate = viewModel::validateAndSaveApiKey,
+            onClear = viewModel::clearApiKey
         )
-        
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBodyVerticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Info Card
-            InfoCard()
             
-            // API Key Section
-            ApiKeySection(
-                apiKey = uiState.apiKey,
-                isValidating = uiState.isValidatingApiKey,
-                isValidated = uiState.apiKeyValidated,
-                isConfigured = uiState.isConfigured,
-                error = uiState.apiKeyError,
-                subscriptionTier = uiState.subscriptionTier,
-                characterUsage = uiState.characterUsage,
-                onApiKeyChange = viewModel::updateApiKey,
-                onValidate = viewModel::validateAndSaveApiKey,
-                onClear = viewModel::clearApiKey
+        // Voice Selection Section (only if configured)
+        if (uiState.isConfigured) {
+            VoiceSelectionSection(
+                voices = uiState.voices,
+                selectedVoiceId = uiState.selectedVoiceId,
+                selectedVoiceName = uiState.selectedVoiceName,
+                isLoading = uiState.isLoadingVoices,
+                error = uiState.voicesError,
+                onVoiceSelect = viewModel::selectVoice,
+                onRefresh = viewModel::refreshVoices
             )
-            
-            // Voice Selection Section (only if configured)
-            if (uiState.isConfigured) {
-                VoiceSelectionSection(
-                    voices = uiState.voices,
-                    selectedVoiceId = uiState.selectedVoiceId,
-                    selectedVoiceName = uiState.selectedVoiceName,
-                    isLoading = uiState.isLoadingVoices,
-                    error = uiState.voicesError,
-                    onVoiceSelect = viewModel::selectVoice,
-                    onRefresh = viewModel::refreshVoices
-                )
                 
-                // Model Selection Section
-                ModelSelectionSection(
-                    models = uiState.models,
-                    selectedModelId = uiState.selectedModelId,
-                    onModelSelect = viewModel::selectModel
-                )
+            // Model Selection Section
+            ModelSelectionSection(
+                models = uiState.models,
+                selectedModelId = uiState.selectedModelId,
+                onModelSelect = viewModel::selectModel
+            )
                 
-                // Test Voice Section
-                TestVoiceSection(
-                    isTesting = uiState.isTestingVoice,
-                    error = uiState.testError,
-                    onTest = viewModel::testVoice,
-                    onStop = viewModel::stopTestVoice
-                )
-            }
+            // Test Voice Section
+            TestVoiceSection(
+                isTesting = uiState.isTestingVoice,
+                error = uiState.testError,
+                onTest = viewModel::testVoice,
+                onStop = viewModel::stopTestVoice
+            )
         }
     }
 }
