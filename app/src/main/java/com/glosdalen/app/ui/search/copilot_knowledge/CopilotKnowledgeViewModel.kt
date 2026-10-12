@@ -294,7 +294,8 @@ class CopilotKnowledgeViewModel @Inject constructor(
                                 response = response,
                                 parsedResponse = parsed,
                                 error = null,
-                                cardError = null
+                                cardError = null,
+                                createdCardIndices = emptySet()
                             )
                         }
                     },

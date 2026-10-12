@@ -393,7 +393,8 @@ class CopilotChatViewModel @Inject constructor(
                                 response = response,
                                 parsedResponse = parsed,
                                 isLoading = false,
-                                cardError = null
+                                cardError = null,
+                                createdCardIndices = emptySet()
                             )
                         }
                     },
