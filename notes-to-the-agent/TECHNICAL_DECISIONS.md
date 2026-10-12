@@ -110,6 +110,15 @@ val apiKey: Flow<String> = dataStore.data
 - **State hoisting**: ViewModels manage state, UI observes
 - **Material Design 3**: Modern, accessible design system
 
+### Edge-to-Edge and Window Insets
+targetSdk 35+ always draws edge-to-edge (no opt-out from API 36). `MainActivity` calls
+`enableEdgeToEdge()` so system-bar icons follow light/dark mode; every screen handles insets:
+- **Scrolling screen body**: `Modifier.screenBodyVerticalScroll(state)` (`ui/components/ScreenInsets.kt`)
+  instead of `verticalScroll` — side insets, keyboard (`imePadding`), navigation bar.
+- **Top inset**: Material 3 `TopAppBar` pads it; screens without one (search screens with
+  `SearchTopAppBar`) add `windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))`.
+- Keep `windowSoftInputMode="adjustResize"`: it is what delivers IME insets to Compose.
+
 ### Navigation Strategy
 ```kotlin
 NavHost(navController, startDestination = "search") {
