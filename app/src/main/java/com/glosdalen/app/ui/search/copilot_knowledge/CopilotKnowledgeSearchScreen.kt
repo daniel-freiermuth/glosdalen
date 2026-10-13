@@ -5,8 +5,6 @@ package com.glosdalen.app.ui.search.copilot_knowledge
 import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.glosdalen.app.ui.search.components.CopilotSearchScreenContent
+import com.glosdalen.app.ui.theme.AppIcons
 
 @Composable
 fun CopilotKnowledgeSearchScreen(
@@ -74,7 +73,7 @@ private fun SuggestedDeckCard(deckName: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Star,
+                imageVector = AppIcons.Star,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(20.dp)
