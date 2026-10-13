@@ -2,13 +2,12 @@ package com.glosdalen.app.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.glosdalen.app.ui.theme.AppIcons
 
 /**
  * A split button with a main action button and a dropdown menu for options.
@@ -70,7 +69,7 @@ fun <T> SplitButton(
                 colors = colors
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
+                    imageVector = AppIcons.ArrowDropDown,
                     contentDescription = dropdownButtonContentDescription
                 )
             }

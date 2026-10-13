@@ -4,8 +4,6 @@ package com.glosdalen.app.ui.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.glosdalen.app.backend.deepl.DeepLModelType
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.domain.preferences.FrontPreference
+import com.glosdalen.app.ui.theme.AppIcons
 
 @Composable
 fun DeepLSettingsSection(
@@ -63,7 +62,7 @@ fun DeepLSettingsSection(
                 trailingIcon = {
                     if (uiState.apiKeyValidated) {
                         Icon(
-                            Icons.Default.Check,
+                            AppIcons.Check,
                             contentDescription = "Validated",
                             tint = MaterialTheme.colorScheme.primary
                         )

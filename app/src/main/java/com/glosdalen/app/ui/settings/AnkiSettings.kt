@@ -8,12 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +23,7 @@ import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
+import com.glosdalen.app.ui.theme.AppIcons
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -172,7 +167,7 @@ private fun DeckNameFieldWithDropdown(
                         onClick = { showDropdown = !showDropdown }
                     ) {
                         Icon(
-                            Icons.Default.ArrowDropDown,
+                            AppIcons.ArrowDropDown,
                             contentDescription = if (showDropdown) "Hide available decks" else "Show available decks"
                         )
                     }
@@ -213,7 +208,7 @@ private fun DeckNameFieldWithDropdown(
                                 onClick = onRefreshDecks
                             ) {
                                 Icon(
-                                    Icons.Default.Refresh,
+                                    AppIcons.Refresh,
                                     contentDescription = "Refresh decks",
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -269,7 +264,7 @@ private fun DeckNameFieldWithDropdown(
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                if (showTemplateHelp) Icons.Default.ArrowDropDown else Icons.AutoMirrored.Filled.ArrowBack,
+                if (showTemplateHelp) AppIcons.ArrowDropDown else AppIcons.ArrowBack,
                 contentDescription = if (showTemplateHelp) "Hide template help" else "Show template help"
             )
             Spacer(modifier = Modifier.width(4.dp))
