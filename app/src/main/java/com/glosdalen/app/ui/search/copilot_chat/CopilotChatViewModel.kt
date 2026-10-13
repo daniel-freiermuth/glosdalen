@@ -17,6 +17,7 @@ import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
 import com.glosdalen.app.ui.search.CopilotSearchErrors
+import com.glosdalen.app.ui.search.loadCopilotModels
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -315,7 +316,7 @@ class CopilotChatViewModel @Inject constructor(
         queryJob?.cancel()
         
         queryJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, cardError = null) }
+            _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
                 // Check authentication first
@@ -377,7 +378,8 @@ class CopilotChatViewModel @Inject constructor(
                             it.copy(
                                 response = response,
                                 parsedResponse = parsed,
-                                isLoading = false
+                                isLoading = false,
+                                cardError = null
                             )
                         }
                     },
@@ -503,25 +505,9 @@ class CopilotChatViewModel @Inject constructor(
     
     fun loadModels() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingModels = true) }
-            
-            val result = copilot.getModels()
-            
-            result.fold(
-                onSuccess = { models ->
-                    _uiState.update { it.copy(
-                        availableModels = models,
-                        isLoadingModels = false,
-                        modelsError = null
-                    )}
-                },
-                onFailure = { error ->
-                    _uiState.update { it.copy(
-                        isLoadingModels = false,
-                        modelsError = "Failed to load models: ${error.message}"
-                    )}
-                }
-            )
+            _uiState.loadCopilotModels(copilot) { models, isLoading, error ->
+                copy(availableModels = models, isLoadingModels = isLoading, modelsError = error)
+            }
         }
     }
     
