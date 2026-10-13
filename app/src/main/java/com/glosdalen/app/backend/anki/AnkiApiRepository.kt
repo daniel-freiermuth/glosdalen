@@ -218,10 +218,12 @@ class AnkiApiRepository @Inject constructor(
                     arrayOf(frontWithAudio, backWithAudio)
                 }
 
-                // Use batch API for better performance - convert to List
-                api.addNotes(modelId, deckId, notes.toMutableList(), null)
-                
-                // Note: API documentation suggests this always returns a valid result
+                val addResult = addNotesChecked(deckCards, notes) { fieldsList, tagsList ->
+                    api.addNotes(modelId, deckId, fieldsList, tagsList)
+                }
+                if (addResult.isFailure) {
+                    return@withContext addResult
+                }
             }
 
             Result.success(Unit)
@@ -319,5 +321,25 @@ internal fun findReversedModel(models: Map<Long, String>): Map.Entry<Long, Strin
         name.contains("omgekeerd") ||         // Dutch
         (name.contains("basic") && name.contains("reverse")) ||
         (name.contains("einfach") && name.contains("richtung"))  // German partial
+    }
+}
+
+/**
+ * Submits [notes] (one per entry of [cards], same order) through [addNotes] together with each
+ * card's tags, and fails unless every note was added.
+ *
+ * [addNotes] mirrors `AddContentApi.addNotes`, which returns the number of notes added
+ * (< 0 means there was a problem).
+ */
+internal fun addNotesChecked(
+    cards: List<AnkiCard>,
+    notes: List<Array<String>>,
+    addNotes: (fieldsList: List<Array<String>>, tagsList: List<Set<String>>) -> Int
+): Result<Unit> {
+    val added = addNotes(notes, cards.map { it.tags.toSet() })
+    return if (added == notes.size) {
+        Result.success(Unit)
+    } else {
+        Result.failure(AnkiError.CardCreationFailed("AnkiDroid added $added of ${notes.size} notes"))
     }
 }
