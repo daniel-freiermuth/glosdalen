@@ -124,7 +124,7 @@ if (ankiRepository.isAnkiDroidAvailable()) {
 ```kotlin
 dependencies {
     // AnkiDroid API
-    implementation("com.github.ankidroid:Anki-Android:api-v1.1.0")
+    implementation("com.github.ankidroid:Anki-Android:2.23.3")
     // ... other dependencies
 }
 ```
