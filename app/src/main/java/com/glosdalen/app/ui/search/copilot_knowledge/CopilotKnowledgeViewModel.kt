@@ -73,6 +73,8 @@ data class CopilotKnowledgeUiState(
     override val parsedResponse: ParsedKnowledgeResponse? = null,
     override val isLoading: Boolean = false,
     override val error: String? = null,
+    override val cardError: String? = null,
+    override val modelsError: String? = null,
     override val isAuthenticated: Boolean = false,
     override val isAdditionalInfoExpanded: Boolean = false,
     override val isCreatingCard: Boolean = false,
@@ -125,6 +127,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 response = "",
                 parsedResponse = null,
                 error = null,
+                cardError = null,
                 createdCardIndices = emptySet()
             ) 
         }
@@ -177,7 +180,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         queryJob?.cancel()
         
         queryJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update { it.copy(isLoading = true, error = null, cardError = null) }
             
             try {
                 // Check authentication first
@@ -305,6 +308,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 response = "",
                 parsedResponse = null,
                 error = null,
+                cardError = null,
                 createdCardIndices = emptySet()
             )
         }
@@ -327,7 +331,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
         val cardDirection = _uiState.value.selectedCardDirection
         
         viewModelScope.launch {
-            _uiState.update { it.copy(isCreatingCard = true, error = null) }
+            _uiState.update { it.copy(isCreatingCard = true, cardError = null) }
             
             val deckTemplate = userPreferences.getDefaultDeckName().first()
             val parsed = _uiState.value.parsedResponse ?: return@launch
@@ -402,7 +406,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                     _uiState.update { 
                         it.copy(
                             isCreatingCard = false,
-                            error = error.toCardCreationErrorMessage()
+                            cardError = error.toCardCreationErrorMessage()
                         )
                     }
                 }
@@ -451,13 +455,14 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 onSuccess = { models ->
                     _uiState.update { it.copy(
                         availableModels = models,
-                        isLoadingModels = false
+                        isLoadingModels = false,
+                        modelsError = null
                     )}
                 },
                 onFailure = { error ->
                     _uiState.update { it.copy(
                         isLoadingModels = false,
-                        error = "Failed to load models: ${error.message}"
+                        modelsError = "Failed to load models: ${error.message}"
                     )}
                 }
             )

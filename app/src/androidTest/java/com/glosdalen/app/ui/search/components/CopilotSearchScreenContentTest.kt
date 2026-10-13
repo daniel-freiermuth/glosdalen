@@ -38,7 +38,7 @@ class CopilotSearchScreenContentTest {
                 parsedResponse = parsedResponse,
                 isAuthenticated = true,
                 isAnkiDroidAvailable = true,
-                error = message
+                cardError = message
             )
         )
 
@@ -55,7 +55,7 @@ class CopilotSearchScreenContentTest {
             CopilotChatUiState(
                 query = "Hund",
                 isAuthenticated = true,
-                error = message
+                modelsError = message
             )
         )
 
