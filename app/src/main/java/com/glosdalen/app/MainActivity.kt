@@ -30,10 +30,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,6 +52,7 @@ import com.glosdalen.app.ui.search.copilot_chat.CopilotChatSearchScreen
 import com.glosdalen.app.ui.search.copilot_knowledge.CopilotKnowledgeSearchScreen
 import com.glosdalen.app.ui.settings.SettingsRoute
 import com.glosdalen.app.ui.settings.settingsEntries
+import com.glosdalen.app.ui.theme.AppIcons
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -209,7 +206,7 @@ private fun AppDrawerContent(
         )
         
         NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = null) },
+            icon = { Icon(AppIcons.Search, contentDescription = null) },
             label = { Text("DeepL") },
             selected = currentRoute is DeepLSearchRoute,
             onClick = { onNavigate(DeepLSearchRoute) },
@@ -227,7 +224,7 @@ private fun AppDrawerContent(
         )
         
         NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Star, contentDescription = null) },
+            icon = { Icon(AppIcons.Star, contentDescription = null) },
             label = { Text("Copilot Language") },
             selected = currentRoute is CopilotChatRoute,
             onClick = { onNavigate(CopilotChatRoute) },
@@ -235,7 +232,7 @@ private fun AppDrawerContent(
         )
         
         NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Lightbulb, contentDescription = null) },
+            icon = { Icon(AppIcons.Lightbulb, contentDescription = null) },
             label = { Text("General Knowledge") },
             selected = currentRoute is CopilotKnowledgeRoute,
             onClick = { onNavigate(CopilotKnowledgeRoute) },
@@ -244,7 +241,7 @@ private fun AppDrawerContent(
         
         // Placeholder for future search providers
         // NavigationDrawerItem(
-        //     icon = { Icon(Icons.Default.Translate, contentDescription = null) },
+        //     icon = { Icon(AppIcons.Translate, contentDescription = null) },
         //     label = { Text("Google Translate") },
         //     selected = currentRoute is GoogleSearchRoute,
         //     onClick = { onNavigate(GoogleSearchRoute) },
