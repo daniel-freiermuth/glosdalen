@@ -104,16 +104,22 @@ class CopilotKnowledgeViewModel @Inject constructor(
             // Initialize card direction from preferences
             val isAuth = copilot.isAuthenticated()
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
-            val selectedModel = userPreferences.getCopilotSelectedModel().first()
             val temperature = userPreferences.getCopilotTemperature().first()
             val shouldShowIntro = userPreferences.shouldShowCopilotKnowledgeIntroDialog().first()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
-                selectedModelId = selectedModel,
                 temperature = temperature,
                 showIntroDialog = shouldShowIntro,
             ) }
+        }
+        
+        // Keep the selected model in sync with the shared preference, which can also be
+        // changed from Copilot Settings or the other Copilot mode while this ViewModel lives
+        viewModelScope.launch {
+            userPreferences.getCopilotSelectedModel().collect { selectedModel ->
+                _uiState.update { it.copy(selectedModelId = selectedModel) }
+            }
         }
     }
     
