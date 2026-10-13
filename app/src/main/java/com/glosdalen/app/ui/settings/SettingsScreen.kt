@@ -4,8 +4,7 @@ package com.glosdalen.app.ui.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -112,7 +111,7 @@ private fun SettingsNavigationCard(
                 )
             }
             Icon(
-                Icons.Default.Settings,
+                AppIcons.Settings,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )

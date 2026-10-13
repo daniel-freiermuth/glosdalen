@@ -6,11 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,7 +47,7 @@ private fun LanguageListScreen(
             title = { Text("Language Settings") },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(AppIcons.ArrowBack, contentDescription = "Back")
                 }
             }
         )
@@ -137,7 +133,7 @@ private fun LanguageListItem(
                 // Checkmark indicator
                 if (hasCustomSettings) {
                     Icon(
-                        imageVector = Icons.Default.Check,
+                        imageVector = AppIcons.Check,
                         contentDescription = "Has custom settings",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
@@ -160,7 +156,7 @@ private fun LanguageListItem(
             }
             
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = AppIcons.KeyboardArrowRight,
                 contentDescription = "Open settings",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -280,7 +276,7 @@ private fun InstructionsEditorSection(
                             )
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = AppIcons.Delete,
                                 contentDescription = "Clear instructions",
                                 modifier = Modifier.size(20.dp)
                             )
