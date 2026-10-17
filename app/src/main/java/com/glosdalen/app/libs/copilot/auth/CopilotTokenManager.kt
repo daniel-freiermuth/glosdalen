@@ -1,5 +1,6 @@
 package com.glosdalen.app.libs.copilot.auth
 
+import android.util.Log
 import com.glosdalen.app.libs.copilot.*
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.*
@@ -27,6 +28,10 @@ class CopilotTokenManager @Inject constructor(
     private val timeProvider: TimeProvider
 ) {
 
+    companion object {
+        private const val TAG = "CopilotTokenManager"
+    }
+
     private var currentCopilotToken: CopilotToken? = null
     private val tokenMutex = Mutex()
 
@@ -41,46 +46,46 @@ class CopilotTokenManager @Inject constructor(
      * Get valid Copilot token (handles exchange and renewal automatically)
      */
     suspend fun getValidCopilotToken(): Result<CopilotToken> {
-        android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Starting...")
+        Log.d(TAG, "getValidCopilotToken: Starting...")
         return tokenMutex.withLock {
             // Check if current token is valid
             currentCopilotToken?.let { token ->
-                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Found cached token, checking validity...")
+                Log.d(TAG, "getValidCopilotToken: Found cached token, checking validity...")
                 if (isTokenValid(token)) {
-                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Cached token is valid")
+                    Log.d(TAG, "getValidCopilotToken: Cached token is valid")
                     return@withLock token.asSuccess()
                 } else {
-                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Cached token is expired")
+                    Log.d(TAG, "getValidCopilotToken: Cached token is expired")
                 }
-            } ?: android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: No cached token")
+            } ?: Log.d(TAG, "getValidCopilotToken: No cached token")
 
             // Try to load from storage
-            android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Loading from storage...")
+            Log.d(TAG, "getValidCopilotToken: Loading from storage...")
             val storedToken = storage.loadCopilotToken()
             if (storedToken != null) {
-                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Found stored token")
+                Log.d(TAG, "getValidCopilotToken: Found stored token")
                 // Parse expiration from token string if not already parsed
                 val tokenWithExpiration = if (storedToken.expiresAt == null) {
                     val parsedExpiration = parseExpirationFromToken(storedToken.token)
-                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Parsed expiration: $parsedExpiration")
+                    Log.d(TAG, "getValidCopilotToken: Parsed expiration: $parsedExpiration")
                     storedToken.copy(expiresAt = parsedExpiration)
                 } else {
                     storedToken
                 }
                 
                 if (isTokenValid(tokenWithExpiration)) {
-                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Stored token is valid")
+                    Log.d(TAG, "getValidCopilotToken: Stored token is valid")
                     currentCopilotToken = tokenWithExpiration
                     return@withLock tokenWithExpiration.asSuccess()
                 } else {
-                    android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Stored token is expired")
+                    Log.d(TAG, "getValidCopilotToken: Stored token is expired")
                 }
             } else {
-                android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: No stored token found")
+                Log.d(TAG, "getValidCopilotToken: No stored token found")
             }
 
             // Need to exchange/refresh token
-            android.util.Log.d("CopilotTokenManager", "getValidCopilotToken: Exchanging/refreshing token...")
+            Log.d(TAG, "getValidCopilotToken: Exchanging/refreshing token...")
             exchangeOrRefreshToken()
         }
     }
@@ -98,24 +103,24 @@ class CopilotTokenManager @Inject constructor(
      * Exchange OAuth token for Copilot token
      */
     suspend fun exchangeOAuthToken(oauthToken: OAuthToken): Result<CopilotToken> {
-        android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Starting token exchange...")
+        Log.d(TAG, "exchangeOAuthToken: Starting token exchange...")
         return try {
             val accessToken = oauthToken.accessToken 
                 ?: run {
-                    android.util.Log.e("CopilotTokenManager", "exchangeOAuthToken: Access token is null!")
+                    Log.e(TAG, "exchangeOAuthToken: Access token is null!")
                     return CopilotException.AuthException.InvalidToken().asFailure()
                 }
                 
             // Validate OAuth token format
             if (accessToken.length < 20) {
-                android.util.Log.e("CopilotTokenManager", "OAuth token seems too short: ${accessToken.length} chars")
+                Log.e(TAG, "OAuth token seems too short: ${accessToken.length} chars")
                 return CopilotException.AuthException.InvalidToken().asFailure()
             }
-            android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Calling GitHub API copilot_internal/v2/token...")
+            Log.d(TAG, "exchangeOAuthToken: Calling GitHub API copilot_internal/v2/token...")
             val response = githubApiService.getCopilotToken(
                 authorization = "token $accessToken"
             )
-            android.util.Log.d("CopilotTokenManager", "exchangeOAuthToken: Got response code=${response.code()}, isSuccessful=${response.isSuccessful}")
+            Log.d(TAG, "exchangeOAuthToken: Got response code=${response.code()}, isSuccessful=${response.isSuccessful}")
 
             if (response.isSuccessful && response.body() != null) {
                 val copilotToken = response.body()!!
@@ -136,7 +141,7 @@ class CopilotTokenManager @Inject constructor(
             } else {
                 val errorCode = response.code()
                 val errorBody = response.errorBody()?.string()
-                android.util.Log.e("CopilotTokenManager", "Token exchange failed with code $errorCode: $errorBody")
+                Log.e(TAG, "Token exchange failed with code $errorCode: $errorBody")
                 
                 when (errorCode) {
                     401 -> CopilotException.AuthException.InvalidToken().asFailure()
@@ -188,16 +193,16 @@ class CopilotTokenManager @Inject constructor(
     // ================================
 
     private suspend fun exchangeOrRefreshToken(): Result<CopilotToken> {
-        android.util.Log.d("CopilotTokenManager", "exchangeOrRefreshToken: Getting OAuth token...")
+        Log.d(TAG, "exchangeOrRefreshToken: Getting OAuth token...")
         // Get fresh OAuth token
         val oauthResult = authManager.getOAuthToken()
         if (oauthResult.isFailure) {
-            android.util.Log.e("CopilotTokenManager", "exchangeOrRefreshToken: Failed to get OAuth token: ${oauthResult.exceptionOrNull()?.message}")
+            Log.e(TAG, "exchangeOrRefreshToken: Failed to get OAuth token: ${oauthResult.exceptionOrNull()?.message}")
             return Result.failure(oauthResult.exceptionOrNull()!!)
         }
 
         val oauthToken = oauthResult.getOrThrow()
-        android.util.Log.d("CopilotTokenManager", "exchangeOrRefreshToken: Got OAuth token, length=${oauthToken.accessToken?.length ?: 0}")
+        Log.d(TAG, "exchangeOrRefreshToken: Got OAuth token, length=${oauthToken.accessToken?.length ?: 0}")
         return exchangeOAuthToken(oauthToken)
     }
 
@@ -218,7 +223,7 @@ class CopilotTokenManager @Inject constructor(
             val expMatch = Regex("exp=(\\d+)").find(token)
             expMatch?.groupValues?.get(1)?.toLongOrNull()
         } catch (e: Exception) {
-            android.util.Log.w("CopilotTokenManager", "Failed to parse expiration from token: $e")
+            Log.w(TAG, "Failed to parse expiration from token: $e")
             null
         }
     }
