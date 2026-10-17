@@ -14,17 +14,7 @@ import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import com.glosdalen.app.ui.components.screenBodyVerticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Stop
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -193,7 +183,7 @@ fun DeepLSearchScreen(
                                         focusRequester.requestFocus()
                                     }
                                 ) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
+                                    Icon(AppIcons.Close, contentDescription = "Clear")
                                 }
                             } else {
                                 IconButton(
@@ -201,7 +191,7 @@ fun DeepLSearchScreen(
                                         viewModel.searchWord()
                                     }
                                 ) {
-                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                    Icon(AppIcons.Search, contentDescription = "Search")
                                 }
                             }
                         },
@@ -226,7 +216,7 @@ fun DeepLSearchScreen(
                             contentPadding = PaddingValues(vertical = 8.dp, horizontal = 0.dp)
                         ) {
                             Icon(
-                                imageVector = if (uiState.isContextExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                imageVector = if (uiState.isContextExpanded) AppIcons.KeyboardArrowUp else AppIcons.KeyboardArrowDown,
                                 contentDescription = if (uiState.isContextExpanded) "Hide context" else "Show context",
                                 modifier = Modifier.size(16.dp)
                             )
@@ -275,7 +265,7 @@ fun DeepLSearchScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    imageVector = AppIcons.Search,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
@@ -516,7 +506,7 @@ private fun TranslationCard(
                         onClick = { onSpeakText(vocabularyEntry.originalWord, vocabularyEntry.sourceLanguage) }
                     ) {
                         Icon(
-                            imageVector = if (isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                            imageVector = if (isTtsPlaying) AppIcons.Stop else AppIcons.VolumeUp,
                             contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
                             tint = if (isTtsPlaying) {
                                 MaterialTheme.colorScheme.primary
@@ -609,7 +599,7 @@ private fun TranslationCard(
                                             modifier = Modifier.size(32.dp)
                                         ) {
                                             Icon(
-                                                imageVector = if (isTtsPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+                                                imageVector = if (isTtsPlaying) AppIcons.Stop else AppIcons.VolumeUp,
                                                 contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
                                                 modifier = Modifier.size(18.dp),
                                                 tint = if (isTtsPlaying) {
@@ -628,7 +618,7 @@ private fun TranslationCard(
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Icon(
-                                        Icons.AutoMirrored.Filled.ArrowForward,
+                                        AppIcons.ArrowForward,
                                         contentDescription = "Search this translation",
                                         modifier = Modifier.size(14.dp)
                                     )

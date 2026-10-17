@@ -3,12 +3,6 @@ package com.glosdalen.app.ui.search.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +11,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.glosdalen.app.R
 import com.glosdalen.app.backend.deepl.Language
+import com.glosdalen.app.ui.theme.AppIcons
 
 /**
  * Header row shared by all search screens: drawer button, logo, screen title and settings button.
@@ -38,7 +33,7 @@ fun SearchTopAppBar(
         ) {
             // Menu button for drawer
             IconButton(onClick = onOpenDrawer) {
-                Icon(Icons.Default.Menu, contentDescription = "Open menu")
+                Icon(AppIcons.Menu, contentDescription = "Open menu")
             }
             
             // Logo + App Name
@@ -54,7 +49,7 @@ fun SearchTopAppBar(
         }
         
         IconButton(onClick = onNavigateToSettings) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings")
+            Icon(AppIcons.Settings, contentDescription = "Settings")
         }
     }
 }
@@ -89,9 +84,9 @@ fun LanguageDirectionToggle(
         IconButton(onClick = onToggleDirection) {
             Icon(
                 imageVector = if (isNativeSource) {
-                    Icons.AutoMirrored.Filled.ArrowForward
+                    AppIcons.ArrowForward
                 } else {
-                    Icons.AutoMirrored.Filled.ArrowBack
+                    AppIcons.ArrowBack
                 },
                 contentDescription = toggleContentDescription
             )
@@ -131,7 +126,7 @@ private fun ForeignLanguageDropdown(
                 color = MaterialTheme.colorScheme.primary
             )
             Icon(
-                imageVector = Icons.Default.ArrowDropDown,
+                imageVector = AppIcons.ArrowDropDown,
                 contentDescription = "Select language",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(start = 4.dp)

@@ -10,9 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import com.glosdalen.app.ui.components.screenBodyVerticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.*
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -231,7 +229,7 @@ private fun CopilotAnswerCard(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ContentCopy,
+                            imageVector = AppIcons.ContentCopy,
                             contentDescription = "Copy answer",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -437,7 +435,7 @@ private fun CopilotAuthRequiredCard(onNavigateToSettings: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Warning,
+                    imageVector = AppIcons.Warning,
                     contentDescription = "Not authenticated",
                     tint = MaterialTheme.colorScheme.onErrorContainer
                 )
@@ -508,11 +506,11 @@ private fun CopilotQueryCard(
                                 focusRequester.requestFocus()
                             }
                         ) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(AppIcons.Close, contentDescription = "Clear")
                         }
                     } else {
                         IconButton(onClick = onSend) {
-                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                            Icon(AppIcons.Send, contentDescription = "Send")
                         }
                     }
                 },
@@ -537,7 +535,7 @@ private fun CopilotQueryCard(
                     contentPadding = PaddingValues(vertical = 8.dp, horizontal = 0.dp)
                 ) {
                     Icon(
-                        imageVector = if (isContextExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        imageVector = if (isContextExpanded) AppIcons.KeyboardArrowUp else AppIcons.KeyboardArrowDown,
                         contentDescription = if (isContextExpanded) "Delete context" else "Show context",
                         modifier = Modifier.size(16.dp)
                     )
@@ -607,7 +605,7 @@ private fun CopilotSendButton(
     SplitButton(
         mainButtonContent = {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
+                imageVector = AppIcons.Send,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
@@ -683,7 +681,7 @@ private fun CopilotLoadingCard(onCancel: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.Close,
+                    imageVector = AppIcons.Close,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
@@ -721,7 +719,7 @@ private fun CopilotErrorCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Warning,
+                    imageVector = AppIcons.Warning,
                     contentDescription = "Error",
                     tint = MaterialTheme.colorScheme.onErrorContainer
                 )
@@ -751,7 +749,7 @@ private fun CopilotErrorCard(
                 ),
                 mainButtonContent = {
                     Icon(
-                        imageVector = Icons.Default.Refresh,
+                        imageVector = AppIcons.Refresh,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -805,9 +803,9 @@ private fun CopilotAdditionalInfoCard(
                 )
                 Icon(
                     imageVector = if (isExpanded) {
-                        Icons.Default.KeyboardArrowUp
+                        AppIcons.KeyboardArrowUp
                     } else {
-                        Icons.Default.KeyboardArrowDown
+                        AppIcons.KeyboardArrowDown
                     },
                     contentDescription = if (isExpanded) "Collapse" else "Expand"
                 )
@@ -876,7 +874,7 @@ private fun CopilotResponseActionsRow(
             modifier = Modifier.weight(1f)
         ) {
             Icon(
-                imageVector = Icons.Default.ContentCopy,
+                imageVector = AppIcons.ContentCopy,
                 contentDescription = "Copy all",
                 modifier = Modifier.size(18.dp)
             )
@@ -889,7 +887,7 @@ private fun CopilotResponseActionsRow(
             modifier = Modifier.weight(1f)
         ) {
             Icon(
-                imageVector = Icons.Default.Clear,
+                imageVector = AppIcons.Close,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
             )
@@ -918,7 +916,7 @@ private fun CopilotIntroDialog(
         onDismissRequest = { onDismiss(true) },
         icon = {
             Icon(
-                imageVector = Icons.Default.Star,
+                imageVector = AppIcons.Star,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -957,7 +955,7 @@ private fun CopilotIntroDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Settings,
+                        imageVector = AppIcons.Settings,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -977,7 +975,7 @@ private fun CopilotIntroDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Info,
+                        imageVector = AppIcons.Info,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.secondary

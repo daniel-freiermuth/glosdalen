@@ -485,7 +485,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
                 },
                 enabled = inputText.isNotBlank() && !uiState.isLoading
             ) {
-                Icon(Icons.Default.Send, "Send")
+                Icon(AppIcons.Send, "Send")
             }
         }
     }
