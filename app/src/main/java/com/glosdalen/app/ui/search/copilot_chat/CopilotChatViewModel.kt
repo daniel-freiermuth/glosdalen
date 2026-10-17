@@ -170,18 +170,24 @@ class CopilotChatViewModel @Inject constructor(
         viewModelScope.launch {
             val isAuth = copilot.isAuthenticated()
             val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
-            val selectedModel = userPreferences.getCopilotSelectedModel().first()
             val temperature = userPreferences.getCopilotTemperature().first()
             val shouldShowIntro = userPreferences.shouldShowCopilotLanguageIntroDialog().first()
             val ttsConfigured = elevenLabsRepository.isConfigured()
             _uiState.update { it.copy(
                 isAuthenticated = isAuth,
                 isAnkiDroidAvailable = ankiAvailable,
-                selectedModelId = selectedModel,
                 temperature = temperature,
                 showIntroDialog = shouldShowIntro,
                 isTtsConfigured = ttsConfigured
             ) }
+        }
+        
+        // Keep the selected model in sync with the shared preference, which can also be
+        // changed from Copilot Settings or the other Copilot mode while this ViewModel lives
+        viewModelScope.launch {
+            userPreferences.getCopilotSelectedModel().collect { selectedModel ->
+                _uiState.update { it.copy(selectedModelId = selectedModel) }
+            }
         }
         
         // React to language preference changes and update source language accordingly
