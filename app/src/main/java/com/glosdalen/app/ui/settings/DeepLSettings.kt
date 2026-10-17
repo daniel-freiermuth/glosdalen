@@ -209,7 +209,7 @@ private fun ModelTypeDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            DeepLModelType.values().forEach { modelType ->
+            DeepLModelType.entries.forEach { modelType ->
                 DropdownMenuItem(
                     onClick = {
                         onModelTypeSelected(modelType)
@@ -269,7 +269,7 @@ private fun FrontDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            FrontPreference.values().forEach { preference ->
+            FrontPreference.entries.forEach { preference ->
                 DropdownMenuItem(
                     onClick = {
                         onPreferenceSelected(preference)

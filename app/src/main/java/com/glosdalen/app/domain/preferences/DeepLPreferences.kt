@@ -46,7 +46,7 @@ class DeepLPreferences @Inject constructor(
     fun getDeepLModelType(): Flow<DeepLModelType> {
         return dataStore.data.map { preferences ->
             val modelTypeValue = preferences[DEEPL_MODEL_TYPE] ?: ""
-            DeepLModelType.values().find { it.value == modelTypeValue } ?: DeepLModelType.QUALITY_OPTIMIZED
+            DeepLModelType.entries.find { it.value == modelTypeValue } ?: DeepLModelType.QUALITY_OPTIMIZED
         }
     }
     
@@ -71,7 +71,7 @@ class DeepLPreferences @Inject constructor(
     fun getFrontPreference(): Flow<FrontPreference> {
         return dataStore.data.map { preferences ->
             val value = preferences[FRONT_PREFERENCE] ?: FrontPreference.NATIVE.name
-            FrontPreference.values().find { it.name == value } 
+            FrontPreference.entries.find { it.name == value } 
                 ?: FrontPreference.NATIVE
         }
     }

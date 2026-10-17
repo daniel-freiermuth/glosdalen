@@ -299,7 +299,7 @@ private fun LanguageDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            Language.values().sortedBy { it.displayName }.forEach { language ->
+            Language.entries.sortedBy { it.displayName }.forEach { language ->
                 DropdownMenuItem(
                     onClick = {
                         onLanguageSelected(language)
