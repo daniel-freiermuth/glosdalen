@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,6 +33,7 @@ class AnkiApiRepository @Inject constructor(
     private var cachedApi: AddContentApi? = null
     private var cachedDeckId: Long? = null
     private var cachedModelId: Long? = null
+    private val audioFileCounter = AtomicLong(0)
 
     private fun getApi(): AddContentApi? {
         return try {
@@ -301,7 +303,7 @@ class AnkiApiRepository @Inject constructor(
             }
             
             // Generate a unique preferred name based on the file name
-            val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}"
+            val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}_${audioFileCounter.incrementAndGet()}"
             val soundTag = api.addMediaFromUri(mediaUri, preferredName, "audio")
             
             // Revoke the permission after the file is copied
