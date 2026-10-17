@@ -98,7 +98,9 @@ class AnkiApiRepository @Inject constructor(
             }
             
             // Check if deck already exists (case-insensitive, as AnkiDroid treats deck names)
-            val decks = api.deckList
+            val decks = api.deckList ?: return@withContext Result.failure(
+                AnkiError.ApiError("Error managing deck: AnkiDroid returned no deck list")
+            )
             val existingDeck = decks.entries.find { it.value.equals(deckName, ignoreCase = true) }
             
             if (existingDeck != null) {
@@ -132,7 +134,9 @@ class AnkiApiRepository @Inject constructor(
             }
 
             // Check if model already exists
-            val models = api.modelList
+            val models = api.modelList ?: return@withContext Result.failure(
+                AnkiError.ApiError("Error managing model: AnkiDroid returned no note type list")
+            )
             android.util.Log.d("AnkiApiRepository", "Available models: ${models.values.toList()}")
             
             // First try exact match
@@ -311,10 +315,11 @@ class AnkiApiRepository @Inject constructor(
                 AnkiError.ApiNotAvailable("AnkiDroid API not available")
             )
             
-            val decks = api.deckList
-            Result.success(decks)
+            api.deckList?.let { Result.success(it) }
+                ?: Result.failure(AnkiError.ApiError("Error retrieving decks: AnkiDroid returned no deck list"))
         } catch (e: Exception) {
             Result.failure(AnkiError.ApiError("Error retrieving decks: ${e.message}"))
         }
     }
+
 }
