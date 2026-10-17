@@ -156,7 +156,7 @@ class AnkiApiRepository @Inject constructor(
             } else {
                 // Handle built-in models vs custom models
                 when (modelName) {
-                    "Basic (and reversed card)" -> {
+                    AnkiCard.REVERSED_CARD_MODEL_NAME -> {
                         // Try case-insensitive match first
                         val caseInsensitiveMatch = models.entries.find { 
                             it.value.equals(modelName, ignoreCase = true) 

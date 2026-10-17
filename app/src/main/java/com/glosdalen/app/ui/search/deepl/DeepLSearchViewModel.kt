@@ -317,7 +317,7 @@ class DeepLSearchViewModel @Inject constructor(
                     
                     listOf(
                         AnkiCard(
-                            modelName = "Basic (and reversed card)",
+                            modelName = AnkiCard.REVERSED_CARD_MODEL_NAME,
                             fields = mapOf("Front" to frontSide, "Back" to backSide),
                             deckName = deckName,
                             tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional"),
