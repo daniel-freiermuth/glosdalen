@@ -16,7 +16,6 @@ import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
  * Error types for ElevenLabs TTS operations.
