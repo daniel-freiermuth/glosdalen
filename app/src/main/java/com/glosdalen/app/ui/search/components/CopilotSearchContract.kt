@@ -29,7 +29,12 @@ interface CopilotSearchUiState<out R : CopilotParsedResponse<*>, out D> {
     val response: String
     val parsedResponse: R?
     val isLoading: Boolean
+    /** Failed Copilot query; the screen offers to re-send the query. */
     val error: String?
+    /** Failed "Add to Anki"; shown without a query retry. */
+    val cardError: String?
+    /** Failed model-list load; shown without a query retry. */
+    val modelsError: String?
     val isAuthenticated: Boolean
     val isAdditionalInfoExpanded: Boolean
     val isCreatingCard: Boolean
