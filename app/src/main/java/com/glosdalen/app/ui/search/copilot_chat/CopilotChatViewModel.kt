@@ -373,7 +373,8 @@ class CopilotChatViewModel @Inject constructor(
                             it.copy(
                                 response = response,
                                 parsedResponse = parsed,
-                                isLoading = false
+                                isLoading = false,
+                                createdCardIndices = emptySet()
                             )
                         }
                     },
