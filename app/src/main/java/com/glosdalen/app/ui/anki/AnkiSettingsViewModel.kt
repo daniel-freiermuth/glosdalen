@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.AnkiApiRepository
-import com.glosdalen.app.backend.anki.AnkiImplementationType
 import com.glosdalen.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*

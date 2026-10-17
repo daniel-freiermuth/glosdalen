@@ -21,7 +21,7 @@ class AnkiRepository @Inject constructor(
     }
 
     /**
-     * Determine the best available AnkiDroid integration method based on user preference
+     * Determine the best available AnkiDroid integration method
      */
     private suspend fun getBestAvailableRepository(): AnkiBackend = withContext(Dispatchers.IO) {
         // Check availability of both methods
@@ -155,13 +155,4 @@ class AnkiRepository @Inject constructor(
         return intentRepository.getInstallAnkiDroidIntent()
     }
 
-}
-
-/**
- * Types of AnkiDroid integration implementations
- */
-enum class AnkiImplementationType {
-    API,        // Using AddContentApi 
-    INTENT,     // Using ACTION_SEND intent
-    UNAVAILABLE // AnkiDroid not available
 }
