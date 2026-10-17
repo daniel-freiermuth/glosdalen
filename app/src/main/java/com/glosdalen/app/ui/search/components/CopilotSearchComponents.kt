@@ -19,9 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -32,6 +30,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.glosdalen.app.domain.preferences.CopilotPreferences
 import com.glosdalen.app.libs.copilot.models.CopilotModel
 import com.glosdalen.app.ui.components.SplitButton
+import com.glosdalen.app.ui.components.rememberCopyToClipboard
 
 /**
  * Building blocks shared by the Copilot-backed search screens
@@ -199,7 +198,7 @@ private fun CopilotAnswerCard(
     answer: String,
     actions: @Composable () -> Unit
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard = rememberCopyToClipboard()
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -226,7 +225,7 @@ private fun CopilotAnswerCard(
                     actions()
                     IconButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(answer))
+                            copyToClipboard(answer)
                         }
                     ) {
                         Icon(
@@ -862,7 +861,7 @@ private fun CopilotResponseActionsRow(
     clipboardText: () -> String,
     onClear: () -> Unit
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    val copyToClipboard = rememberCopyToClipboard()
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -870,7 +869,7 @@ private fun CopilotResponseActionsRow(
     ) {
         OutlinedButton(
             onClick = {
-                clipboardManager.setText(AnnotatedString(clipboardText()))
+                copyToClipboard(clipboardText())
             },
             modifier = Modifier.weight(1f)
         ) {
