@@ -144,6 +144,8 @@ android {
     }
     
     testOptions {
+        // android.util.Log calls in code under test return defaults instead of throwing "not mocked"
+        unitTests.isReturnDefaultValues = true
         unitTests.all {
             it.useJUnitPlatform()
         }
