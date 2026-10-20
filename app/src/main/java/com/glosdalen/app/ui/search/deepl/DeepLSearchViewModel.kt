@@ -400,78 +400,35 @@ internal fun buildDeepLAnkiCard(
     deckName: String,
     foreignAudioFile: File?
 ): AnkiCard {
-    return when (cardDirection) {
-        DeepLCardDirection.VIA_INTENT -> {
-            val (frontSide, backSide) = when (frontPreference) {
-                FrontPreference.NATIVE -> Pair(nativeWord, foreignWord)
-                FrontPreference.FOREIGN -> Pair(foreignWord, nativeWord)
-            }
-            
-            // Add audio to the foreign language side
-            val audioFiles = mutableMapOf<String, File>()
-            if (foreignAudioFile != null) {
-                when (frontPreference) {
-                    FrontPreference.NATIVE -> audioFiles["Back"] = foreignAudioFile
-                    FrontPreference.FOREIGN -> audioFiles["Front"] = foreignAudioFile
-                }
-            }
-            
-            AnkiCard(
-                modelName = "Basic",
-                fields = mapOf("Front" to frontSide, "Back" to backSide),
-                deckName = deckName,
-                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code),
-                audioFiles = audioFiles
-            )
-        }
-        DeepLCardDirection.NATIVE_TO_FOREIGN -> {
-            val audioFiles = mutableMapOf<String, File>()
-            if (foreignAudioFile != null) audioFiles["Back"] = foreignAudioFile
-            
-            AnkiCard(
-                modelName = "Basic",
-                fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
-                deckName = deckName,
-                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "native-to-foreign"),
-                audioFiles = audioFiles
-            )
-        }
-        DeepLCardDirection.FOREIGN_TO_NATIVE -> {
-            val audioFiles = mutableMapOf<String, File>()
-            if (foreignAudioFile != null) audioFiles["Front"] = foreignAudioFile
-            
-            AnkiCard(
-                modelName = "Basic",
-                fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
-                deckName = deckName,
-                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "foreign-to-native"),
-                audioFiles = audioFiles
-            )
-        }
-        DeepLCardDirection.BOTH_DIRECTIONS -> {
-            val (frontSide, backSide) = when (frontPreference) {
-                FrontPreference.NATIVE -> Pair(nativeWord, foreignWord)
-                FrontPreference.FOREIGN -> Pair(foreignWord, nativeWord)
-            }
-            
-            // Add audio to the foreign language side
-            val audioFiles = mutableMapOf<String, File>()
-            if (foreignAudioFile != null) {
-                when (frontPreference) {
-                    FrontPreference.NATIVE -> audioFiles["Back"] = foreignAudioFile
-                    FrontPreference.FOREIGN -> audioFiles["Front"] = foreignAudioFile
-                }
-            }
-            
-            AnkiCard(
-                modelName = "Basic (and reversed card)",
-                fields = mapOf("Front" to frontSide, "Back" to backSide),
-                deckName = deckName,
-                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "bidirectional"),
-                audioFiles = audioFiles
-            )
-        }
+    val foreignOnFront = when (cardDirection) {
+        DeepLCardDirection.NATIVE_TO_FOREIGN -> false
+        DeepLCardDirection.FOREIGN_TO_NATIVE -> true
+        DeepLCardDirection.VIA_INTENT,
+        DeepLCardDirection.BOTH_DIRECTIONS -> frontPreference == FrontPreference.FOREIGN
     }
+    val (frontSide, backSide) = if (foreignOnFront) foreignWord to nativeWord else nativeWord to foreignWord
+
+    // The audio is generated for the foreign word, so it goes on the foreign side
+    val audioFiles = if (foreignAudioFile == null) {
+        emptyMap()
+    } else {
+        mapOf((if (foreignOnFront) "Front" else "Back") to foreignAudioFile)
+    }
+
+    val directionTag = when (cardDirection) {
+        DeepLCardDirection.VIA_INTENT -> null
+        DeepLCardDirection.NATIVE_TO_FOREIGN -> "native-to-foreign"
+        DeepLCardDirection.FOREIGN_TO_NATIVE -> "foreign-to-native"
+        DeepLCardDirection.BOTH_DIRECTIONS -> "bidirectional"
+    }
+
+    return AnkiCard(
+        modelName = if (cardDirection == DeepLCardDirection.BOTH_DIRECTIONS) "Basic (and reversed card)" else "Basic",
+        fields = mapOf("Front" to frontSide, "Back" to backSide),
+        deckName = deckName,
+        tags = listOfNotNull("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, directionTag),
+        audioFiles = audioFiles
+    )
 }
 
 /**
