@@ -1,10 +1,8 @@
 package com.glosdalen.app.backend.anki
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.glosdalen.app.libs.copilot.util.TimeProvider
 import com.ichi2.anki.api.AddContentApi
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,19 +19,20 @@ import javax.inject.Singleton
 @Singleton
 class AnkiApiRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val apiFactory: AnkiContentApiFactory
 ) : AnkiBackend {
 
     companion object {
         private const val PERMISSION_READ_WRITE_DATABASE = "com.ichi2.anki.permission.READ_WRITE_DATABASE"
     }
 
-    private var cachedApi: AddContentApi? = null
+    private var cachedApi: AnkiContentApi? = null
 
-    private fun getApi(): AddContentApi? {
+    private fun getApi(): AnkiContentApi? {
         return try {
-            if (cachedApi == null && AddContentApi.getAnkiDroidPackageName(context) != null) {
-                cachedApi = AddContentApi(context)
+            if (cachedApi == null) {
+                cachedApi = apiFactory.create()
             }
             cachedApi
         } catch (e: Exception) {
@@ -241,8 +240,8 @@ class AnkiApiRepository @Inject constructor(
                     arrayOf(frontWithAudio, backWithAudio)
                 }
 
-                // Use batch API for better performance - convert to List
-                api.addNotes(modelId, deckId, notes.toMutableList(), null)
+                // Use batch API for better performance
+                api.addNotes(modelId, deckId, notes)
                 
                 // Note: API documentation suggests this always returns a valid result
             }
@@ -259,32 +258,17 @@ class AnkiApiRepository @Inject constructor(
      * Add audio file to AnkiDroid media collection and return the field with [sound:...] tag.
      * Returns the original text if audio file is null or copying fails.
      */
-    private fun addAudioTag(api: AddContentApi, fieldText: String, audioFile: File?): String {
+    private fun addAudioTag(api: AnkiContentApi, fieldText: String, audioFile: File?): String {
         if (audioFile == null || !audioFile.exists()) {
             return fieldText
         }
         
         return try {
-            // Use FileProvider to create a content URI that AnkiDroid can access
-            val authority = "${context.packageName}.fileprovider"
-            val mediaUri = FileProvider.getUriForFile(context, authority, audioFile)
-            
-            // Grant read permission to AnkiDroid
-            val ankiPackage = AddContentApi.getAnkiDroidPackageName(context)
-            if (ankiPackage != null) {
-                context.grantUriPermission(ankiPackage, mediaUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            
             // Generate a unique preferred name based on the file name
             val preferredName = "glosdalen_${timeProvider.currentTimeMillis()}"
-            val soundTag = api.addMediaFromUri(mediaUri, preferredName, "audio")
+            val soundTag = api.addAudio(audioFile, preferredName)
             
-            // Revoke the permission after the file is copied
-            if (ankiPackage != null) {
-                context.revokeUriPermission(mediaUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            
-            // addMediaFromUri returns the formatted [sound:...] tag directly, or null if it failed
+            // addAudio returns the formatted [sound:...] tag directly, or null if it failed
             if (soundTag != null) {
                 android.util.Log.d("AnkiApiRepository", "Successfully added audio: $soundTag")
                 if (fieldText.isNotBlank()) {
