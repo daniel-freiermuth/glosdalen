@@ -7,12 +7,14 @@ import com.glosdalen.app.backend.anki.AnkiError
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
+import com.glosdalen.app.domain.preferences.FrontPreference
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.backend.deepl.*
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -173,11 +175,7 @@ class DeepLSearchViewModel @Inject constructor(
             val result = deepLRepository.lookupWord(
                 word = query,
                 sourceLanguage = _uiState.value.sourceLanguage,
-                targetLanguage = when (_uiState.value.sourceLanguage) {
-                    currentNative -> currentForeign
-                    currentForeign -> currentNative
-                    else -> currentForeign // Default fallback
-                },
+                targetLanguage = deepLTargetLanguage(_uiState.value.sourceLanguage, currentNative, currentForeign),
                 modelType = modelType,
                 context = _uiState.value.contextQuery.takeIf { it.isNotBlank() }
             )
@@ -205,7 +203,7 @@ class DeepLSearchViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreatingCard = true)
             
-            val translation = _uiState.value.selectedTranslation ?: result.translations.firstOrNull()?.text ?: ""
+            val selectedTranslation = _uiState.value.selectedTranslation
             val currentNative = nativeLanguage.first()
             val currentForeign = foreignLanguage.first()
             val deckTemplate = defaultDeckName.first()
@@ -214,14 +212,7 @@ class DeepLSearchViewModel @Inject constructor(
             // Resolve deck name template
             val deckName = templateResolver.resolveDeckName(deckTemplate, currentForeign)
             
-            // Determine which word is native and which is foreign
-            val (nativeWord, foreignWord) = if (result.sourceLanguage == currentNative) {
-                // Original search: Native → Foreign
-                result.originalWord to translation
-            } else {
-                // Reverse search: Foreign → Native  
-                translation to result.originalWord
-            }
+            val (nativeWord, foreignWord) = nativeAndForeignWords(result, selectedTranslation, currentNative)
             
             // Generate audio files for the foreign word if ElevenLabs is configured
             val foreignAudioFile = if (elevenLabsRepository.isConfigured()) {
@@ -234,98 +225,19 @@ class DeepLSearchViewModel @Inject constructor(
             } else null
             
             // Create cards based on user's direction preference
-            val cardsToCreate = when (cardDirection) {
-                DeepLCardDirection.VIA_INTENT -> {
-                    // Check user preference for which side should be front
-                    val frontPref = userPreferences.getFrontPreference().first()
-                    val (frontSide, backSide) = when (frontPref) {
-                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                            Pair(nativeWord, foreignWord)
-                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                            Pair(foreignWord, nativeWord)
-                    }
-                    
-                    // Add audio to the foreign language side
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) {
-                        when (frontPref) {
-                            com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                                audioFiles["Back"] = foreignAudioFile
-                            com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                                audioFiles["Front"] = foreignAudioFile
-                        }
-                    }
-                    
-                    listOf(
-                        AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to frontSide, "Back" to backSide),
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code),
-                            audioFiles = audioFiles
-                        )
-                    )
-                }
-                DeepLCardDirection.NATIVE_TO_FOREIGN -> {
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) audioFiles["Back"] = foreignAudioFile
-                    
-                    listOf(
-                        AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "native-to-foreign"),
-                            audioFiles = audioFiles
-                        )
-                    )
-                }
-                DeepLCardDirection.FOREIGN_TO_NATIVE -> {
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) audioFiles["Front"] = foreignAudioFile
-                    
-                    listOf(
-                        AnkiCard(
-                            modelName = "Basic",
-                            fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "foreign-to-native"),
-                            audioFiles = audioFiles
-                        )
-                    )
-                }
-                DeepLCardDirection.BOTH_DIRECTIONS -> {
-                    // Check user preference for which side should be front
-                    val frontPref = userPreferences.getFrontPreference().first()
-                    val (frontSide, backSide) = when (frontPref) {
-                        com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                            Pair(nativeWord, foreignWord)
-                        com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                            Pair(foreignWord, nativeWord)
-                    }
-                    
-                    // Add audio to the foreign language side
-                    val audioFiles = mutableMapOf<String, java.io.File>()
-                    if (foreignAudioFile != null) {
-                        when (frontPref) {
-                            com.glosdalen.app.domain.preferences.FrontPreference.NATIVE -> 
-                                audioFiles["Back"] = foreignAudioFile
-                            com.glosdalen.app.domain.preferences.FrontPreference.FOREIGN -> 
-                                audioFiles["Front"] = foreignAudioFile
-                        }
-                    }
-                    
-                    listOf(
-                        AnkiCard(
-                            modelName = "Basic (and reversed card)",
-                            fields = mapOf("Front" to frontSide, "Back" to backSide),
-                            deckName = deckName,
-                            tags = listOf("glosdalen", "vocab", currentNative.code, currentForeign.code, "bidirectional"),
-                            audioFiles = audioFiles
-                        )
-                    )
-                }
-            }
+            val frontPref = userPreferences.getFrontPreference().first()
+            val cardsToCreate = listOf(
+                buildDeepLAnkiCard(
+                    nativeWord = nativeWord,
+                    foreignWord = foreignWord,
+                    nativeLanguage = currentNative,
+                    foreignLanguage = currentForeign,
+                    cardDirection = cardDirection,
+                    frontPreference = frontPref,
+                    deckName = deckName,
+                    foreignAudioFile = foreignAudioFile
+                )
+            )
             
             try {
                 // For VIA_INTENT, force using Intent method
@@ -432,6 +344,133 @@ class DeepLSearchViewModel @Inject constructor(
         super.onCleared()
         // Stop any playing audio when ViewModel is cleared
         elevenLabsRepository.stopPlayback()
+    }
+}
+
+/**
+ * Target language for a DeepL lookup: the other configured language, or the foreign
+ * language when [sourceLanguage] is neither native nor foreign.
+ */
+internal fun deepLTargetLanguage(
+    sourceLanguage: Language,
+    nativeLanguage: Language,
+    foreignLanguage: Language
+): Language = when (sourceLanguage) {
+    nativeLanguage -> foreignLanguage
+    foreignLanguage -> nativeLanguage
+    else -> foreignLanguage // Default fallback
+}
+
+/**
+ * Split a lookup result into (nativeWord, foreignWord).
+ *
+ * The translation is [selectedTranslation], else the first DeepL translation, else "".
+ * A search from [nativeLanguage] keeps the original word on the native side; any other
+ * source language is treated as a reverse (foreign → native) search.
+ */
+internal fun nativeAndForeignWords(
+    entry: VocabularyEntry,
+    selectedTranslation: String?,
+    nativeLanguage: Language
+): Pair<String, String> {
+    val translation = selectedTranslation ?: entry.translations.firstOrNull()?.text ?: ""
+    return if (entry.sourceLanguage == nativeLanguage) {
+        // Original search: Native → Foreign
+        entry.originalWord to translation
+    } else {
+        // Reverse search: Foreign → Native
+        translation to entry.originalWord
+    }
+}
+
+/**
+ * Build the Anki note for a DeepL vocabulary pair.
+ *
+ * [frontPreference] only applies to [DeepLCardDirection.VIA_INTENT] and
+ * [DeepLCardDirection.BOTH_DIRECTIONS]; [foreignAudioFile], when present, is attached to
+ * whichever field holds [foreignWord].
+ */
+internal fun buildDeepLAnkiCard(
+    nativeWord: String,
+    foreignWord: String,
+    nativeLanguage: Language,
+    foreignLanguage: Language,
+    cardDirection: DeepLCardDirection,
+    frontPreference: FrontPreference,
+    deckName: String,
+    foreignAudioFile: File?
+): AnkiCard {
+    return when (cardDirection) {
+        DeepLCardDirection.VIA_INTENT -> {
+            val (frontSide, backSide) = when (frontPreference) {
+                FrontPreference.NATIVE -> Pair(nativeWord, foreignWord)
+                FrontPreference.FOREIGN -> Pair(foreignWord, nativeWord)
+            }
+            
+            // Add audio to the foreign language side
+            val audioFiles = mutableMapOf<String, File>()
+            if (foreignAudioFile != null) {
+                when (frontPreference) {
+                    FrontPreference.NATIVE -> audioFiles["Back"] = foreignAudioFile
+                    FrontPreference.FOREIGN -> audioFiles["Front"] = foreignAudioFile
+                }
+            }
+            
+            AnkiCard(
+                modelName = "Basic",
+                fields = mapOf("Front" to frontSide, "Back" to backSide),
+                deckName = deckName,
+                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code),
+                audioFiles = audioFiles
+            )
+        }
+        DeepLCardDirection.NATIVE_TO_FOREIGN -> {
+            val audioFiles = mutableMapOf<String, File>()
+            if (foreignAudioFile != null) audioFiles["Back"] = foreignAudioFile
+            
+            AnkiCard(
+                modelName = "Basic",
+                fields = mapOf("Front" to nativeWord, "Back" to foreignWord),
+                deckName = deckName,
+                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "native-to-foreign"),
+                audioFiles = audioFiles
+            )
+        }
+        DeepLCardDirection.FOREIGN_TO_NATIVE -> {
+            val audioFiles = mutableMapOf<String, File>()
+            if (foreignAudioFile != null) audioFiles["Front"] = foreignAudioFile
+            
+            AnkiCard(
+                modelName = "Basic",
+                fields = mapOf("Front" to foreignWord, "Back" to nativeWord),
+                deckName = deckName,
+                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "foreign-to-native"),
+                audioFiles = audioFiles
+            )
+        }
+        DeepLCardDirection.BOTH_DIRECTIONS -> {
+            val (frontSide, backSide) = when (frontPreference) {
+                FrontPreference.NATIVE -> Pair(nativeWord, foreignWord)
+                FrontPreference.FOREIGN -> Pair(foreignWord, nativeWord)
+            }
+            
+            // Add audio to the foreign language side
+            val audioFiles = mutableMapOf<String, File>()
+            if (foreignAudioFile != null) {
+                when (frontPreference) {
+                    FrontPreference.NATIVE -> audioFiles["Back"] = foreignAudioFile
+                    FrontPreference.FOREIGN -> audioFiles["Front"] = foreignAudioFile
+                }
+            }
+            
+            AnkiCard(
+                modelName = "Basic (and reversed card)",
+                fields = mapOf("Front" to frontSide, "Back" to backSide),
+                deckName = deckName,
+                tags = listOf("glosdalen", "vocab", nativeLanguage.code, foreignLanguage.code, "bidirectional"),
+                audioFiles = audioFiles
+            )
+        }
     }
 }
 
