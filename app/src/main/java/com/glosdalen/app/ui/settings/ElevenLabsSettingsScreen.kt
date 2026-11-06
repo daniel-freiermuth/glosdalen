@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -101,7 +100,7 @@ private fun InfoCard() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(
-                    Icons.Default.Info,
+                    AppIcons.Info,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -171,7 +170,7 @@ private fun ApiKeySection(
                     Row {
                         IconButton(onClick = { showApiKey = !showApiKey }) {
                             Icon(
-                                imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                imageVector = if (showApiKey) AppIcons.VisibilityOff else AppIcons.Visibility,
                                 contentDescription = if (showApiKey) "Hide API key" else "Show API key"
                             )
                         }
@@ -198,7 +197,7 @@ private fun ApiKeySection(
                         Spacer(Modifier.width(8.dp))
                         Text("Validating...")
                     } else if (isValidated || isConfigured) {
-                        Icon(Icons.Default.Check, contentDescription = null)
+                        Icon(AppIcons.Check, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text("Validated")
                     } else {
@@ -213,7 +212,7 @@ private fun ApiKeySection(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = null)
+                        Icon(AppIcons.Delete, contentDescription = null)
                     }
                 }
             }
@@ -275,7 +274,7 @@ private fun VoiceSelectionSection(
                     )
                 } else {
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh voices")
+                        Icon(AppIcons.Refresh, contentDescription = "Refresh voices")
                     }
                 }
             }
@@ -337,7 +336,7 @@ private fun VoiceSelectionSection(
                             leadingIcon = if (voice.voiceId == selectedVoiceId) {
                                 {
                                     Icon(
-                                        Icons.Default.Check,
+                                        AppIcons.Check,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -421,7 +420,7 @@ private fun ModelSelectionSection(
                             leadingIcon = if (model.modelId == selectedModelId) {
                                 {
                                     Icon(
-                                        Icons.Default.Check,
+                                        AppIcons.Check,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -471,11 +470,11 @@ private fun TestVoiceSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (isTesting) {
-                    Icon(Icons.Default.Stop, contentDescription = null)
+                    Icon(AppIcons.Stop, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Stop")
                 } else {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                    Icon(AppIcons.PlayArrow, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Test Voice")
                 }

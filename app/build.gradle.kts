@@ -166,7 +166,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
     
     // Navigation 3 (Compose-native navigation with user-owned back stack)
     implementation("androidx.navigation3:navigation3-runtime:1.1.7")
