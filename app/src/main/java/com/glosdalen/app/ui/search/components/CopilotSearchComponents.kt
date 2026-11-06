@@ -148,6 +148,16 @@ fun <C : CopilotFlashCardContent, R : CopilotParsedResponse<C>, D> CopilotSearch
             )
         }
         
+        listOfNotNull(uiState.cardError, uiState.modelsError).forEach { error ->
+            CopilotErrorCard(
+                error = error,
+                availableModels = uiState.availableModels,
+                selectedModelId = uiState.selectedModelId,
+                onRetry = null,
+                onSelectModel = actions::selectModel
+            )
+        }
+        
         uiState.parsedResponse?.let { parsed ->
             if (parsed.directAnswer.isNotBlank()) {
                 CopilotAnswerCard(
@@ -694,13 +704,13 @@ private fun CopilotLoadingCard(onCancel: () -> Unit) {
     }
 }
 
-/** Error card with a "Try Again" split button whose dropdown selects the Copilot model. */
+/** Error card; with [onRetry], it offers a "Try Again" split button whose dropdown selects the Copilot model. */
 @Composable
 private fun CopilotErrorCard(
     error: String,
     availableModels: List<CopilotModel>,
     selectedModelId: String,
-    onRetry: () -> Unit,
+    onRetry: (() -> Unit)?,
     onSelectModel: (String) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
@@ -737,42 +747,44 @@ private fun CopilotErrorCard(
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             
-            // Retry button with model selection
-            val selectedModelDisplay = modelDisplayName(selectedModelId, availableModels, "Auto")
-            
-            SplitButton(
-                onMainClick = {
-                    focusManager.clearFocus()
-                    onRetry()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                ),
-                mainButtonContent = {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Try Again ($selectedModelDisplay)")
-                },
-                dropdownItems = modelItems(availableModels),
-                selectedItem = selectedModelId,
-                enabled = true,
-                onItemSelect = onSelectModel,
-                itemLabel = { modelId ->
-                    modelDisplayName(modelId, availableModels, "Auto (Recommended)")
-                },
-                dropdownButtonContentDescription = "Select AI model",
-                itemContent = { modelId ->
-                    Text(
-                        text = modelDisplayName(modelId, availableModels, "Auto (Recommended)"),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                },
-            )
+            if (onRetry != null) {
+                // Retry button with model selection
+                val selectedModelDisplay = modelDisplayName(selectedModelId, availableModels, "Auto")
+                
+                SplitButton(
+                    onMainClick = {
+                        focusManager.clearFocus()
+                        onRetry()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    mainButtonContent = {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Try Again ($selectedModelDisplay)")
+                    },
+                    dropdownItems = modelItems(availableModels),
+                    selectedItem = selectedModelId,
+                    enabled = true,
+                    onItemSelect = onSelectModel,
+                    itemLabel = { modelId ->
+                        modelDisplayName(modelId, availableModels, "Auto (Recommended)")
+                    },
+                    dropdownButtonContentDescription = "Select AI model",
+                    itemContent = { modelId ->
+                        Text(
+                            text = modelDisplayName(modelId, availableModels, "Auto (Recommended)"),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                )
+            }
         }
     }
 }
