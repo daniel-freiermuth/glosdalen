@@ -301,7 +301,7 @@ private fun VoiceSelectionSection(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
                         .fillMaxWidth()
                 )
                 
@@ -385,7 +385,7 @@ private fun ModelSelectionSection(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     modifier = Modifier
-                        .menuAnchor()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
                         .fillMaxWidth()
                 )
                 
