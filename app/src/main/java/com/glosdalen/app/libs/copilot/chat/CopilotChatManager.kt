@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withTimeout
+import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.min
@@ -159,52 +160,9 @@ class CopilotChatManager @Inject constructor(
                 request = request
             )
 
-            when {
-                response.isSuccessful && response.body() != null -> {
-                    val chatResponse = response.body()!!
-                    
-                    // Validate response
-                    if (chatResponse.choices.isEmpty()) {
-                        CopilotException.ChatException.ResponseParsingFailed().asFailure()
-                    } else {
-                        chatResponse.asSuccess()
-                    }
-                }
-                
-                response.code() == 401 -> {
-                    CopilotException.NetworkException.Unauthorized().asFailure()
-                }
-                
-                response.code() == 403 -> {
-                    CopilotException.NetworkException.Forbidden().asFailure()
-                }
-                
-                response.code() == 404 -> {
-                    CopilotException.ModelException.ModelNotFound(request.model).asFailure()
-                }
-                
-                response.code() == 429 -> {
-                    val retryAfter = response.headers()["Retry-After"]?.toLongOrNull()
-                    CopilotException.NetworkException.RateLimited(retryAfter).asFailure()
-                }
-                
-                response.code() in 500..599 -> {
-                    val errorBody = response.errorBody()?.string()
-                    CopilotException.NetworkException.ServerError(response.code(), errorBody).asFailure()
-                }
-                
-                else -> {
-                    val errorBody = response.errorBody()?.string()
-                    CopilotException.NetworkException.BadRequest(errorBody).asFailure()
-                }
-            }
+            mapChatCompletionResponse(response, request.model)
         } catch (e: Exception) {
-            when (e) {
-                is CopilotException -> e.asFailure()
-                is java.net.SocketTimeoutException -> CopilotException.NetworkException.Timeout().asFailure()
-                is java.net.UnknownHostException -> CopilotException.NetworkException.NoConnection().asFailure()
-                else -> CopilotException.ChatException.ResponseParsingFailed(e).asFailure()
-            }
+            mapChatRequestException(e)
         }
     }
 
@@ -286,84 +244,152 @@ class CopilotChatManager @Inject constructor(
         )
     }
 
-    // ================================
-    // Retry Logic with Exponential Backoff
-    // ================================
+    companion object {
 
-    private suspend fun <T> executeWithRetry(
-        maxRetries: Int = 3,
-        initialDelayMs: Long = 1000,
-        maxDelayMs: Long = 16000,
-        backoffMultiplier: Double = 2.0,
-        jitterFactor: Double = 0.1,
-        operation: suspend () -> Result<T>
-    ): Result<T> {
-        
-        var lastException: Throwable? = null
-        var delay = initialDelayMs
+        // ================================
+        // Response Mapping
+        // ================================
 
-        repeat(maxRetries + 1) { attempt ->
-            try {
-                val result = withTimeout(30000) { // 30 second timeout per attempt
-                    operation()
-                }
+        /**
+         * Maps a chat completion HTTP response to a result, classifying non-2xx statuses
+         * into the [CopilotException] subtypes that [shouldRetry] understands.
+         */
+        internal fun mapChatCompletionResponse(
+            response: Response<ChatResponse>,
+            modelId: String
+        ): Result<ChatResponse> {
+            return when {
+                response.isSuccessful && response.body() != null -> {
+                    val chatResponse = response.body()!!
 
-                if (result.isSuccess) {
-                    return result
-                } else {
-                    val exception = result.exceptionOrNull()!!
-                    lastException = exception
-
-                    // Don't retry certain errors
-                    if (exception is CopilotException && !shouldRetry(exception, attempt)) {
-                        return result
-                    }
-
-                    // Apply delay before retry (except on last attempt)
-                    if (attempt < maxRetries) {
-                        val jitter = delay * jitterFactor * Random.nextDouble(-1.0, 1.0)
-                        val actualDelay = (delay + jitter).toLong().coerceAtLeast(0)
-                        delay(actualDelay)
-                        
-                        // Exponential backoff with max limit
-                        delay = min(maxDelayMs, (delay * backoffMultiplier).toLong())
+                    // Validate response
+                    if (chatResponse.choices.isEmpty()) {
+                        CopilotException.ChatException.ResponseParsingFailed().asFailure()
+                    } else {
+                        chatResponse.asSuccess()
                     }
                 }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                lastException = CopilotException.NetworkException.Timeout()
-                if (attempt == maxRetries) {
-                    return Result.failure(lastException ?: CopilotException.UnknownException())
+
+                response.code() == 401 -> {
+                    CopilotException.NetworkException.Unauthorized().asFailure()
                 }
-                delay(delay)
-                delay = min(maxDelayMs, (delay * backoffMultiplier).toLong())
+
+                response.code() == 403 -> {
+                    CopilotException.NetworkException.Forbidden().asFailure()
+                }
+
+                response.code() == 404 -> {
+                    CopilotException.ModelException.ModelNotFound(modelId).asFailure()
+                }
+
+                response.code() == 429 -> {
+                    val retryAfter = response.headers()["Retry-After"]?.toLongOrNull()
+                    CopilotException.NetworkException.RateLimited(retryAfter).asFailure()
+                }
+
+                response.code() in 500..599 -> {
+                    val errorBody = response.errorBody()?.string()
+                    CopilotException.NetworkException.ServerError(response.code(), errorBody).asFailure()
+                }
+
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    CopilotException.NetworkException.BadRequest(errorBody).asFailure()
+                }
             }
         }
 
-        return Result.failure(lastException ?: CopilotException.UnknownException())
-    }
+        /**
+         * Maps an exception thrown while obtaining auth or calling the API to a failure result.
+         */
+        internal fun mapChatRequestException(e: Exception): Result<Nothing> {
+            return when (e) {
+                is CopilotException -> e.asFailure()
+                is java.net.SocketTimeoutException -> CopilotException.NetworkException.Timeout().asFailure()
+                is java.net.UnknownHostException -> CopilotException.NetworkException.NoConnection().asFailure()
+                else -> CopilotException.ChatException.ResponseParsingFailed(e).asFailure()
+            }
+        }
 
-    private fun shouldRetry(exception: CopilotException, attempt: Int): Boolean {
-        return when (exception) {
-            // Always retry network issues
-            is CopilotException.NetworkException.NoConnection,
-            is CopilotException.NetworkException.Timeout,
-            is CopilotException.NetworkException.ServerError -> true
+        // ================================
+        // Retry Logic with Exponential Backoff
+        // ================================
 
-            // Retry rate limiting with proper delay
-            is CopilotException.NetworkException.RateLimited -> attempt < 2
+        internal suspend fun <T> executeWithRetry(
+            maxRetries: Int = 3,
+            initialDelayMs: Long = 1000,
+            maxDelayMs: Long = 16000,
+            backoffMultiplier: Double = 2.0,
+            jitterFactor: Double = 0.1,
+            operation: suspend () -> Result<T>
+        ): Result<T> {
 
-            // Don't retry auth issues
-            is CopilotException.AuthException -> false
+            var lastException: Throwable? = null
+            var delay = initialDelayMs
 
-            // Don't retry validation errors
-            is CopilotException.ChatException.EmptyMessage,
-            is CopilotException.ChatException.InvalidMessage -> false
+            repeat(maxRetries + 1) { attempt ->
+                try {
+                    val result = withTimeout(30000) { // 30 second timeout per attempt
+                        operation()
+                    }
 
-            // Don't retry model not found
-            is CopilotException.ModelException.ModelNotFound -> false
+                    if (result.isSuccess) {
+                        return result
+                    } else {
+                        val exception = result.exceptionOrNull()!!
+                        lastException = exception
 
-            // Retry other errors once
-            else -> attempt == 0
+                        // Don't retry certain errors
+                        if (exception is CopilotException && !shouldRetry(exception, attempt)) {
+                            return result
+                        }
+
+                        // Apply delay before retry (except on last attempt)
+                        if (attempt < maxRetries) {
+                            val jitter = delay * jitterFactor * Random.nextDouble(-1.0, 1.0)
+                            val actualDelay = (delay + jitter).toLong().coerceAtLeast(0)
+                            delay(actualDelay)
+
+                            // Exponential backoff with max limit
+                            delay = min(maxDelayMs, (delay * backoffMultiplier).toLong())
+                        }
+                    }
+                } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                    lastException = CopilotException.NetworkException.Timeout()
+                    if (attempt == maxRetries) {
+                        return Result.failure(lastException ?: CopilotException.UnknownException())
+                    }
+                    delay(delay)
+                    delay = min(maxDelayMs, (delay * backoffMultiplier).toLong())
+                }
+            }
+
+            return Result.failure(lastException ?: CopilotException.UnknownException())
+        }
+
+        internal fun shouldRetry(exception: CopilotException, attempt: Int): Boolean {
+            return when (exception) {
+                // Always retry network issues
+                is CopilotException.NetworkException.NoConnection,
+                is CopilotException.NetworkException.Timeout,
+                is CopilotException.NetworkException.ServerError -> true
+
+                // Retry rate limiting with proper delay
+                is CopilotException.NetworkException.RateLimited -> attempt < 2
+
+                // Don't retry auth issues
+                is CopilotException.AuthException -> false
+
+                // Don't retry validation errors
+                is CopilotException.ChatException.EmptyMessage,
+                is CopilotException.ChatException.InvalidMessage -> false
+
+                // Don't retry model not found
+                is CopilotException.ModelException.ModelNotFound -> false
+
+                // Retry other errors once
+                else -> attempt == 0
+            }
         }
     }
 }
