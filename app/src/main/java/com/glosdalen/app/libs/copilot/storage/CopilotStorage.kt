@@ -10,6 +10,7 @@ import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.util.TimeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.KeyStore
@@ -212,20 +213,39 @@ class CopilotStorage @Inject constructor(
         }
     }
 
+    /**
+     * Returns the persisted model list, or null if there is none.
+     *
+     * A cache that no longer decodes (e.g. written before [CopilotModel] gained a required
+     * field) is removed and reported as absent, so callers refetch from the API instead of
+     * failing on every load until the app data is cleared.
+     */
     suspend fun loadModelCache(): CachedModels? = withContext(Dispatchers.IO) {
         try {
             val modelsJson = regularPrefs.getString(KEY_MODELS_CACHE, null)
             val timestamp = regularPrefs.getLong(KEY_MODELS_CACHE_TIMESTAMP, 0)
             
             if (modelsJson != null && timestamp > 0) {
-                val models = json.decodeFromString<List<CopilotModel>>(modelsJson)
-                CachedModels(models, timestamp)
+                decodeModelCache(modelsJson)?.let { CachedModels(it, timestamp) }
             } else {
                 null
             }
         } catch (e: Exception) {
             throw StorageException.LoadFailed(KEY_MODELS_CACHE, e)
         }
+    }
+
+    private fun decodeModelCache(modelsJson: String): List<CopilotModel>? = try {
+        json.decodeFromString<List<CopilotModel>>(modelsJson)
+    } catch (e: SerializationException) {
+        // A save may have replaced the cache since it was read; only drop the one that failed.
+        if (regularPrefs.getString(KEY_MODELS_CACHE, null) == modelsJson) {
+            regularPrefs.edit()
+                .remove(KEY_MODELS_CACHE)
+                .remove(KEY_MODELS_CACHE_TIMESTAMP)
+                .apply()
+        }
+        null
     }
 
     suspend fun isModelCacheValid(maxAgeMs: Long = MODEL_CACHE_DURATION): Boolean = withContext(Dispatchers.IO) {
