@@ -106,12 +106,29 @@ class CopilotStorageTest {
         assertTrue(regularPrefs().all.isEmpty())
     }
 
+    @Test
+    fun `cache written by an incompatible schema is discarded instead of failing every load`() = runBlocking {
+        // A model persisted before a required field (here: vendor) existed.
+        regularPrefs().edit()
+            .putString(KEY_MODELS_CACHE, """[{"id":"gpt-4o","name":"GPT-4o"}]""")
+            .putLong(KEY_MODELS_CACHE_TIMESTAMP, clock.now)
+            .commit()
+
+        assertNull(storage.loadModelCache())
+        assertTrue(regularPrefs().all.isEmpty())
+        assertFalse(storage.isModelCacheValid())
+
+        storage.saveModelCache(models)
+        assertEquals(models, storage.loadModelCache()?.models)
+    }
+
     private fun regularPrefs() = context.getSharedPreferences(REGULAR_PREFS_NAME, 0)
 
     private companion object {
         const val REGULAR_PREFS_NAME = "copilot_regular_prefs"
         const val KEY_MODELS_CACHE = "models_cache"
         const val MAX_AGE_MS = 60 * 60 * 1000L
+        const val KEY_MODELS_CACHE_TIMESTAMP = "models_cache_timestamp"
     }
 }
 
