@@ -38,15 +38,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.glosdalen.app.ui.anki.AnkiApiInfoDialog
@@ -58,12 +58,14 @@ import com.glosdalen.app.ui.settings.SettingsScreen
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
-// Navigation 3 route keys — type-safe replacements for string routes
-data object DeepLSearchRoute
-data object CopilotChatRoute
-data object CopilotKnowledgeRoute
-data object SettingsRoute
+// Navigation 3 route keys. @Serializable + NavKey lets rememberNavBackStack persist the
+// back stack across configuration changes and process death.
+@Serializable data object DeepLSearchRoute : NavKey
+@Serializable data object CopilotChatRoute : NavKey
+@Serializable data object CopilotKnowledgeRoute : NavKey
+@Serializable data object SettingsRoute : NavKey
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -87,7 +89,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun GlosdalenApp() {
-    val backStack = remember { mutableStateListOf<Any>(DeepLSearchRoute) }
+    val backStack = rememberNavBackStack(DeepLSearchRoute)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val ankiInfoViewModel: AnkiApiInfoViewModel = hiltViewModel()
@@ -185,8 +187,8 @@ fun GlosdalenApp() {
 
 @Composable
 private fun AppDrawerContent(
-    currentRoute: Any?,
-    onNavigate: (Any) -> Unit,
+    currentRoute: NavKey?,
+    onNavigate: (NavKey) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
