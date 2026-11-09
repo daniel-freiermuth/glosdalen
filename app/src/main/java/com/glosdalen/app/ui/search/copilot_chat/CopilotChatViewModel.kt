@@ -79,6 +79,8 @@ internal fun parseCopilotResponse(response: String): ParsedCopilotResponse? {
         val json = Json { 
             ignoreUnknownKeys = true
             isLenient = true
+            // Explicit null for an optional field means "use the default", not "reject"
+            coerceInputValues = true
         }
         
         // Try to extract JSON from the response (in case LLM added extra text)
