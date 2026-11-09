@@ -683,4 +683,8 @@ class CopilotChatViewModel @Inject constructor(
         elevenLabsRepository.stopPlayback()
         _uiState.update { it.copy(isTtsPlaying = false) }
     }
+    
+    fun clearTtsError() {
+        _uiState.update { it.copy(ttsError = null) }
+    }
 }
