@@ -299,7 +299,7 @@ class AnkiApiRepository @Inject constructor(
 /**
  * Per-note tag sets for [AddContentApi.addNotes], index-aligned with [cards].
  */
-internal fun noteTagsList(cards: List<AnkiCard>): List<Set<String>>? = null
+internal fun noteTagsList(cards: List<AnkiCard>): List<Set<String>> = cards.map { it.tags.toSet() }
 
 /**
  * Locate AnkiDroid's built-in "Basic (and reversed card)" model in [models] (id -> name).
