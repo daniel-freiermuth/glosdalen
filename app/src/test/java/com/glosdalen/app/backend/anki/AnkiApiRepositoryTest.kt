@@ -73,4 +73,26 @@ class AnkiApiRepositoryTest {
     fun `unrelated name containing reverse is not matched`() {
         assertNull(reversedModelId(1L to "Basic", 2L to "My Reverse Engineering Notes"))
     }
+
+    // --- Note tags passed to AddContentApi.addNotes ---
+
+    private fun card(vararg tags: String) = AnkiCard(
+        modelName = "Basic",
+        fields = mapOf("Front" to "f", "Back" to "b"),
+        tags = tags.toList(),
+        deckName = "Deck"
+    )
+
+    @Test
+    fun `card tags are sent per note in card order`() {
+        assertEquals(
+            listOf(setOf("glosdalen", "vocab", "de", "sv", "bidirectional"), setOf("glosdalen", "reversed")),
+            noteTagsList(listOf(card("glosdalen", "vocab", "de", "sv", "bidirectional"), card("glosdalen", "reversed")))
+        )
+    }
+
+    @Test
+    fun `card without tags yields an empty tag set for its note`() {
+        assertEquals(listOf(setOf("vocab"), emptySet<String>()), noteTagsList(listOf(card("vocab"), card())))
+    }
 }

@@ -219,7 +219,7 @@ class AnkiApiRepository @Inject constructor(
                 }
 
                 // Use batch API for better performance - convert to List
-                api.addNotes(modelId, deckId, notes.toMutableList(), null)
+                api.addNotes(modelId, deckId, notes.toMutableList(), noteTagsList(deckCards))
                 
                 // Note: API documentation suggests this always returns a valid result
             }
@@ -295,6 +295,11 @@ class AnkiApiRepository @Inject constructor(
         }
     }
 }
+
+/**
+ * Per-note tag sets for [AddContentApi.addNotes], index-aligned with [cards].
+ */
+internal fun noteTagsList(cards: List<AnkiCard>): List<Set<String>>? = null
 
 /**
  * Locate AnkiDroid's built-in "Basic (and reversed card)" model in [models] (id -> name).
