@@ -58,6 +58,9 @@ data class ParsedKnowledgeResponse(
 
 /**
  * Parse a raw LLM response into [ParsedKnowledgeResponse].
+ *
+ * If the response cannot be parsed, the error and raw response are returned as the
+ * direct answer so the user still sees something.
  */
 internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? {
     return try {
@@ -85,8 +88,13 @@ internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? 
             suggestedDeck = parsedJson.suggestedDeck
         )
     } catch (e: Exception) {
-        // If parsing fails, return null and show raw response
-        null
+        // The shared screen renders only parsedResponse, so surface the failure as the answer
+        ParsedKnowledgeResponse(
+            directAnswer = "Error parsing response: ${e.message}\n\nRaw response:\n$response",
+            cards = emptyList(),
+            additionalInfo = "",
+            suggestedDeck = ""
+        )
     }
 }
 
