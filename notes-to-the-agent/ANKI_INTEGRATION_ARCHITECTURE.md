@@ -52,8 +52,11 @@ The `AnkiRepositoryImpl` automatically selects the best available implementation
    - Handles permission requests automatically
 
 2. **Intent Fallback**: Falls back to ACTION_SEND intents
-   - When API is unavailable or permission denied
-   - Works with all AnkiDroid versions
+   - Only when the AnkiDroid API itself is unavailable
+   - If the API is available but permission is denied, card creation fails with
+     `AnkiError.PermissionDenied` instead (the intent drops deck, note type, tags and audio,
+     so silently substituting it would misreport success)
+   - Users can still pick the intent path explicitly ("Via Intent" → `createCardViaIntent`)
    - Single card creation only
 
 3. **Graceful Degradation**: Reports unavailable state
