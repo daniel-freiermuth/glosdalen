@@ -178,27 +178,6 @@ data class TokenUsage(
     val totalTokens: Int
 )
 
-@Serializable
-data class ChatChunk(
-    val choices: List<ChatChunkChoice>,
-    val id: String,
-    val model: String
-)
-
-@Serializable
-data class ChatChunkChoice(
-    val delta: ChatDelta,
-    @kotlinx.serialization.SerialName("finish_reason")
-    val finishReason: String? = null,
-    val index: Int = 0
-)
-
-@Serializable
-data class ChatDelta(
-    val role: String? = null,
-    val content: String? = null
-)
-
 // ================================
 // API Response Models
 // ================================
@@ -229,20 +208,4 @@ data class RawModel(
 data class ModelPolicy(
     val state: String = "enabled",
     val terms: String? = null
-)
-
-// ================================
-// Error Models  
-// ================================
-
-@Serializable
-data class CopilotError(
-    val message: String,
-    val type: String? = null,
-    val code: String? = null
-)
-
-@Serializable
-data class ErrorResponse(
-    val error: CopilotError
 )

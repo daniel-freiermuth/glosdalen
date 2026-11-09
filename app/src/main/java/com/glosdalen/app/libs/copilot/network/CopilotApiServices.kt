@@ -111,8 +111,6 @@ object CopilotApiConstants {
     
     // Headers
     const val USER_AGENT = "GithubCopilot/1.250.0"
-    const val EDITOR_VERSION = "vscode/1.96.0"
-    const val EDITOR_PLUGIN_VERSION = "copilot/1.250.0"
     
     // Timeouts
     const val CONNECT_TIMEOUT = 30L // seconds
@@ -120,67 +118,5 @@ object CopilotApiConstants {
     const val WRITE_TIMEOUT = 60L // seconds
     
     // OAuth Device Flow
-    const val DEVICE_CODE_POLL_INTERVAL = 5000L // milliseconds
     const val DEVICE_CODE_TIMEOUT = 600000L // 10 minutes
-}
-
-// ================================
-// Request/Response Wrappers
-// ================================
-
-data class ApiRequest<T>(
-    val url: String,
-    val headers: Map<String, String>,
-    val body: T? = null
-)
-
-data class ApiResponse<T>(
-    val isSuccessful: Boolean,
-    val code: Int,
-    val data: T? = null,
-    val errorBody: String? = null,
-    val headers: Map<String, String> = emptyMap()
-)
-
-// ================================
-// Streaming Support
-// ================================
-
-/**
- * For future streaming implementation
- */
-interface StreamingCallback {
-    fun onChunk(chunk: ChatChunk)
-    fun onComplete()
-    fun onError(error: Throwable)
-}
-
-// ================================
-// Request Builder
-// ================================
-
-class CopilotRequestBuilder {
-    private val headers = mutableMapOf<String, String>()
-    
-    fun withAuth(token: String) = apply {
-        headers["Authorization"] = "Bearer $token"
-    }
-    
-    fun withUserAgent(userAgent: String = CopilotApiConstants.USER_AGENT) = apply {
-        headers["User-Agent"] = userAgent
-    }
-    
-    fun withEditorHeaders(
-        version: String = CopilotApiConstants.EDITOR_VERSION,
-        pluginVersion: String = CopilotApiConstants.EDITOR_PLUGIN_VERSION
-    ) = apply {
-        headers["Editor-Version"] = version
-        headers["Editor-Plugin-Version"] = pluginVersion
-    }
-    
-    fun withContentType(contentType: String = "application/json") = apply {
-        headers["Content-Type"] = contentType
-    }
-    
-    fun build(): Map<String, String> = headers.toMap()
 }
