@@ -299,29 +299,137 @@ class AnkiApiRepository @Inject constructor(
 }
 
 /**
+ * Localized names of the stock "Basic (and reversed card)" note type, stored lowercase.
+ *
+ * Exact names only: substring heuristics matched the "optional reversed" note type (3 fields,
+ * no reverse card unless the third field is filled) and unrelated user models, and missed most
+ * real translations. Sources, current and historical values:
+ * - ankitects/anki-core-i18n core/<lang>/notetypes.ftl, key notetypes-basic-reversed-name
+ *   (names given by AnkiDroid's Rust backend and Anki desktop)
+ * - ankidroid/Anki-Android res/values-<lang>, string forward_reverse_model_name
+ *   (names given by the pre-Rust AnkiDroid libanki)
+ * Names that either source also uses for another note type are left out.
+ */
+private val LOCALIZED_REVERSED_MODEL_NAMES: Set<String> = setOf(
+    "Alap (mindkét irányban)",
+    "Alapvető (és fordított kártya)",
+    "Asas (dan kad terbalik)",
+    "Bas (och omvänt kort)",
+    "Basic (at may kabalikan na card)",
+    "Basic (en omgekeerde kaart)",
+    "Basic (裏表反転カード付き)",
+    "Basiese (en omgekeerde kaart)",
+    "Basilare (e carta inversa)",
+    "Basique (et carte inversée)",
+    "Basique (et envers de la carte)",
+    "Basis (en omgekeerde kaart)",
+    "Baza (en ambaŭ direktoj)",
+    "Bunúsach (agus cárta aisiompaithe)",
+    "Bunúsach (le malairt an chárta)",
+    "Bàsic (i carta girada)",
+    "Bàsica (i carta reversa)",
+    "Bàsica (i targeta inversa)",
+    "Básica (e tarxeta invertida)",
+    "Básico (e card invertido)",
+    "Básico (e carta invertida)",
+    "Básico (e cartão invertido)",
+    "Básico (e ficha invertida)",
+    "Básico (y tarjeta invertida)",
+    "Cơ bản (và thẻ đảo ngược)",
+    "Cơ bản (với thẻ ngược)",
+    "Dasar (dan kartu bolak-balik)",
+    "Dasar (juga kartu terbalik)",
+    "De base (e carta furriada)",
+    "De bază (și cu card întors)",
+    "Einfach (beide Richtungen)",
+    "Einfach (und die umgekehrte Richtung)",
+    "Enkel (och omvänt kort)",
+    "Generalitats (dos senses)",
+    "Grundlegende (und umgekehrte Karte)",
+    "Grundlæggende (og kort baglæns)",
+    "Grunnleggende (og motsatt kortet)",
+    "Généralités (deux sens)",
+    "malli (ja käänteinen kortti)",
+    "Oddiy (va teskari karta)",
+    "Oinarrizko (eta alderantzizko karta)",
+    "Osnovna (i obratna kartica)",
+    "Osnovna (in obrnjena kartica)",
+    "Pamata (un apvērstā kartīte)",
+    "Perusmalli (ja käännetty kortti)",
+    "Perusmalli (ja käänteinen kortti)",
+    "Podstawowy (z odwrotną kartą)",
+    "Standard (e carta invertita)",
+    "Standard (und umgekehrte Karte)",
+    "Temel (ve ters kart)",
+    "Temel (ve ters çevrilmiş kart)",
+    "Základná (a obrátená kartička)",
+    "Základní (a obrácená karta)",
+    "Základní (plus obrácená karta)",
+    "Základný (plus obrátená karta)",
+    "Βασική (και αντίστροφη κάρτα)",
+    "Βασική (και αντεστραμμένη κάρτα)",
+    "Асноўная (з адваротнай карткай)",
+    "Асноўны (і адваротная картка)",
+    "Базавая (з адваротнай карткай)",
+    "Базова (зі зворотною карткою)",
+    "Базова (із зворотньою карткою)",
+    "Базовий (зі зворотною карткою)",
+    "Основна (и обратне карте)",
+    "Основна (и обърната карта)",
+    "Основная (с обратной карточкой)",
+    "Основний (з оберненою карткою)",
+    "Простая (с обратной карточкой)",
+    "Қарапайым (және кері карта)",
+    "Հիմնական (+ հետադարձ քարտերը)",
+    "בסיסי (וכרטיס הופכי)",
+    "בסיסי (וכרטיס רוורס)",
+    "בסיסית  (וכרטיסייה הופכית)",
+    "בסיסית (וכרטיסייה הופכית)",
+    "עיקרדיק (און פֿאַרקערט קאַרטל)",
+    "أساسي (وبطاقة معكوسة)",
+    "ئاساسى (ئۆرۈلىدىغان كارتا)",
+    "بطاقة أساسية وبطاقة معكوسة",
+    "بنچینەیی (و کارتی پێچەوانە)",
+    "بنیادی (اور الٹ کارڈ)",
+    "پایه (و کارت معکوس شده)",
+    "پایه (و کارت وارونه)",
+    "मूल (और उलटा कार्ड)",
+    "मूलभूत (आणि उलट कार्ड)",
+    "मूळ (व उलट पत्ता)",
+    "মৌলিক (এবং উল্টানো কার্ড)",
+    "મૂળભૂત (અને રિવર્સ્ડ કાર્ડ)",
+    "ମୌଳିକ (ଏବଂ ଓଲଟା ପତ୍ର)",
+    "ప్రాథమిక (మరియు రివర్స్డ్ కార్డ్)",
+    "അടിസ്ഥാന (വിപരീത കാർഡും)",
+    "അടിസ്ഥാനം (വിപരീത കാർഡും)",
+    "พื้นฐาน (และการ์ดแบบกลับด้าน)",
+    "ზოგადი (და გადმობრუნებული ბარათი)",
+    "ᱵᱮᱥᱤᱠ (ᱟᱨ ᱯᱟᱪᱹᱞᱟ ᱠᱟᱰ)",
+    "基本 (表面と裏面を反転したカードも作成)",
+    "基本 (裏表反転カード付き)",
+    "基本型 (含反向卡片)",
+    "基本型 (含反向的卡片)",
+    "基本型(含反向的卡片)",
+    "基本型（含反向卡片）",
+    "基本型（含反向的卡片）",
+    "基本型（含翻转的卡片）",
+    "基础的（和相反的卡片）",
+    "问答题（同时生成翻转的卡片）",
+    "问答题（附翻转卡片）",
+    "기본 (역방향 카드 포함)"
+).mapTo(HashSet()) { it.lowercase() }
+
+/**
  * Locate AnkiDroid's built-in "Basic (and reversed card)" model in [models] (id -> name).
  *
- * Tries a case-insensitive match on the English name first, then falls back to
- * localized variants:
- * - English: "Basic (and reversed card)"
- * - German: "Einfach (beide Richtungen)"
- * - Other languages with "reversed", "both", "directions", etc.
+ * Tries a case-insensitive match on the English name first, then on the stock note type's
+ * localized names ([LOCALIZED_REVERSED_MODEL_NAMES]).
  */
 internal fun findReversedModel(models: Map<Long, String>): Map.Entry<Long, String>? {
     models.entries.find { it.value.equals("Basic (and reversed card)", ignoreCase = true) }
         ?.let { return it }
 
-    return models.entries.find { modelEntry ->
-        val name = modelEntry.value.lowercase()
-        name.contains("reversed") ||
-        name.contains("beide richtungen") ||  // German
-        name.contains("both directions") ||
-        name.contains("inverso") ||           // Spanish/Italian
-        name.contains("inversé") ||           // French
-        name.contains("omgekeerd") ||         // Dutch
-        (name.contains("basic") && name.contains("reverse")) ||
-        (name.contains("einfach") && name.contains("richtung"))  // German partial
-    }
+    return models.entries.find { it.value.lowercase() in LOCALIZED_REVERSED_MODEL_NAMES }
 }
 
 /**
