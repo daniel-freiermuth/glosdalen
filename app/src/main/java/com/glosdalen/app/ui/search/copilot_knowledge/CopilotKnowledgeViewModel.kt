@@ -14,6 +14,8 @@ import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
 import com.glosdalen.app.ui.search.CopilotSearchErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -180,8 +182,12 @@ class CopilotKnowledgeViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
-                // Check authentication first
-                if (!copilot.isAuthenticated()) {
+                // Check authentication first. CopilotChat swallows exceptions (cancellation
+                // included) into `false`/Result.failure, so re-check cancellation after each
+                // library call: a superseded query must not touch the shared UI state.
+                val isAuthenticated = copilot.isAuthenticated()
+                ensureActive()
+                if (!isAuthenticated) {
                     _uiState.update { 
                         it.copy(
                             isLoading = false,
@@ -218,6 +224,7 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 
                 // Send to Copilot
                 val result = copilot.chat(prompt, modelId, temperature)
+                ensureActive()
                 
                 result.fold(
                     onSuccess = { response ->
@@ -241,6 +248,8 @@ class CopilotKnowledgeViewModel @Inject constructor(
                         }
                     }
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
