@@ -14,6 +14,8 @@ import com.glosdalen.app.libs.copilot.CopilotChat
 import com.glosdalen.app.libs.copilot.util.LlmJsonExtractor
 import com.glosdalen.app.ui.search.CopilotSearchErrors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -219,6 +221,10 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 // Send to Copilot
                 val result = copilot.chat(prompt, modelId, temperature)
                 
+                // The Copilot library reports a cancellation during its network calls as a
+                // failure Result; a cancelled query must not show that as an error.
+                ensureActive()
+                
                 result.fold(
                     onSuccess = { response ->
                         val parsed = parseResponse(response)
@@ -241,6 +247,8 @@ class CopilotKnowledgeViewModel @Inject constructor(
                         }
                     }
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
