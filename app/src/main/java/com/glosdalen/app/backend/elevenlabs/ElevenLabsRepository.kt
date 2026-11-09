@@ -32,6 +32,19 @@ sealed class ElevenLabsError : Exception() {
 }
 
 /**
+ * User-facing message for a failed TTS playback request.
+ */
+fun ElevenLabsError.toTtsUserMessage(): String = when (this) {
+    is ElevenLabsError.NoApiKey -> "TTS not configured. Set up in Settings → ElevenLabs TTS"
+    is ElevenLabsError.NoVoiceSelected -> "No TTS voice selected. Choose one in Settings → ElevenLabs TTS"
+    is ElevenLabsError.InvalidApiKey -> "Invalid ElevenLabs API key"
+    is ElevenLabsError.NetworkError -> "Network error"
+    is ElevenLabsError.QuotaExceeded -> "ElevenLabs character quota exceeded"
+    is ElevenLabsError.PlaybackError -> "Playback failed"
+    is ElevenLabsError.ApiError -> "TTS error"
+}
+
+/**
  * Repository for ElevenLabs TTS functionality.
  * Handles text-to-speech conversion and audio playback.
  */

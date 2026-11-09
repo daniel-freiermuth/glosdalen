@@ -10,8 +10,8 @@ import com.glosdalen.app.backend.anki.AnkiCard
 import com.glosdalen.app.backend.anki.AnkiRepository
 import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import com.glosdalen.app.backend.deepl.Language
-import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
+import com.glosdalen.app.backend.elevenlabs.toTtsUserMessage
 import com.glosdalen.app.domain.preferences.UserPreferences
 import com.glosdalen.app.domain.template.DeckNameTemplateResolver
 import com.glosdalen.app.libs.copilot.CopilotChat
@@ -664,16 +664,7 @@ class CopilotChatViewModel @Inject constructor(
                     _uiState.update { it.copy(isTtsPlaying = false) }
                 },
                 onError = { error ->
-                    val errorMessage = when (error) {
-                        is ElevenLabsError.NoApiKey -> "TTS not configured. Set up in Settings → ElevenLabs TTS"
-                        is ElevenLabsError.NoVoiceSelected -> "No TTS voice selected. Choose one in Settings → ElevenLabs TTS"
-                        is ElevenLabsError.InvalidApiKey -> "Invalid ElevenLabs API key"
-                        is ElevenLabsError.NetworkError -> "Network error"
-                        is ElevenLabsError.QuotaExceeded -> "ElevenLabs character quota exceeded"
-                        is ElevenLabsError.PlaybackError -> "Playback failed"
-                        else -> "TTS error"
-                    }
-                    _uiState.update { it.copy(isTtsPlaying = false, ttsError = errorMessage) }
+                    _uiState.update { it.copy(isTtsPlaying = false, ttsError = error.toTtsUserMessage()) }
                 }
             )
         }
