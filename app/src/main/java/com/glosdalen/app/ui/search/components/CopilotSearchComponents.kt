@@ -75,9 +75,10 @@ fun <C : CopilotFlashCardContent, R : CopilotParsedResponse<C>, D> CopilotSearch
     frontActions: @Composable (C) -> Unit = {},
     backActions: @Composable (C) -> Unit = {}
 ) {
-    // Recheck authentication status when screen is resumed
+    // Recheck authentication status and AnkiDroid availability when screen is resumed
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         actions.recheckAuthenticationStatus()
+        actions.recheckAnkiDroidAvailability()
     }
     
     if (uiState.showIntroDialog) {

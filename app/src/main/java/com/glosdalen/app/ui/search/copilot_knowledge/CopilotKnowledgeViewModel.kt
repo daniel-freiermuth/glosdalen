@@ -206,6 +206,13 @@ class CopilotKnowledgeViewModel @Inject constructor(
         }
     }
     
+    override fun recheckAnkiDroidAvailability() {
+        viewModelScope.launch {
+            val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
+            _uiState.update { it.copy(isAnkiDroidAvailable = ankiAvailable) }
+        }
+    }
+    
     override fun dismissIntroDialog(showAgain: Boolean) {
         viewModelScope.launch {
             userPreferences.setShowCopilotKnowledgeIntroDialog(showAgain)

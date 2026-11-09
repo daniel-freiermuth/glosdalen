@@ -42,6 +42,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +83,11 @@ fun DeepLSearchScreen(
     // Refresh language state when languages change (e.g., returning from settings)
     LaunchedEffect(nativeLanguage, foreignLanguage) {
         viewModel.refreshLanguageState()
+    }
+    
+    // Recheck AnkiDroid availability when screen is resumed (e.g., after installing AnkiDroid)
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.recheckAnkiDroidAvailability()
     }
     
     // Handle card creation result
