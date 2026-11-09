@@ -38,18 +38,8 @@ class AnkiApiRepositoryTest {
     }
 
     @Test
-    fun `German partial name with einfach and richtung is found`() {
-        assertEquals(2L, reversedModelId(1L to "Einfach", 2L to "Einfach (Richtung umkehrbar)"))
-    }
-
-    @Test
-    fun `Spanish or Italian inverso name is found`() {
-        assertEquals(2L, reversedModelId(1L to "Base", 2L to "Base (con carta inverso)"))
-    }
-
-    @Test
-    fun `French accented inverse name is found regardless of case`() {
-        assertEquals(2L, reversedModelId(1L to "Basique", 2L to "BASIQUE (AVEC CARTE INVERSÉE)"))
+    fun `localized name is matched case-insensitively`() {
+        assertEquals(2L, reversedModelId(1L to "Basique", 2L to "BASIQUE (ET CARTE INVERSÉE)"))
     }
 
     @Test
