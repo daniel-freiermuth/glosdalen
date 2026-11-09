@@ -125,6 +125,8 @@ class DeepLDataSource @Inject constructor(
                     val retryAfter = e.response()?.headers()?.get("Retry-After")?.toLongOrNull()
                     Result.failure(VocabularyError.ApiLimitExceeded(retryAfter))
                 }
+                // Quota exceeded: no Retry-After, won't succeed until the usage period resets
+                456 -> Result.failure(VocabularyError.ApiLimitExceeded(null))
                 else -> Result.failure(VocabularyError.ApiError)
             }
         } catch (e: IOException) {
