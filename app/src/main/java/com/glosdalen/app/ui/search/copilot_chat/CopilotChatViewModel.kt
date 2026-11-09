@@ -266,21 +266,22 @@ class CopilotChatViewModel @Inject constructor(
         viewModelScope.launch {
             val native = nativeLanguage.first()
             val foreign = foreignLanguage.first()
-            val currentState = _uiState.value
             val ttsConfigured = elevenLabsRepository.isConfigured()
             
             // If current source language is not one of the configured languages,
             // reset to native language
-            if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
-                _uiState.value = currentState.copy(
-                    sourceLanguage = native,
-                    response = "",
-                    error = null,
-                    isTtsConfigured = ttsConfigured
-                )
-            } else {
-                // Still update TTS config status even if language didn't change
-                _uiState.update { it.copy(isTtsConfigured = ttsConfigured) }
+            _uiState.update { currentState ->
+                if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
+                    currentState.copy(
+                        sourceLanguage = native,
+                        response = "",
+                        error = null,
+                        isTtsConfigured = ttsConfigured
+                    )
+                } else {
+                    // Still update TTS config status even if language didn't change
+                    currentState.copy(isTtsConfigured = ttsConfigured)
+                }
             }
         }
     }
