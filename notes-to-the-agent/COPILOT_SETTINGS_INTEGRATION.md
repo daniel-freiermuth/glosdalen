@@ -61,11 +61,8 @@ Successfully integrated GitHub Copilot authentication into the app's settings wi
 
 ### Modified Files
 
-**SettingsScreen.kt:**
-- Added `Copilot` to `SettingsPage` enum
-- Added `onNavigateToCopilot` parameter to `MainSettingsScreen`
-- Added navigation route for Copilot settings
-- Added "GitHub Copilot" navigation card in main settings
+**SettingsNavigation.kt:**
+- `CopilotSettingsRoute` Nav3 entry, pushed from the "GitHub Copilot" card in main settings
 
 ## User Flow
 
@@ -162,10 +159,10 @@ Surface(
 ## Navigation Architecture
 
 The Copilot settings page follows the same pattern as DeepL and Anki settings:
-- Internal navigation within SettingsScreen
-- Each sub-page gets its own ViewModel via `hiltViewModel()`
-- Back button returns to main settings
-- Android system back button handled with `BackHandler`
+- Its own Navigation 3 entry (`CopilotSettingsRoute` in `ui/settings/SettingsNavigation.kt`)
+- Entry-scoped ViewModel via `hiltViewModel()`: leaving the page clears it, which also cancels
+  an in-progress device-code poll
+- Top-bar back and system back pop the back stack; no `BackHandler`
 
 ## Testing the Integration
 

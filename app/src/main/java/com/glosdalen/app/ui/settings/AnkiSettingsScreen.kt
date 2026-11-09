@@ -2,7 +2,6 @@
 
 package com.glosdalen.app.ui.settings
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,11 +17,6 @@ fun AnkiSettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
-    // Handle Android's native back button/gesture - navigate back to main settings
-    BackHandler {
-        onNavigateBack()
-    }
     
     SettingsScreenScaffold(
         title = { Text("AnkiDroid Settings") },

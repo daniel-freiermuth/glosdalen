@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.activity.compose.BackHandler
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,70 +48,6 @@ import com.glosdalen.app.ui.anki.AnkiSettingsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit
-) {
-    // Internal navigation state for sub-pages
-    var currentPage by remember { mutableStateOf<SettingsPage>(SettingsPage.Main) }
-    
-    // Each page gets its own ViewModel instance to ensure fresh state
-    when (currentPage) {
-        SettingsPage.Main -> {
-            MainSettingsScreen(
-                onNavigateBack = onNavigateBack,
-                onNavigateToDeepL = { currentPage = SettingsPage.DeepL },
-                onNavigateToAnki = { currentPage = SettingsPage.Anki },
-                onNavigateToCopilot = { currentPage = SettingsPage.Copilot },
-                onNavigateToElevenLabs = { currentPage = SettingsPage.ElevenLabs }
-            )
-        }
-        SettingsPage.DeepL -> {
-            DeepLSettingsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main }
-            )
-        }
-        SettingsPage.Anki -> {
-            AnkiSettingsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main }
-            )
-        }
-        SettingsPage.Copilot -> {
-            CopilotSettingsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main },
-                onNavigateToLanguageInstructions = { currentPage = SettingsPage.CopilotLanguageInstructions }
-            )
-        }
-        SettingsPage.CopilotLanguageInstructions -> {
-            LanguageInstructionsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Copilot }
-            )
-        }
-        SettingsPage.LanguageInstructions -> {
-            // Kept for backward compatibility - redirects to main
-            LanguageInstructionsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main }
-            )
-        }
-        SettingsPage.ElevenLabs -> {
-            ElevenLabsSettingsScreen(
-                onNavigateBack = { currentPage = SettingsPage.Main }
-            )
-        }
-    }
-}
-
-private enum class SettingsPage {
-    Main,
-    DeepL,
-    Anki,
-    Copilot,
-    CopilotLanguageInstructions,
-    LanguageInstructions, // Kept for backward compatibility if needed
-    ElevenLabs
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MainSettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDeepL: () -> Unit,
     onNavigateToAnki: () -> Unit,
@@ -121,11 +56,6 @@ private fun MainSettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
-    // Handle Android's native back button/gesture
-    BackHandler {
-        onNavigateBack()
-    }
     
     SettingsScreenScaffold(
         title = { Text("Settings") },

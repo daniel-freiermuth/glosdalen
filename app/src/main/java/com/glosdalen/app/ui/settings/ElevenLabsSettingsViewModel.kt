@@ -7,8 +7,10 @@ import com.glosdalen.app.backend.elevenlabs.ElevenLabsError
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsModel
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsRepository
 import com.glosdalen.app.backend.elevenlabs.Voice
+import com.glosdalen.app.domain.coroutines.LatestJobLauncher
 import com.glosdalen.app.domain.preferences.ElevenLabsPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,7 +20,8 @@ private const val TAG = "ElevenLabsSettingsVM"
 @HiltViewModel
 class ElevenLabsSettingsViewModel @Inject constructor(
     private val repository: ElevenLabsRepository,
-    private val preferences: ElevenLabsPreferences
+    private val preferences: ElevenLabsPreferences,
+    private val jobLauncher: LatestJobLauncher
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ElevenLabsSettingsUiState())
@@ -76,14 +79,18 @@ class ElevenLabsSettingsViewModel @Inject constructor(
             return
         }
         
-        viewModelScope.launch {
+        // Outlives this entry-scoped VM, so leaving the page does not drop the save; a newer
+        // submission or a clear from a re-opened page supersedes (cancels) this one.
+        jobLauncher.launch(LatestJobLauncher.Slot.ELEVENLABS_API_KEY) {
             _uiState.value = _uiState.value.copy(
                 isValidatingApiKey = true,
                 apiKeyError = null
             )
             
             Log.d(TAG, "validateAndSaveApiKey: Calling repository.validateApiKey...")
-            repository.validateApiKey(apiKey).fold(
+            val result = repository.validateApiKey(apiKey)
+            ensureActive() // superseded by a newer submission or a clear
+            result.fold(
                 onSuccess = { subscription ->
                     Log.d(TAG, "validateAndSaveApiKey: Validation successful, tier=${subscription.tier}")
                     preferences.setApiKey(apiKey)
@@ -241,6 +248,8 @@ class ElevenLabsSettingsViewModel @Inject constructor(
     }
     
     fun clearApiKey() {
+        // A pending validate & save must not write its key back after the clear.
+        jobLauncher.cancel(LatestJobLauncher.Slot.ELEVENLABS_API_KEY)
         viewModelScope.launch {
             preferences.setApiKey("")
             _uiState.value = ElevenLabsSettingsUiState()

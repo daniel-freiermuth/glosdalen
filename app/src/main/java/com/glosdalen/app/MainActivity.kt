@@ -54,18 +54,19 @@ import com.glosdalen.app.ui.anki.AnkiApiInfoViewModel
 import com.glosdalen.app.ui.search.deepl.DeepLSearchScreen
 import com.glosdalen.app.ui.search.copilot_chat.CopilotChatSearchScreen
 import com.glosdalen.app.ui.search.copilot_knowledge.CopilotKnowledgeSearchScreen
-import com.glosdalen.app.ui.settings.SettingsScreen
+import com.glosdalen.app.ui.settings.SettingsRoute
+import com.glosdalen.app.ui.settings.settingsEntries
 import com.glosdalen.app.ui.theme.GlosdalenTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // Navigation 3 route keys. @Serializable + NavKey lets rememberNavBackStack persist the
-// back stack across configuration changes and process death.
+// back stack across configuration changes and process death. Settings routes live in
+// ui/settings/SettingsNavigation.kt.
 @Serializable data object DeepLSearchRoute : NavKey
 @Serializable data object CopilotChatRoute : NavKey
 @Serializable data object CopilotKnowledgeRoute : NavKey
-@Serializable data object SettingsRoute : NavKey
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -156,15 +157,7 @@ fun GlosdalenApp() {
                     )
                 }
 
-                entry<SettingsRoute> {
-                    SettingsScreen(
-                        onNavigateBack = {
-                            if (backStack.lastOrNull() is SettingsRoute) {
-                                backStack.removeLastOrNull()
-                            }
-                        }
-                    )
-                }
+                settingsEntries(backStack)
             }
         )
 

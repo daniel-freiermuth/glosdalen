@@ -31,22 +31,19 @@ fun getDefaultInstructions(language: Language): String
 fun hasCustomInstructions(language: Language): Flow<Boolean>
 ```
 
-### 2. LanguageInstructionsViewModel.kt
-**Location:** `app/src/main/java/com/glosdalen/app/ui/settings/LanguageInstructionsViewModel.kt`
+### 2. LanguageInstructionsViewModel.kt / LanguageInstructionsDetailViewModel.kt
+**Location:** `app/src/main/java/com/glosdalen/app/ui/settings/`
 
-**Purpose:** Manages state for the language instructions settings screen
-
-**Features:**
-- Tracks currently selected language for editing
-- Loads instructions for the selected language
-- Provides language status indicators (which languages have custom instructions)
-- Operations: select language, update/clear/load default instructions
+**Purpose:** `LanguageInstructionsViewModel` backs the language list; `LanguageInstructionsDetailViewModel`
+backs the editor for one language, received through Hilt assisted injection from
+`LanguageInstructionsDetailRoute(language)`.
 
 **State:**
 ```kotlin
-val selectedLanguage: StateFlow<Language>
-val currentInstructions: StateFlow<String>
+// LanguageInstructionsViewModel
 val languageStatuses: StateFlow<Map<Language, Boolean>>
+// LanguageInstructionsDetailViewModel
+val currentInstructions: StateFlow<String>  // update/clear/load default instructions
 ```
 
 ### 3. LanguageInstructionsScreen.kt
@@ -74,10 +71,9 @@ val languageStatuses: StateFlow<Map<Language, Boolean>>
 - Added `LanguageInstructionsPreferences` as a dependency
 - Exposed language instructions methods through the facade
 
-**SettingsScreen.kt:**
-- Added `LanguageInstructions` to the `SettingsPage` enum
-- Added navigation card: "Language Instructions - Per-language specific guidance for Copilot"
-- Integrated routing to the new screen
+**SettingsNavigation.kt:**
+- `LanguageInstructionsRoute` (list, pushed from Copilot settings) and
+  `LanguageInstructionsDetailRoute(language)` (editor) Nav3 entries
 
 **CopilotChatViewModel.kt:**
 - Modified `buildPrompt()` to accept `languageInstructions` parameter

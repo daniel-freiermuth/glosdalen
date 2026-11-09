@@ -4,7 +4,6 @@ package com.glosdalen.app.ui.settings
 
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -50,11 +49,6 @@ fun CopilotSettingsScreen(
     // Automatically resume polling when app comes back to foreground
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME, lifecycleOwner) {
         viewModel.onAppResumed()
-    }
-    
-    // Handle Android's native back button/gesture
-    BackHandler {
-        onNavigateBack()
     }
     
     SettingsScreenScaffold(
