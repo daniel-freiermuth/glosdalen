@@ -13,7 +13,7 @@ Or download the latest APK from the [Releases Section](https://github.com/daniel
 - **Multi-Language Support**: High-quality translation for 30+ languages
 - **Seamless AnkiDroid Integration**: 
   - **Direct database access** (default): Fast, seamless integration with full deck management
-  - **Intent-based fallback**: Works even without database permissions
+  - **Intent-based mode** ("Via Intent"): Works even without database permissions
 - ️ **Flexible Card Types**: Choose between unidirectional or bidirectional cards
 -  **Simple UX**: Search → Translate → Create card workflow
 

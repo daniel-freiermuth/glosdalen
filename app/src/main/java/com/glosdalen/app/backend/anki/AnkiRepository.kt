@@ -33,34 +33,16 @@ class AnkiRepository @Inject constructor(
     }
     
     private suspend fun tryApiFirst(apiAvailable: Boolean, intentAvailable: Boolean): AnkiBackend {
-        if (apiAvailable) {
-            Log.d(TAG, "Trying API implementation...")
-            val hasPermission = apiRepository.hasApiPermission()
-            Log.d(TAG, "Has API permission: $hasPermission")
-            
-            if (hasPermission) {
-                Log.d(TAG, "API permission granted, using API implementation")
-                return apiRepository
-            } else {
-                Log.d(TAG, "API permission not granted, attempting to trigger permission request...")
-                val permissionGranted = apiRepository.triggerPermissionRequest()
-                if (permissionGranted) {
-                    Log.d(TAG, "Permission granted after request, using API implementation")
-                    return apiRepository
-                } else {
-                    Log.d(TAG, "Permission request failed or denied")
-                }
-            }
+        // Short-circuits: the permission request is only triggered when the API exists and the permission is missing.
+        val apiPermitted = apiAvailable &&
+            (apiRepository.hasApiPermission() || apiRepository.triggerPermissionRequest())
+        Log.d(TAG, "API permitted: $apiPermitted")
+
+        return when (chooseAnkiImplementation(apiAvailable, apiPermitted, intentAvailable)) {
+            AnkiImplementationType.API -> apiRepository
+            AnkiImplementationType.INTENT -> intentRepository
+            AnkiImplementationType.UNAVAILABLE -> throw AnkiError.AnkiDroidNotInstalled
         }
-        
-        // Fall back to intent if available
-        if (intentAvailable) {
-            Log.d(TAG, "Falling back to intent implementation")
-            return intentRepository
-        }
-        
-        Log.w(TAG, "No AnkiDroid integration available")
-        throw AnkiError.AnkiDroidNotInstalled
     }
 
     /**
@@ -72,6 +54,9 @@ class AnkiRepository @Inject constructor(
             return@withContext true
         } catch (e: AnkiError.AnkiDroidNotInstalled) {
             return@withContext false
+        } catch (e: AnkiError.PermissionDenied) {
+            // Installed, just not permitted: card actions stay visible so the user gets the permission error.
+            return@withContext true
         } catch (e: Exception) {
             Log.e(TAG, "Error checking AnkiDroid availability", e)
             return@withContext false
@@ -157,4 +142,22 @@ enum class AnkiImplementationType {
     API,        // Using AddContentApi 
     INTENT,     // Using ACTION_SEND intent
     UNAVAILABLE // AnkiDroid not available
+}
+
+/**
+ * Pick the backend for automatic card creation.
+ *
+ * The intent backend drops deck, note type, tags and audio, so it is never used as a silent substitute
+ * for an installed-but-unpermitted API: that case fails with [AnkiError.PermissionDenied]. Users who
+ * want the intent path choose it explicitly via [AnkiRepository.createCardViaIntent].
+ */
+internal fun chooseAnkiImplementation(
+    apiAvailable: Boolean,
+    apiPermitted: Boolean,
+    intentAvailable: Boolean,
+): AnkiImplementationType = when {
+    apiAvailable && apiPermitted -> AnkiImplementationType.API
+    apiAvailable -> throw AnkiError.PermissionDenied("AnkiDroid API permission not granted")
+    intentAvailable -> AnkiImplementationType.INTENT
+    else -> AnkiImplementationType.UNAVAILABLE
 }
