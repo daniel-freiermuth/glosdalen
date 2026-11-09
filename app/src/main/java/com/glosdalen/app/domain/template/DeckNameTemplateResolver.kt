@@ -12,7 +12,9 @@ class DeckNameTemplateResolver @Inject constructor() {
     
     fun resolveDeckName(
         templateString: String,
-        foreignLanguage: Language
+        foreignLanguage: Language,
+        today: LocalDate = LocalDate.now(),
+        locale: Locale = Locale.getDefault()
     ): String {
         var resolved = templateString
         
@@ -25,11 +27,12 @@ class DeckNameTemplateResolver @Inject constructor() {
         resolved = resolved.replace("{Foreign_english}", foreignLanguage.displayName)
         
         // Date templates
-        val now = LocalDate.now()
-        resolved = resolved.replace("{day}", String.format("%02d", now.dayOfMonth))
-        resolved = resolved.replace("{month}", String.format("%02d", now.monthValue))
-        resolved = resolved.replace("{year}", now.year.toString())
-        resolved = resolved.replace("{week}", now.get(WeekFields.of(Locale.getDefault()).weekOfYear()).toString())
+        resolved = resolved.replace("{day}", String.format("%02d", today.dayOfMonth))
+        resolved = resolved.replace("{month}", String.format("%02d", today.monthValue))
+        resolved = resolved.replace("{year}", today.year.toString())
+        // Count weeks within the calendar year so {week} stays consistent with {year};
+        // the partial week before the locale's first full week (week 0) counts as week 1
+        resolved = resolved.replace("{week}", maxOf(1, today.get(WeekFields.of(locale).weekOfYear())).toString())
         
         return resolved.trim()
     }
