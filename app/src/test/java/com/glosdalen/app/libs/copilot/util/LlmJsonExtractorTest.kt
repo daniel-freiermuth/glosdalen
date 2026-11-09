@@ -145,6 +145,63 @@ Hope that helps! Let me know if you need more."""
                 extractAndParse(response)["answer"]!!.jsonPrimitive.content
             )
         }
+
+        @Test
+        fun `keeps fenced JSON whose string values contain triple backticks`() {
+            val response = "```json\n{\"answer\": \"Use ```git rebase``` here\", " +
+                "\"flashcards\": [{\"front\": \"a\", \"back\": \"b\"}]}\n```"
+            assertEquals(
+                "Use ```git rebase``` here",
+                extractAndParse(response)["answer"]!!.jsonPrimitive.content
+            )
+        }
+
+        @Test
+        fun `does not treat triple backticks inside unfenced JSON strings as a fence`() {
+            val response = "Sure:\n{\"answer\": \"Type ``` to open a fence\", " +
+                "\"flashcards\": [{\"front\": \"```\", \"back\": \"b\"}]}"
+            assertEquals(
+                "Type ``` to open a fence",
+                extractAndParse(response)["answer"]!!.jsonPrimitive.content
+            )
+        }
+
+        @Test
+        fun `does not join an unbalanced brace in one fence with a later fence`() {
+            val response = "```kotlin\nclass Foo {\n```\nThen close it:\n```kotlin\n}\n```\n" +
+                "```json\n{\"answer\":\"hej\"}\n```"
+            assertEquals("""{"answer":"hej"}""", LlmJsonExtractor.extractJsonObject(response))
+        }
+
+        @Test
+        fun `skips an earlier code block that is not a JSON object`() {
+            val response = "```kotlin\nfun f() { }\n```\n```json\n{\"answer\":\"hej\"}\n```"
+            assertEquals("""{"answer":"hej"}""", LlmJsonExtractor.extractJsonObject(response))
+        }
+
+        @Test
+        fun `prefers a fenced object whose opener follows prose on the same line`() {
+            val response = "A set is written {a, b}. Here: ```json\n{\"answer\":\"hej\"}\n```"
+            assertEquals("""{"answer":"hej"}""", LlmJsonExtractor.extractJsonObject(response))
+        }
+
+        @Test
+        fun `prefers a fenced object whose info string is not only letters`() {
+            for (info in listOf("json5", "json title=x")) {
+                val response = "A set is written {a, b}.\n```$info\n{\"answer\":\"hej\"}\n```"
+                assertEquals(
+                    """{"answer":"hej"}""",
+                    LlmJsonExtractor.extractJsonObject(response),
+                    "info string: $info"
+                )
+            }
+        }
+
+        @Test
+        fun `prefers a fenced object whose closing fence follows it on the same line`() {
+            val response = "A set is written {a, b}.\n```json\n{\"answer\":\"hej\"}```"
+            assertEquals("""{"answer":"hej"}""", LlmJsonExtractor.extractJsonObject(response))
+        }
     }
 
     @Nested
