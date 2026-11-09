@@ -15,7 +15,15 @@ UI Layer (Compose) → ViewModel → Repository → Data Sources
 **Rationale**: Clear separation of concerns, testable business logic, reactive UI updates.
 
 ### Dependency Injection with Hilt
-- **Scoping**: Application-scoped repositories, ViewModels scoped to Compose navigation
+- **Scoping**: Application-scoped repositories; ViewModels scoped to their Navigation 3 entry
+  (`rememberViewModelStoreNavEntryDecorator`). `hiltViewModel()` comes from
+  `androidx.hilt:hilt-lifecycle-viewmodel-compose` (package `androidx.hilt.lifecycle.viewmodel.compose`);
+  do not re-add `hilt-navigation-compose`, which is deprecated and pulls Navigation 2 back in.
+- **Work that must outlive a screen**: an entry's `viewModelScope` is cancelled when the entry is
+  popped. User-submitted saves that wait on the network (e.g. DeepL/ElevenLabs "validate & save")
+  go through `LatestJobLauncher` (`domain/coroutines/`), which runs them in the injected
+  `@ApplicationScope CoroutineScope` (`di/CoroutineScopeModule.kt`) with one job per slot: a newer
+  submission or a clear cancels the older job, so a stale save can never overwrite it.
 - **KSP over KAPT**: 2x faster builds, better Java 21 compatibility
 - **Testing**: Easy mock injection for unit tests
 
@@ -121,15 +129,18 @@ targetSdk 35+ always draws edge-to-edge (no opt-out from API 36). `MainActivity`
   `SearchTopAppBar`) add `windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))`.
 - Keep `windowSoftInputMode="adjustResize"`: it is what delivers IME insets to Compose.
 
-### Navigation Strategy
-```kotlin
-NavHost(navController, startDestination = "search") {
-    composable("search") { SearchScreen(...) }
-    composable("settings") { SettingsScreen(...) }
-}
-```
-
-**Simple navigation**: Only 2 screens, no complex deep linking needed.
+### Navigation Strategy (Navigation 3)
+- One user-owned back stack in `MainActivity.GlosdalenApp`: `rememberNavBackStack(DeepLSearchRoute)`,
+  rendered by `NavDisplay`. Every route key MUST be `@Serializable` and implement `NavKey`: that
+  is what lets the stack survive configuration changes and process death.
+- Search routes live in `MainActivity.kt`; Settings routes and their entries live in
+  `ui/settings/SettingsNavigation.kt` (`settingsEntries(backStack)`). Every settings sub-page,
+  including the per-language instructions detail, is its own back-stack entry.
+- System back (including predictive back) is handled by `NavDisplay`'s `onBack`. Do not add
+  `BackHandler`s for page-to-page navigation; top-bar back buttons pop the stack.
+- Navigation arguments are route properties (e.g. `LanguageInstructionsDetailRoute(language)`);
+  pass them into the ViewModel through Hilt assisted injection
+  (`hiltViewModel<VM, VM.Factory> { it.create(arg) }`).
 
 ### State Management
 ```kotlin

@@ -2,7 +2,6 @@
 
 package com.glosdalen.app.ui.settings
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,37 +26,16 @@ import com.glosdalen.app.backend.deepl.Language
 @Composable
 fun LanguageInstructionsScreen(
     onNavigateBack: () -> Unit,
+    onLanguageSelect: (Language) -> Unit,
     viewModel: LanguageInstructionsViewModel = hiltViewModel()
 ) {
     val languageStatuses by viewModel.languageStatuses.collectAsState()
-    var selectedLanguage by remember { mutableStateOf<Language?>(null) }
-    
-    // Handle Android's native back button/gesture
-    BackHandler {
-        if (selectedLanguage != null) {
-            selectedLanguage = null
-        } else {
-            onNavigateBack()
-        }
-    }
-    
-    // Show list or detail based on selection
-    if (selectedLanguage == null) {
-        LanguageListScreen(
-            languageStatuses = languageStatuses,
-            onLanguageSelect = { language ->
-                viewModel.selectLanguage(language)
-                selectedLanguage = language
-            },
-            onNavigateBack = onNavigateBack
-        )
-    } else {
-        LanguageDetailScreen(
-            language = selectedLanguage!!,
-            onNavigateBack = { selectedLanguage = null },
-            viewModel = viewModel
-        )
-    }
+
+    LanguageListScreen(
+        languageStatuses = languageStatuses,
+        onLanguageSelect = onLanguageSelect,
+        onNavigateBack = onNavigateBack
+    )
 }
 
 @Composable
@@ -191,10 +169,13 @@ private fun LanguageListItem(
 }
 
 @Composable
-private fun LanguageDetailScreen(
+fun LanguageInstructionsDetailScreen(
     language: Language,
     onNavigateBack: () -> Unit,
-    viewModel: LanguageInstructionsViewModel
+    viewModel: LanguageInstructionsDetailViewModel =
+        hiltViewModel<LanguageInstructionsDetailViewModel, LanguageInstructionsDetailViewModel.Factory> { factory ->
+            factory.create(language)
+        }
 ) {
     val currentInstructions by viewModel.currentInstructions.collectAsState()
     

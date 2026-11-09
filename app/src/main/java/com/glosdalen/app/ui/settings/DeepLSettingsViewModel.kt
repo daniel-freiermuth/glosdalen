@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.glosdalen.app.backend.deepl.DeepLModelType
 import com.glosdalen.app.backend.deepl.DeepLRepository
+import com.glosdalen.app.domain.coroutines.LatestJobLauncher
 import com.glosdalen.app.domain.preferences.FrontPreference
 import com.glosdalen.app.domain.preferences.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DeepLSettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
-    private val vocabularyRepository: DeepLRepository
+    private val vocabularyRepository: DeepLRepository,
+    private val jobLauncher: LatestJobLauncher
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(DeepLSettingsUiState())
@@ -73,14 +76,18 @@ class DeepLSettingsViewModel @Inject constructor(
             return
         }
         
-        viewModelScope.launch {
+        // Outlives this entry-scoped VM, so leaving the page does not drop the save; a newer
+        // submission from a re-opened page supersedes (cancels) this one.
+        jobLauncher.launch(LatestJobLauncher.Slot.DEEPL_API_KEY) {
             _uiState.value = _uiState.value.copy(
                 isValidatingApiKey = true,
                 apiKeyError = null
             )
             
             val result = vocabularyRepository.validateApiKey(apiKey)
-            
+            // Superseded while validating: the repository reports cancellation as a failure.
+            ensureActive()
+
             result.fold(
                 onSuccess = {
                     userPreferences.setDeepLApiKey(apiKey)
