@@ -57,6 +57,60 @@ class AnkiApiRepositoryTest {
         assertEquals(2L, reversedModelId(1L to "Basis", 2L to "Basis (en omgekeerde kaart)"))
     }
 
+    // --- Real stock names from Anki's translations (anki-core-i18n core/<lang>/notetypes.ftl) ---
+
+    @Test
+    fun `real Spanish Italian and Portuguese names are found`() {
+        assertEquals(2L, reversedModelId(1L to "Básico", 2L to "Básico (y tarjeta invertida)"))
+        assertEquals(2L, reversedModelId(1L to "Basilare", 2L to "Basilare (e carta inversa)"))
+        assertEquals(2L, reversedModelId(1L to "Básico", 2L to "Básico (e cartão invertido)"))
+    }
+
+    @Test
+    fun `real names without latin keywords are found`() {
+        assertEquals(2L, reversedModelId(1L to "Enkel", 2L to "Enkel (och omvänt kort)"))
+        assertEquals(2L, reversedModelId(1L to "Простая", 2L to "Простая (с обратной карточкой)"))
+        assertEquals(2L, reversedModelId(1L to "基本", 2L to "基本 (表面と裏面を反転したカードも作成)"))
+        assertEquals(2L, reversedModelId(1L to "问答题", 2L to "问答题（附翻转卡片）"))
+    }
+
+    @Test
+    fun `French reversed model is found and the optional reversed model is not taken for it`() {
+        assertEquals(
+            3L,
+            reversedModelId(
+                1L to "Basique",
+                2L to "Basique (carte inversée optionnelle)",
+                3L to "Généralités (deux sens)"
+            )
+        )
+        assertNull(reversedModelId(1L to "Basique", 2L to "Basique (carte inversée optionnelle)"))
+    }
+
+    @Test
+    fun `German and Dutch optional reversed models listed first are not picked`() {
+        assertEquals(
+            2L,
+            reversedModelId(
+                1L to "Einfach (und wahlweise die umgekehrte Richtung)",
+                2L to "Einfach (und die umgekehrte Richtung)"
+            )
+        )
+        assertEquals(
+            2L,
+            reversedModelId(1L to "Basis (omgekeerde kaart optioneel)", 2L to "Basis (en omgekeerde kaart)")
+        )
+    }
+
+    @Test
+    fun `user model containing reversed listed first is not picked`() {
+        assertEquals(
+            2L,
+            reversedModelId(1L to "Reversed Engineering", 2L to "Einfach (und die umgekehrte Richtung)")
+        )
+        assertNull(reversedModelId(1L to "Basic", 2L to "Reversed Engineering"))
+    }
+
     // --- No match ---
 
     @Test
