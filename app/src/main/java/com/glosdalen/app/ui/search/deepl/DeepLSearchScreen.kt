@@ -114,6 +114,14 @@ fun DeepLSearchScreen(
         }
     }
     
+    // Surface TTS failures (invalid key, quota, network, playback)
+    uiState.ttsError?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            viewModel.clearTtsError()
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()

@@ -341,6 +341,10 @@ class DeepLSearchViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isTtsPlaying = false)
     }
     
+    fun clearTtsError() {
+        _uiState.value = _uiState.value.copy(ttsError = null)
+    }
+    
     override fun onCleared() {
         super.onCleared()
         // Stop any playing audio when ViewModel is cleared

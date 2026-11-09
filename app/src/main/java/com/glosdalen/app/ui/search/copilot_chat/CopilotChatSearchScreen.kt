@@ -2,6 +2,7 @@
 
 package com.glosdalen.app.ui.search.copilot_chat
 
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.ui.search.components.CopilotSearchScreenContent
@@ -40,6 +42,15 @@ fun CopilotChatSearchScreen(
     // Refresh language state when languages change (e.g., returning from settings)
     LaunchedEffect(nativeLanguage, foreignLanguage) {
         viewModel.refreshLanguageState()
+    }
+    
+    // Surface TTS failures (invalid key, quota, network, playback)
+    val context = LocalContext.current
+    uiState.ttsError?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            viewModel.clearTtsError()
+        }
     }
     
     CopilotSearchScreenContent(
