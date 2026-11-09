@@ -128,6 +128,13 @@ class DeepLSearchViewModel @Inject constructor(
         }
     }
     
+    fun recheckAnkiDroidAvailability() {
+        viewModelScope.launch {
+            val ankiAvailable = ankiRepository.isAnkiDroidAvailable()
+            _uiState.update { it.copy(isAnkiDroidAvailable = ankiAvailable) }
+        }
+    }
+    
     fun updateContextQuery(context: String) {
         _uiState.value = _uiState.value.copy(
             contextQuery = context,

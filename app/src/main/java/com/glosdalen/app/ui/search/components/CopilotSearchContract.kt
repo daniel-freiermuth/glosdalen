@@ -53,6 +53,7 @@ interface CopilotSearchActions<in D> {
     fun clearResponse()
     fun dismissIntroDialog(showAgain: Boolean)
     fun recheckAuthenticationStatus()
+    fun recheckAnkiDroidAvailability()
     fun createAnkiCard(cardIndex: Int)
     fun updateCardDirection(direction: D)
 }
