@@ -105,24 +105,25 @@ class DeepLSearchViewModel @Inject constructor(
         viewModelScope.launch {
             val native = nativeLanguage.first()
             val foreign = foreignLanguage.first()
-            val currentState = _uiState.value
             
             // Refresh TTS configuration status (in case it was set up in settings)
             val ttsConfigured = elevenLabsRepository.isConfigured()
             
             // If current source language is not one of the configured languages,
             // reset to native language
-            if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
-                _uiState.value = currentState.copy(
-                    sourceLanguage = native,
-                    translationResult = null,
-                    error = null,
-                    cardCreationResult = null,
-                    cardsCreatedCount = 0,
-                    isTtsConfigured = ttsConfigured
-                )
-            } else {
-                _uiState.value = currentState.copy(isTtsConfigured = ttsConfigured)
+            _uiState.update { currentState ->
+                if (currentState.sourceLanguage != native && currentState.sourceLanguage != foreign) {
+                    currentState.copy(
+                        sourceLanguage = native,
+                        translationResult = null,
+                        error = null,
+                        cardCreationResult = null,
+                        cardsCreatedCount = 0,
+                        isTtsConfigured = ttsConfigured
+                    )
+                } else {
+                    currentState.copy(isTtsConfigured = ttsConfigured)
+                }
             }
         }
     }
