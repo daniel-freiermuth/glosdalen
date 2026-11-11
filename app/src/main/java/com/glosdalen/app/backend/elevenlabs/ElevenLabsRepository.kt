@@ -23,6 +23,7 @@ import kotlin.coroutines.resumeWithException
  */
 sealed class ElevenLabsError : Exception() {
     data object NoApiKey : ElevenLabsError()
+    data object NoVoiceSelected : ElevenLabsError()
     data object InvalidApiKey : ElevenLabsError()
     data object QuotaExceeded : ElevenLabsError()
     data object NetworkError : ElevenLabsError()
@@ -105,11 +106,10 @@ class ElevenLabsRepository @Inject constructor(
     }
     
     /**
-     * Check if ElevenLabs is configured with an API key.
+     * Check if ElevenLabs TTS can run: an API key and a chosen voice are both saved.
+     * Without a voice, callers hide TTS instead of failing with [ElevenLabsError.NoVoiceSelected].
      */
-    suspend fun isConfigured(): Boolean {
-        return preferences.getApiKey().first().isNotBlank()
-    }
+    suspend fun isConfigured(): Boolean = preferences.isTtsReady()
     
     /**
      * Validate the API key by fetching user subscription info.
@@ -244,6 +244,7 @@ class ElevenLabsRepository @Inject constructor(
         }
         
         val voiceId = preferences.getVoiceId().first()
+            ?: return@withContext Result.failure(ElevenLabsError.NoVoiceSelected)
         val modelId = preferences.getModelId().first()
         
         Log.d(TAG, "generateAudioFile: text='${text.take(50)}', languageCode='$languageCode', voiceId='$voiceId'")
@@ -307,6 +308,10 @@ class ElevenLabsRepository @Inject constructor(
         }
         
         val voiceId = preferences.getVoiceId().first()
+        if (voiceId == null) {
+            withContext(Dispatchers.Main) { onError(ElevenLabsError.NoVoiceSelected) }
+            return@withContext
+        }
         val modelId = preferences.getModelId().first()
         
         Log.d(TAG, "speakText: text='${text.take(50)}', languageCode='$languageCode', voiceId='$voiceId', modelId='$modelId'")

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.glosdalen.app.backend.deepl.DeepLApiService
 import com.glosdalen.app.backend.elevenlabs.ElevenLabsApiService
+import com.glosdalen.app.domain.preferences.ElevenLabsPreferences
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -21,7 +22,10 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "settings",
+    produceMigrations = { listOf(ElevenLabsPreferences.PinImplicitDefaultVoiceMigration) }
+)
 
 @Module
 @InstallIn(SingletonComponent::class)
