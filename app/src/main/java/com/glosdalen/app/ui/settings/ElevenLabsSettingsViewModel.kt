@@ -133,8 +133,13 @@ class ElevenLabsSettingsViewModel @Inject constructor(
                     Log.d(TAG, "loadVoicesAndModels: Got ${voices.size} voices")
                     _uiState.value = _uiState.value.copy(
                         voices = voices,
+                        voicesLoaded = true,
                         isLoadingVoices = false
                     )
+                    // No built-in default voice: pick the account's first voice if none is chosen yet
+                    if (_uiState.value.selectedVoiceId == null) {
+                        voices.firstOrNull()?.let(::selectVoice)
+                    }
                 },
                 onFailure = { error ->
                     Log.e(TAG, "loadVoicesAndModels failed: $error")
@@ -177,6 +182,23 @@ class ElevenLabsSettingsViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Use a voice ID typed in by the user. This is the only way to choose a voice when the
+     * account's voice list cannot be loaded (e.g. a key scoped to text-to-speech without `voices_read`).
+     */
+    fun useVoiceId(voiceId: String) {
+        val id = voiceId.trim()
+        if (id.isBlank()) return
+        viewModelScope.launch {
+            preferences.setVoiceId(id)
+            preferences.setVoiceName(id)
+            _uiState.value = _uiState.value.copy(
+                selectedVoiceId = id,
+                selectedVoiceName = id
+            )
+        }
+    }
+    
     fun selectModel(model: ElevenLabsModel) {
         viewModelScope.launch {
             preferences.setModelId(model.modelId)
@@ -201,6 +223,7 @@ class ElevenLabsSettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isTestingVoice = false,
                         testError = when (error) {
+                            is ElevenLabsError.NoVoiceSelected -> "Choose a voice first"
                             is ElevenLabsError.InvalidApiKey -> "Invalid API key"
                             is ElevenLabsError.NetworkError -> "Network error"
                             is ElevenLabsError.QuotaExceeded -> "Character quota exceeded"
@@ -234,8 +257,8 @@ class ElevenLabsSettingsViewModel @Inject constructor(
 
 private data class ElevenLabsSettings(
     val apiKey: String,
-    val voiceId: String,
-    val voiceName: String,
+    val voiceId: String?,
+    val voiceName: String?,
     val modelId: String
 )
 
@@ -250,14 +273,26 @@ data class ElevenLabsSettingsUiState(
     val characterUsage: String? = null,
     
     val voices: List<Voice> = emptyList(),
+    val voicesLoaded: Boolean = false,
     val models: List<ElevenLabsModel> = emptyList(),
     val isLoadingVoices: Boolean = false,
     val voicesError: String? = null,
     
-    val selectedVoiceId: String = ElevenLabsPreferences.DEFAULT_VOICE_ID,
-    val selectedVoiceName: String = ElevenLabsPreferences.DEFAULT_VOICE_NAME,
+    val selectedVoiceId: String? = null,
+    val selectedVoiceName: String? = null,
     val selectedModelId: String = ElevenLabsPreferences.DEFAULT_MODEL_ID,
     
     val isTestingVoice: Boolean = false,
     val testError: String? = null
-)
+) {
+    /**
+     * The saved voice is not in the account's voice list: ElevenLabs retired it (legacy voices,
+     * Default voices after 2026-12-31) or the account cannot use it. The user should pick another.
+     */
+    val selectedVoiceUnavailable: Boolean
+        get() = voicesLoaded && selectedVoiceId != null && voices.none { it.voiceId == selectedVoiceId }
+    
+    /** The voice list could not be loaded or is empty, so a voice ID has to be entered by hand. */
+    val voiceListUnavailable: Boolean
+        get() = !isLoadingVoices && (voicesError != null || (voicesLoaded && voices.isEmpty()))
+}

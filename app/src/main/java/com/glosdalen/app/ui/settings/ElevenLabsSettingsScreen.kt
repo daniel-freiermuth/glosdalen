@@ -61,9 +61,12 @@ fun ElevenLabsSettingsScreen(
                 voices = uiState.voices,
                 selectedVoiceId = uiState.selectedVoiceId,
                 selectedVoiceName = uiState.selectedVoiceName,
+                selectedVoiceUnavailable = uiState.selectedVoiceUnavailable,
+                voiceListUnavailable = uiState.voiceListUnavailable,
                 isLoading = uiState.isLoadingVoices,
                 error = uiState.voicesError,
                 onVoiceSelect = viewModel::selectVoice,
+                onVoiceIdEnter = viewModel::useVoiceId,
                 onRefresh = viewModel::refreshVoices
             )
                 
@@ -245,11 +248,14 @@ private fun ApiKeySection(
 @Composable
 private fun VoiceSelectionSection(
     voices: List<Voice>,
-    selectedVoiceId: String,
-    selectedVoiceName: String,
+    selectedVoiceId: String?,
+    selectedVoiceName: String?,
+    selectedVoiceUnavailable: Boolean,
+    voiceListUnavailable: Boolean,
     isLoading: Boolean,
     error: String?,
     onVoiceSelect: (Voice) -> Unit,
+    onVoiceIdEnter: (String) -> Unit,
     onRefresh: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -288,13 +294,59 @@ private fun VoiceSelectionSection(
                 )
             }
             
+            if (selectedVoiceUnavailable) {
+                Text(
+                    text = "\"${selectedVoiceName ?: selectedVoiceId}\" is not available to your ElevenLabs account " +
+                            "(ElevenLabs retired its legacy voices and ends its Default voices on 2026-12-31). " +
+                            "Choose another voice.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            
+            if (selectedVoiceId == null && !isLoading) {
+                Text(
+                    text = "No voice selected. Text-to-speech stays off until you choose one.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            
+            if (voiceListUnavailable) {
+                var manualVoiceId by remember { mutableStateOf("") }
+                Text(
+                    text = "The voice list is unavailable. Paste a voice ID from elevenlabs.io (My Voices → voice → ID) instead.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = manualVoiceId,
+                        onValueChange = { manualVoiceId = it },
+                        label = { Text("Voice ID") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(
+                        onClick = { onVoiceIdEnter(manualVoiceId) },
+                        enabled = manualVoiceId.isNotBlank()
+                    ) {
+                        Text("Use")
+                    }
+                }
+            }
+            
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
                 OutlinedTextField(
                     readOnly = true,
-                    value = selectedVoiceName,
+                    value = selectedVoiceName ?: "",
                     onValueChange = { },
                     label = { Text("Select Voice") },
                     trailingIcon = {

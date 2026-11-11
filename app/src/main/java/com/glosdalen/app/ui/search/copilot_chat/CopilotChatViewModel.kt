@@ -666,6 +666,7 @@ class CopilotChatViewModel @Inject constructor(
                 onError = { error ->
                     val errorMessage = when (error) {
                         is ElevenLabsError.NoApiKey -> "TTS not configured. Set up in Settings → ElevenLabs TTS"
+                        is ElevenLabsError.NoVoiceSelected -> "No TTS voice selected. Choose one in Settings → ElevenLabs TTS"
                         is ElevenLabsError.InvalidApiKey -> "Invalid ElevenLabs API key"
                         is ElevenLabsError.NetworkError -> "Network error"
                         is ElevenLabsError.QuotaExceeded -> "ElevenLabs character quota exceeded"
