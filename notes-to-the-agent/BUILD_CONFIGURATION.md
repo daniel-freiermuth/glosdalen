@@ -90,6 +90,7 @@ sdk.dir=/home/daniel/Android/Sdk
 
 ### 1. Java Version Compatibility Matrix
 - **Java 17 target + Java 21 runtime = ✅ WORKS** (with AGP 8.2.2+)
+- **Java 17 target + Java 25 runtime = ✅ WORKS** (AGP 9.4.0, Gradle 9.6.0; CI uses Temurin 25). Unsigned release APKs built on JDK 17, 21 (F-Droid buildserver default) and 25 are byte-identical.
 - **Java 11 target + Java 21 runtime = ❌ FAILS** (jlink incompatibility)  
 - **Java 8 target + Java 21 runtime = ✅ WORKS** (legacy mode bypass)
 
