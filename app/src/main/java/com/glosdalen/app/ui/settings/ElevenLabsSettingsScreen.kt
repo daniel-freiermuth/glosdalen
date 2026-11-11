@@ -314,16 +314,19 @@ private fun VoiceSelectionSection(
                             text = {
                                 Column {
                                     Text(
-                                        text = voice.displayName(),
+                                        text = voice.name,
                                         fontWeight = if (voice.voiceId == selectedVoiceId) {
                                             FontWeight.Bold
                                         } else {
                                             FontWeight.Normal
                                         }
                                     )
-                                    voice.labels?.get("accent")?.let { accent ->
+                                    listOfNotNull(
+                                        voice.labels?.get("accent"),
+                                        voice.verifiedLanguageSummary()
+                                    ).takeIf { it.isNotEmpty() }?.let { details ->
                                         Text(
-                                            text = accent,
+                                            text = details.joinToString(" · "),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
