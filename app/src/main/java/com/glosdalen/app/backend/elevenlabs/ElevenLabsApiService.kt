@@ -29,17 +29,17 @@ interface ElevenLabsApiService {
     ): Response<ResponseBody>
     
     /**
-     * Get list of available voices using v2 API.
-     * Uses a higher page size to fetch more voices and includes all voice types.
-     * 
+     * List the voices available to the account (v2 API, paginated).
+     *
      * @param apiKey ElevenLabs API key
-     * @param pageSize Number of voices to fetch (max 100)
-     * @return List of available voices including default/premade voices
+     * @param pageSize Number of voices per page (max 100)
+     * @param nextPageToken Token from the previous page's [VoicesResponse.nextPageToken]; null for the first page
      */
     @GET("v2/voices")
     suspend fun getVoices(
         @Header("xi-api-key") apiKey: String,
-        @Query("page_size") pageSize: Int = 100
+        @Query("page_size") pageSize: Int = 100,
+        @Query("next_page_token") nextPageToken: String? = null
     ): Response<VoicesResponse>
     
     /**
@@ -107,56 +107,28 @@ data class Voice(
     @SerialName("preview_url")
     val previewUrl: String? = null,
     val labels: Map<String, String>? = null,
-    // Not from API - added locally to indicate multilingual support
-    val languageHint: String? = null
+    @SerialName("verified_languages")
+    val verifiedLanguages: List<VerifiedVoiceLanguage>? = null
 ) {
     /**
-     * Get a display name that includes language support information.
+     * Languages ElevenLabs has verified for this voice, as upper-case codes (e.g. "EN, SV"),
+     * or null when the API reports none.
      */
-    fun displayName(): String = when {
-        languageHint != null -> "$name ($languageHint)"
-        else -> name
-    }
-    
-    companion object {
-        /**
-         * Default premade multilingual voices from ElevenLabs.
-         * All voices support the eleven_multilingual_v2 model and can speak 29+ languages.
-         * languageHint indicates which languages the voice performs best in.
-         * 
-         * Source: https://elevenlabs.io/docs/voices/premade-voices
-         */
-        val PREMADE_VOICES = listOf(
-            // Excellent for most languages - professionally trained multilingual
-            Voice("21m00Tcm4TlvDq8ikWAM", "Rachel", "premade", "Calm, American female", languageHint = "EN, ES, FR, DE, IT, PT, PL"),
-            Voice("pNInz6obpgDQGcFmaJgB", "Adam", "premade", "Deep, American male", languageHint = "EN, ES, FR, DE, IT, PT"),
-            Voice("EXAVITQu4vr4xnSDxMaL", "Bella", "premade", "Soft, American female", languageHint = "EN, ES, FR, IT, PT"),
-            Voice("ErXwobaYiN019PkySvjV", "Antoni", "premade", "Well-rounded, American male", languageHint = "EN, ES, FR, DE, IT"),
-            Voice("VR6AewLTigWG4xSOukaG", "Arnold", "premade", "Crisp, American male", languageHint = "EN, DE, FR, ES"),
-            Voice("TxGEqnHWrfWFTfGW9XjX", "Josh", "premade", "Deep, American male", languageHint = "EN, ES, FR"),
-            Voice("AZnzlk1XvdvUeBnXmlld", "Domi", "premade", "Strong, American female", languageHint = "EN, ES, FR"),
-            Voice("MF3mGyEYCl7XYWbV9V6O", "Elli", "premade", "Emotional, American female", languageHint = "EN, ES, FR"),
-            Voice("yoZ06aMxZJJ28mfd3POQ", "Sam", "premade", "Raspy, American male", languageHint = "EN, ES"),
-            
-            // Nordic/European accents - excellent for European languages
-            Voice("XB0fDUnXU5powFXDhCwa", "Charlotte", "premade", "Swedish female", languageHint = "SV, EN, DE, NL, NO, DA"),
-            Voice("onwK4e9ZLuTAKqWW03F9", "Daniel", "premade", "British male", languageHint = "EN, FR, DE, ES, IT"),
-            Voice("pFZP5JQG7iQjIQuC4Bku", "Lily", "premade", "British female", languageHint = "EN, FR, DE, ES, IT"),
-            Voice("Xb7hH8MSUJpSbSDYk0k2", "Alice", "premade", "British female", languageHint = "EN, FR, DE"),
-            Voice("t0jbNlBVZ17f02VDIeMI", "George", "premade", "British male", languageHint = "EN, FR, DE"),
-            
-            // Good all-around voices
-            Voice("XrExE9yKIg1WjnnlVkGX", "Matilda", "premade", "Warm, American female", languageHint = "EN, ES, FR"),
-            Voice("bIHbv24MWmeRgasZH58o", "Will", "premade", "Friendly, American male", languageHint = "EN, ES, FR"),
-            Voice("cgSgspJ2msm6clMCkdW9", "Jessica", "premade", "Expressive, American female", languageHint = "EN, ES, FR"),
-            Voice("cjVigY5qzO86Huf0OWal", "Eric", "premade", "Friendly, American male", languageHint = "EN, ES"),
-            Voice("iP95p4xoKVk53GoZ742B", "Chris", "premade", "Casual, American male", languageHint = "EN, ES"),
-            Voice("nPczCjzI2devNBz1zQrb", "Brian", "premade", "Deep, American male", languageHint = "EN, ES"),
-            Voice("pqHfZKP75CvOlQylNhV4", "Bill", "premade", "Trustworthy, American male", languageHint = "EN"),
-            Voice("z9fAnlkpzviPz146aGWa", "Glinda", "premade", "Dramatic, American female", languageHint = "EN"),
-        )
-    }
+    fun verifiedLanguageSummary(): String? = verifiedLanguages
+        ?.map { it.language.uppercase() }
+        ?.distinct()
+        ?.takeIf { it.isNotEmpty() }
+        ?.joinToString(", ")
 }
+
+@Serializable
+data class VerifiedVoiceLanguage(
+    val language: String,
+    @SerialName("model_id")
+    val modelId: String? = null,
+    val accent: String? = null,
+    val locale: String? = null
+)
 
 @Serializable
 data class ElevenLabsModel(

@@ -143,68 +143,49 @@ class ElevenLabsRepository @Inject constructor(
     }
     
     /**
-     * Get list of available voices with explicit API key.
+     * Get every voice the account can list, following `v2/voices` pagination.
+     * Only API data is returned; there is no local voice catalog.
      */
     suspend fun getVoices(apiKey: String): Result<List<Voice>> = withContext(Dispatchers.IO) {
-        Log.d(TAG, "getVoices called with apiKey length: ${apiKey.length}, blank: ${apiKey.isBlank()}")
         if (apiKey.isBlank()) {
-            Log.d(TAG, "getVoices: API key is blank, returning NoApiKey error")
             return@withContext Result.failure(ElevenLabsError.NoApiKey)
         }
         
         try {
-            Log.d(TAG, "getVoices: Making API call with key starting with: ${apiKey.take(8)}...")
-            val response = apiService.getVoices(apiKey)
-            Log.d(TAG, "getVoices: Response code: ${response.code()}, message: ${response.message()}")
+            val voices = mutableListOf<Voice>()
+            var pageToken: String? = null
+            do {
+                val response = apiService.getVoices(apiKey, nextPageToken = pageToken)
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(voicesErrorFor(response.code(), response.errorBody()?.string(), response.message()))
+                }
+                val page = response.body()
+                    ?: return@withContext Result.failure(ElevenLabsError.ApiError(response.code(), "Empty response"))
+                voices += page.voices
+                pageToken = page.nextPageToken.takeIf { page.hasMore }
+            } while (pageToken != null)
             
-            when {
-                response.isSuccessful -> {
-                    response.body()?.let { 
-                        Log.d(TAG, "getVoices: Success, got ${it.voices.size} voices from API, hasMore: ${it.hasMore}, totalCount: ${it.totalCount}")
-                        it.voices.forEach { voice ->
-                            Log.d(TAG, "getVoices: API Voice: ${voice.name} (${voice.voiceId}), category: ${voice.category}")
-                        }
-                        
-                        // Combine premade voices with API voices, avoiding duplicates
-                        val apiVoiceIds = it.voices.map { v -> v.voiceId }.toSet()
-                        val premadeVoices = Voice.PREMADE_VOICES.filter { v -> v.voiceId !in apiVoiceIds }
-                        val allVoices = premadeVoices + it.voices
-                        
-                        Log.d(TAG, "getVoices: Combined ${premadeVoices.size} premade + ${it.voices.size} API = ${allVoices.size} total voices")
-                        
-                        Result.success(allVoices)
-                    } ?: Result.success(Voice.PREMADE_VOICES)
-                }
-                response.code() == 401 -> {
-                    // Try to get more details from the error response
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "getVoices: 401 Unauthorized. Error body: $errorBody")
-                    Log.e(TAG, "getVoices: API key used (first 8 chars): ${apiKey.take(8)}, length: ${apiKey.length}")
-                    
-                    // Check if it's a permission issue
-                    if (errorBody?.contains("missing_permissions") == true || 
-                        errorBody?.contains("voices_read") == true) {
-                        Result.failure(ElevenLabsError.ApiError(401, 
-                            "API key missing 'voices_read' permission. Please create a new key with full permissions at elevenlabs.io"))
-                    } else {
-                        Result.failure(ElevenLabsError.InvalidApiKey)
-                    }
-                }
-                response.code() == 403 -> {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "getVoices: 403 Forbidden - Permission denied. Error body: $errorBody")
-                    Result.failure(ElevenLabsError.ApiError(403, "Permission denied: $errorBody"))
-                }
-                response.code() == 429 -> Result.failure(ElevenLabsError.QuotaExceeded)
-                else -> {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e(TAG, "getVoices: Error ${response.code()}. Error body: $errorBody")
-                    Result.failure(ElevenLabsError.ApiError(response.code(), errorBody ?: response.message()))
-                }
-            }
+            Log.d(TAG, "getVoices: got ${voices.size} voices from API")
+            Result.success(voices)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch voices", e)
             Result.failure(ElevenLabsError.NetworkError)
+        }
+    }
+    
+    private fun voicesErrorFor(code: Int, errorBody: String?, message: String): ElevenLabsError {
+        Log.e(TAG, "getVoices: Error $code. Error body: $errorBody")
+        return when (code) {
+            401 -> if (errorBody?.contains("missing_permissions") == true ||
+                errorBody?.contains("voices_read") == true) {
+                ElevenLabsError.ApiError(401,
+                    "API key missing 'voices_read' permission. Please create a new key with full permissions at elevenlabs.io")
+            } else {
+                ElevenLabsError.InvalidApiKey
+            }
+            403 -> ElevenLabsError.ApiError(403, "Permission denied: $errorBody")
+            429 -> ElevenLabsError.QuotaExceeded
+            else -> ElevenLabsError.ApiError(code, errorBody ?: message)
         }
     }
     
