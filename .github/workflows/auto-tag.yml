@@ -20,7 +20,7 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
       created: ${{ steps.tag.outputs.created }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Create tag if version is new
         id: tag
