@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+    ignore:
+      # setup-gradle v6+ moves caching into the closed-source gradle-actions-caching
+      # component under Gradle's Terms of Use; stay on the MIT-licensed v5 line
+      # unless that licence is explicitly accepted
+      - dependency-name: 'gradle/actions*'
+        update-types: ['version-update:semver-major']
