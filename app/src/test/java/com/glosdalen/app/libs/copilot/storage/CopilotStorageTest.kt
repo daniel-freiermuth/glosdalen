@@ -39,10 +39,8 @@ class CopilotStorageTest {
             category = ModelCategory.VERSATILE,
             costType = CostType.FREE,
             capabilities = ModelCapabilities(
-                family = "gpt-4o",
                 limits = TokenLimits(maxContextTokens = 128_000, maxOutputTokens = 4_096),
-                supports = ModelSupports(streaming = true, toolCalls = true),
-                tokenizer = "o200k_base"
+                supports = ModelSupports(streaming = true, toolCalls = true)
             ),
             description = "Fast multimodal model"
         ),
@@ -52,7 +50,7 @@ class CopilotStorageTest {
             vendor = "Anthropic",
             category = ModelCategory.POWERFUL,
             costType = CostType.PAID,
-            capabilities = ModelCapabilities(family = "claude-sonnet-4", supports = ModelSupports()),
+            capabilities = ModelCapabilities(supports = ModelSupports()),
             preview = true,
             enabled = false
         )
