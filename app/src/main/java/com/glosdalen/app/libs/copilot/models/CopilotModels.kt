@@ -58,33 +58,17 @@ enum class ModelCategory {
 }
 
 @Serializable
-data class VisionCapabilities(
-    @kotlinx.serialization.SerialName("max_prompt_image_size")
-    val maxPromptImageSize: Long,
-    @kotlinx.serialization.SerialName("max_prompt_images")
-    val maxPromptImages: Int,
-    @kotlinx.serialization.SerialName("supported_media_types")
-    val supportedMediaTypes: List<String>
-)
-
-@Serializable
 data class TokenLimits(
     @kotlinx.serialization.SerialName("max_context_window_tokens")
     val maxContextTokens: Int? = null,
     @kotlinx.serialization.SerialName("max_output_tokens")
-    val maxOutputTokens: Int? = null,
-    @kotlinx.serialization.SerialName("max_prompt_tokens")
-    val maxPromptTokens: Int? = null,
-    val vision: VisionCapabilities? = null
+    val maxOutputTokens: Int? = null
 )
 
 @Serializable
 data class ModelCapabilities(
-    val family: String,
     val limits: TokenLimits? = null,
     val supports: ModelSupports,
-    val tokenizer: String? = null,
-    val type: String = "chat",
     val `object`: String = "model_capabilities"
 )
 
@@ -156,26 +140,12 @@ data class ChatRequest(
 data class ChatResponse(
     val choices: List<ChatChoice>,
     val id: String,
-    val model: String,
-    val usage: TokenUsage? = null
+    val model: String
 )
 
 @Serializable
 data class ChatChoice(
-    val message: Message,
-    @kotlinx.serialization.SerialName("finish_reason")
-    val finishReason: String? = null,
-    val index: Int = 0
-)
-
-@Serializable
-data class TokenUsage(
-    @kotlinx.serialization.SerialName("prompt_tokens")
-    val promptTokens: Int,
-    @kotlinx.serialization.SerialName("completion_tokens")
-    val completionTokens: Int,
-    @kotlinx.serialization.SerialName("total_tokens")
-    val totalTokens: Int
+    val message: Message
 )
 
 // ================================
@@ -200,12 +170,10 @@ data class RawModel(
     val modelPickerCategory: String? = null,
     val preview: Boolean = false,
     val policy: ModelPolicy? = null,
-    val `object`: String = "model",
-    val version: String? = null
+    val `object`: String = "model"
 )
 
 @Serializable
 data class ModelPolicy(
-    val state: String = "enabled",
     val terms: String? = null
 )
