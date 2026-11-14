@@ -226,6 +226,10 @@ class CopilotKnowledgeViewModel @Inject constructor(
                 val result = copilot.chat(prompt, modelId, temperature)
                 ensureActive()
                 
+                // The Copilot library reports a cancellation during its network calls as a
+                // failure Result; a cancelled query must not show that as an error.
+                ensureActive()
+                
                 result.fold(
                     onSuccess = { response ->
                         val parsed = parseResponse(response)
