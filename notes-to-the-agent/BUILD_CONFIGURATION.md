@@ -92,6 +92,8 @@ sdk.dir=/home/daniel/Android/Sdk
 - **Java 17 target + Java 21 runtime = ✅ WORKS** (with AGP 8.2.2+)
 - **Java 11 target + Java 21 runtime = ❌ FAILS** (jlink incompatibility)  
 - **Java 8 target + Java 21 runtime = ✅ WORKS** (legacy mode bypass)
+- **Java 17 target + Java 27 runtime = ✅ WORKS** (AGP 9.4.0, Gradle 9.6.0, Kotlin 2.3.20; CI/release use Temurin 27).
+  Unsigned release APK is byte-identical whether built on JDK 17, 21 (F-Droid buildserver default) or 27.
 
 ### 2. Android Gradle Plugin Evolution
 - **AGP 8.1.4**: Limited Java 21 support, jlink issues with modern targets
