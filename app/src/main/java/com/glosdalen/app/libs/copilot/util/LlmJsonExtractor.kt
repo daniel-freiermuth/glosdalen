@@ -13,15 +13,21 @@ package com.glosdalen.app.libs.copilot.util
  *
  * Strategy, in order:
  *  1. The response itself starts with `{` -> take its balanced object.
- *  2. A markdown code fence contains a balanced object -> take that (preferred
- *     over stray braces in the surrounding prose).
+ *  2. A markdown code fence whose content starts with `{` -> take its balanced
+ *     object when the closing fence follows it (preferred over stray braces in
+ *     the surrounding prose; fences holding other code are skipped).
  *  3. The first balanced object anywhere in the response.
  *  4. Nothing balanced -> return the trimmed input and let the JSON parser
  *     produce the error.
  */
 internal object LlmJsonExtractor {
 
-    private val CODE_FENCE_REGEX = "```[a-zA-Z]*[ \\t]*\\r?\\n?([\\s\\S]*?)```".toRegex()
+    // ``` + info string + newline, then the object's opening brace. Fences are
+    // not paired by regex: a ``` inside a JSON string value would close a
+    // regex-paired fence early. The object is instead scanned string-aware and
+    // must be followed by the closing ```. A JSON string cannot contain a raw
+    // newline, so a ``` inside one never matches this opener.
+    private val FENCE_OPENER_REGEX = Regex("```[^`\\n]*\\n\\s*\\{")
 
     fun extractJsonObject(response: String): String {
         val trimmed = response.trim()
@@ -31,8 +37,12 @@ internal object LlmJsonExtractor {
             balancedObjectAt(trimmed, 0)?.let { return it }
         }
 
-        for (fence in CODE_FENCE_REGEX.findAll(trimmed)) {
-            firstBalancedObject(fence.groupValues[1])?.let { return it }
+        for (opener in FENCE_OPENER_REGEX.findAll(trimmed)) {
+            val start = opener.range.last
+            val candidate = balancedObjectAt(trimmed, start) ?: continue
+            var end = start + candidate.length
+            while (end < trimmed.length && trimmed[end].isWhitespace()) end++
+            if (trimmed.startsWith("```", end)) return candidate
         }
 
         firstBalancedObject(trimmed)?.let { return it }
