@@ -32,6 +32,7 @@ class AnkiApiRepositoryTest {
         var failDeckCreation = emptySet<String>()
         var addNotesError: Exception? = null
         var audioResult: (File) -> String? = { "[sound:${it.name}]" }
+        val audioPreferredNames = mutableListOf<String>()
 
         override val deckList: Map<Long, String> get() = decks.toMap()
         override val modelList: Map<Long, String> get() = models.toMap()
@@ -55,7 +56,10 @@ class AnkiApiRepositoryTest {
             return fieldsList.size
         }
 
-        override fun addAudio(audioFile: File, preferredName: String): String? = audioResult(audioFile)
+        override fun addAudio(audioFile: File, preferredName: String): String? {
+            audioPreferredNames += preferredName
+            return audioResult(audioFile)
+        }
     }
 
     private fun repository(api: AnkiContentApi?) = AnkiApiRepository(
@@ -226,6 +230,16 @@ class AnkiApiRepositoryTest {
                 listOf(listOf("Hund [sound:front.mp3]", "dog [sound:back.mp3]")),
                 api.addNotesCalls.single().notes
             )
+        }
+
+        @Test
+        fun `front and back audio added in the same millisecond get distinct media names`() {
+            val api = FakeAnkiContentApi()
+            val audio = mapOf("Front" to audioFile("front.mp3"), "Back" to audioFile("back.mp3"))
+
+            createCards(api, card("Hund", "dog", audio = audio))
+
+            assertEquals(2, api.audioPreferredNames.toSet().size, "${api.audioPreferredNames}")
         }
 
         @Test
