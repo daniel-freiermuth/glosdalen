@@ -5,11 +5,7 @@ package com.glosdalen.app.ui.settings
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
+import com.glosdalen.app.ui.theme.AppIcons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -245,7 +241,7 @@ private fun DeviceCodeSection(
                     ) {
                         if (codeCopied) {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = AppIcons.Check,
                                 contentDescription = "Copied",
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -368,7 +364,7 @@ private fun AuthenticatedSection(
                 }
                 
                 Icon(
-                    imageVector = Icons.Default.Check,
+                    imageVector = AppIcons.Check,
                     contentDescription = "Authenticated",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -385,7 +381,7 @@ private fun AuthenticatedSection(
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Refresh,
+                        imageVector = AppIcons.Refresh,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp)
                     )
@@ -528,7 +524,7 @@ private fun LanguageInstructionsNavigationCard(
                 )
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = AppIcons.ArrowBack,
                 contentDescription = "Navigate to language instructions",
                 modifier = Modifier.rotate(180f)
             )
@@ -720,7 +716,7 @@ private fun ModelSelectionSection(
                 } else {
                     IconButton(onClick = onRefreshModels) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            imageVector = AppIcons.Refresh,
                             contentDescription = "Refresh models",
                             modifier = Modifier.size(20.dp)
                         )
@@ -776,7 +772,7 @@ private fun ModelSelectionSection(
                         }
                         
                         Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
+                            imageVector = AppIcons.ArrowDropDown,
                             contentDescription = "Select model"
                         )
                     }
@@ -803,7 +799,7 @@ private fun ModelSelectionSection(
                                     if (selectedModelId == com.glosdalen.app.domain.preferences.CopilotPreferences.AUTO_MODEL) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Icon(
-                                            imageVector = Icons.Default.Check,
+                                            imageVector = AppIcons.Check,
                                             contentDescription = "Selected",
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(18.dp)
@@ -845,7 +841,7 @@ private fun ModelSelectionSection(
                                         if (model.id == selectedModelId) {
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Icon(
-                                                imageVector = Icons.Default.Check,
+                                                imageVector = AppIcons.Check,
                                                 contentDescription = "Selected",
                                                 tint = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.size(18.dp)

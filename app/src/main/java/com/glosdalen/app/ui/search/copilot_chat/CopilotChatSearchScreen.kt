@@ -6,9 +6,6 @@ import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,6 +16,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.ui.search.components.CopilotSearchScreenContent
 import com.glosdalen.app.ui.search.components.LanguageDirectionToggle
+import com.glosdalen.app.ui.theme.AppIcons
 
 @Composable
 fun CopilotChatSearchScreen(
@@ -166,7 +164,7 @@ private fun TtsButton(
         modifier = modifier
     ) {
         Icon(
-            imageVector = if (isPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp,
+            imageVector = if (isPlaying) AppIcons.Stop else AppIcons.VolumeUp,
             contentDescription = if (isPlaying) "Stop" else "Listen",
             tint = if (isPlaying) {
                 MaterialTheme.colorScheme.primary
