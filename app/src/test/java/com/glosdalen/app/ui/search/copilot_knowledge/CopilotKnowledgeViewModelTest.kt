@@ -36,6 +36,24 @@ class CopilotKnowledgeViewModelTest {
         assertEquals("Geography", parsed.suggestedDeck)
     }
 
+    @Test
+    fun `explicit null optional fields fall back to their defaults`() {
+        val parsed = parseKnowledgeResponse(
+            """{"answer": "Paris", "flashcards": [{"front": "Capital of France?", "back": "Paris",
+                "note": null}], "explanation": null, "suggestedDeck": null}"""
+        )
+
+        assertEquals(
+            ParsedKnowledgeResponse(
+                directAnswer = "Paris",
+                cards = listOf(KnowledgeFlashCard(frontSide = "Capital of France?", backSide = "Paris", note = "")),
+                additionalInfo = "",
+                suggestedDeck = "",
+            ),
+            parsed,
+        )
+    }
+
     @Nested
     @DisplayName("parse failures fall back to an error answer")
     inner class Fallback {
@@ -65,6 +83,9 @@ class CopilotKnowledgeViewModelTest {
         @Test
         fun `valid JSON missing the required answer field`() =
             assertFallback("""{"flashcards": [], "suggestedDeck": "Geo"}""")
+
+        @Test
+        fun `explicit null for the required answer field`() = assertFallback("""{"answer": null}""")
 
         @Test
         fun `flashcard missing required back field`() =

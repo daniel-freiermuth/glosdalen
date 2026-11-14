@@ -69,6 +69,8 @@ internal fun parseKnowledgeResponse(response: String): ParsedKnowledgeResponse? 
         val json = Json { 
             ignoreUnknownKeys = true
             isLenient = true
+            // Explicit null for an optional field means "use the default", not "reject"
+            coerceInputValues = true
         }
         
         // Try to extract JSON from response (in case it's wrapped in markdown)

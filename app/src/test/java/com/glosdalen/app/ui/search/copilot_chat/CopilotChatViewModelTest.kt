@@ -75,6 +75,26 @@ class CopilotChatViewModelTest {
         }
 
         @Test
+        fun `explicit null optional fields fall back to their defaults`() {
+            val parsed = parse(
+                """{"answer": "hus", "answer_language": null,
+                   "flashcards": [{"front": "Haus", "front_language": null, "back": "hus",
+                                   "back_language": null, "note": null}],
+                   "explanation": null}"""
+            )
+
+            assertEquals(
+                ParsedCopilotResponse(
+                    directAnswer = "hus",
+                    directAnswerLanguageCode = null,
+                    cards = listOf(FlashCard(frontSide = "Haus", backSide = "hus", note = "")),
+                    additionalInfo = "",
+                ),
+                parsed,
+            )
+        }
+
+        @Test
         fun `unknown keys are ignored`() {
             val parsed = parse(
                 """
