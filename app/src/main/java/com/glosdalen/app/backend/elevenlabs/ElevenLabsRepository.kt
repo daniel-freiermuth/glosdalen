@@ -15,6 +15,7 @@ import java.io.FileOutputStream
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
+import retrofit2.Response
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -124,9 +125,7 @@ class ElevenLabsRepository @Inject constructor(
                         Result.success(it)
                     } ?: Result.failure(ElevenLabsError.ApiError(response.code(), "Empty response"))
                 }
-                response.code() == 401 -> Result.failure(ElevenLabsError.InvalidApiKey)
-                response.code() == 429 -> Result.failure(ElevenLabsError.QuotaExceeded)
-                else -> Result.failure(ElevenLabsError.ApiError(response.code(), response.message()))
+                else -> Result.failure(response.toElevenLabsError())
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to validate API key", e)
@@ -234,9 +233,7 @@ class ElevenLabsRepository @Inject constructor(
                         Result.success(models.filter { it.canDoTextToSpeech })
                     } ?: Result.success(emptyList())
                 }
-                response.code() == 401 -> Result.failure(ElevenLabsError.InvalidApiKey)
-                response.code() == 429 -> Result.failure(ElevenLabsError.QuotaExceeded)
-                else -> Result.failure(ElevenLabsError.ApiError(response.code(), response.message()))
+                else -> Result.failure(response.toElevenLabsError())
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch models", e)
@@ -294,9 +291,7 @@ class ElevenLabsRepository @Inject constructor(
                         Result.success(audioFile)
                     } ?: Result.failure(ElevenLabsError.ApiError(response.code(), "Empty audio response"))
                 }
-                response.code() == 401 -> Result.failure(ElevenLabsError.InvalidApiKey)
-                response.code() == 429 -> Result.failure(ElevenLabsError.QuotaExceeded)
-                else -> Result.failure(ElevenLabsError.ApiError(response.code(), response.message()))
+                else -> Result.failure(response.toElevenLabsError())
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to generate audio file", e)
@@ -381,14 +376,8 @@ class ElevenLabsRepository @Inject constructor(
                         onError(ElevenLabsError.ApiError(response.code(), "Empty audio response"))
                     }
                 }
-                response.code() == 401 -> withContext(Dispatchers.Main) { 
-                    onError(ElevenLabsError.InvalidApiKey) 
-                }
-                response.code() == 429 -> withContext(Dispatchers.Main) { 
-                    onError(ElevenLabsError.QuotaExceeded) 
-                }
-                else -> withContext(Dispatchers.Main) { 
-                    onError(ElevenLabsError.ApiError(response.code(), response.message())) 
+                else -> withContext(Dispatchers.Main) {
+                    onError(response.toElevenLabsError())
                 }
             }
         } catch (e: Exception) {
@@ -426,6 +415,15 @@ class ElevenLabsRepository @Inject constructor(
         } catch (e: Exception) {
             false
         }
+    }
+    
+    /**
+     * Map a non-successful HTTP response to the matching [ElevenLabsError].
+     */
+    private fun Response<*>.toElevenLabsError(): ElevenLabsError = when (code()) {
+        401 -> ElevenLabsError.InvalidApiKey
+        429 -> ElevenLabsError.QuotaExceeded
+        else -> ElevenLabsError.ApiError(code(), message())
     }
     
     private fun saveAudioToCacheFile(cacheKey: String, audioBytes: ByteArray): File {
