@@ -81,7 +81,9 @@ class LanguageInstructionsPreferences @Inject constructor(
             if (jsonString != null) {
                 try {
                     val data = json.decodeFromString<LanguageInstructionsData>(jsonString)
-                    data.instructions[language.code] ?: ""
+                    data.instructions[language.code]
+                        ?: data.instructions.entries.find { Language.fromCode(it.key) == language }?.value
+                        ?: ""
                 } catch (e: Exception) {
                     ""
                 }
@@ -102,7 +104,7 @@ class LanguageInstructionsPreferences @Inject constructor(
                     val data = json.decodeFromString<LanguageInstructionsData>(jsonString)
                     // Convert string keys back to Language enum
                     data.instructions.mapNotNull { (code, instructions) ->
-                        Language.entries.find { it.code == code }?.let { it to instructions }
+                        Language.fromCode(code)?.let { it to instructions }
                     }.toMap()
                 } catch (e: Exception) {
                     emptyMap()
@@ -130,10 +132,9 @@ class LanguageInstructionsPreferences @Inject constructor(
             }
             
             val updatedInstructions = currentData.instructions.toMutableMap()
-            if (instructions.isBlank()) {
-                // Remove entry if instructions are empty
-                updatedInstructions.remove(language.code)
-            } else {
+            // Drop the current and any legacy code entries for this language
+            updatedInstructions.keys.removeAll { Language.fromCode(it) == language }
+            if (instructions.isNotBlank()) {
                 updatedInstructions[language.code] = instructions
             }
             

@@ -60,6 +60,20 @@ enum class Language(
     
     companion object {
         /**
+         * Codes persisted by earlier app versions that have since been renamed.
+         * Norwegian was stored as "NO" up to v2.3.0 and is "NB" since v2.4.0.
+         */
+        private val LEGACY_CODES = mapOf("NO" to NORWEGIAN)
+
+        /**
+         * Find Language by its (possibly legacy) persisted code.
+         * Returns null if no matching language is found.
+         */
+        fun fromCode(code: String): Language? {
+            return entries.find { it.code == code } ?: LEGACY_CODES[code]
+        }
+
+        /**
          * Find Language by ElevenLabs language code.
          * Returns null if no matching language is found.
          */
