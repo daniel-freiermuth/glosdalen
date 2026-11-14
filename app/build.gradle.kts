@@ -195,7 +195,7 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     
     // Testing
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
