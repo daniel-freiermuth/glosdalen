@@ -179,6 +179,8 @@ Releases are fully automated on GitHub Actions; `versionName`/`versionCode` in
 make build-release  # signed if keystore.properties exists; copies to apks/glosdalen-<version>.apk
 make build-debug    # debug APK with versioned naming
 make sync-apks      # sync apks/ to Nextcloud (if configured)
+make test           # JVM unit tests
+make test-android   # instrumented tests (Keystore token storage) on the Gradle-managed `api35` emulator; CI runs the same task
 ```
 `../build_all_releases.py` rebuilds APKs for past tags into `../release-apks/`.
 

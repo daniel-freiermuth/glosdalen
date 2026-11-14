@@ -28,7 +28,8 @@ help:
 	@echo "  install-debug - Install debug APK to connected device"
 	@echo "  clean         - Clean build artifacts"
 	@echo "  version       - Show current version"
-	@echo "  test          - Run all tests"
+	@echo "  test          - Run JVM unit tests"
+	@echo "  test-android  - Run instrumented tests on a Gradle-managed emulator"
 	@echo "  lint          - Run lint checks"
 	@echo ""
 	@echo "Current version: $(VERSION)"
@@ -78,11 +79,18 @@ clean:
 version:
 	@echo "Current version: $(VERSION)"
 
-# Run all tests
+# Run JVM unit tests
 .PHONY: test
 test:
 	@echo "🧪 Running tests..."
 	./gradlew test
+
+# Run instrumented tests (androidTest) on the Gradle-managed emulator; same task as CI.
+# AGP downloads the system image and creates the AVD itself; needs /dev/kvm.
+.PHONY: test-android
+test-android:
+	@echo "🧪 Running instrumented tests on managed emulator..."
+	./gradlew api35DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
 # Run lint checks
 .PHONY: lint

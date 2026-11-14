@@ -147,6 +147,18 @@ android {
         unitTests.all {
             it.useJUnitPlatform()
         }
+        // Emulator for the instrumented suite (Keystore-backed token storage), run by
+        // `make test-android` and CI via `./gradlew api35DebugAndroidTest`.
+        // AGP downloads the system image and creates the AVD itself.
+        managedDevices {
+            localDevices {
+                create("api35") {
+                    device = "Pixel 6"
+                    apiLevel = 35
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
     }
 }
 
