@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.temporal.WeekFields
 import java.util.Locale
 
 class DeckNameTemplateResolverTest {
@@ -131,20 +130,44 @@ class DeckNameTemplateResolverTest {
     }
 
     @Test
-    fun `week variable resolves to current week of year`() {
-        val now = LocalDate.now()
-        val expectedWeek = now.get(WeekFields.of(Locale.getDefault()).weekOfYear()).toString()
-        val result = resolver.resolveDeckName("{week}", Language.GERMAN)
-        assertEquals(expectedWeek, result)
+    fun `week variable resolves to week of year for the given date`() {
+        val result = resolver.resolveDeckName("{week}", Language.GERMAN, LocalDate.of(2025, 10, 1), Locale.GERMANY)
+        assertEquals("40", result)
+    }
+
+    @Test
+    fun `week is never zero for early-January days before the first full week`() {
+        // 2027-01-01 (Fri) to 2027-01-03 (Sun) precede the first full week in a Monday-first, minDays=4 locale
+        for (day in 1..4) {
+            val result = resolver.resolveDeckName("{week}", Language.GERMAN, LocalDate.of(2027, 1, day), Locale.GERMANY)
+            assertEquals("1", result, "2027-01-0$day")
+        }
+    }
+
+    @Test
+    fun `year and week stay in the same calendar year at the year boundary`() {
+        val template = "{year}-W{week}"
+        // Late December stays in the closing year's last week instead of colliding with January's week 1
+        assertEquals("2025-W53", resolver.resolveDeckName(template, Language.GERMAN, LocalDate.of(2025, 12, 29), Locale.GERMANY))
+        assertEquals("2025-W53", resolver.resolveDeckName(template, Language.GERMAN, LocalDate.of(2025, 12, 28), Locale.US))
+        // Early January belongs to the new year's week 1 instead of colliding with the next December's last week
+        assertEquals("2028-W1", resolver.resolveDeckName(template, Language.GERMAN, LocalDate.of(2028, 1, 1), Locale.GERMANY))
+        assertEquals("2028-W52", resolver.resolveDeckName(template, Language.GERMAN, LocalDate.of(2028, 12, 25), Locale.GERMANY))
+    }
+
+    @Test
+    fun `week numbering follows the locale's first day of week`() {
+        // 2027-01-10 is a Sunday: still week 1 in Germany (Monday-first), already week 3 in the US (Sunday-first)
+        val date = LocalDate.of(2027, 1, 10)
+        assertEquals("1", resolver.resolveDeckName("{week}", Language.GERMAN, date, Locale.GERMANY))
+        assertEquals("3", resolver.resolveDeckName("{week}", Language.GERMAN, date, Locale.US))
     }
 
     @Test
     fun `all date variables resolve in one template`() {
-        val now = LocalDate.now()
         val template = "{year}-{month}-{day} W{week}"
-        val result = resolver.resolveDeckName(template, Language.GERMAN)
-        val expected = "${now.year}-${String.format("%02d", now.monthValue)}-${String.format("%02d", now.dayOfMonth)} W${now.get(WeekFields.of(Locale.getDefault()).weekOfYear())}"
-        assertEquals(expected, result)
+        val result = resolver.resolveDeckName(template, Language.GERMAN, LocalDate.of(2025, 3, 7), Locale.GERMANY)
+        assertEquals("2025-03-07 W10", result)
     }
 
     // --- Whitespace handling ---
