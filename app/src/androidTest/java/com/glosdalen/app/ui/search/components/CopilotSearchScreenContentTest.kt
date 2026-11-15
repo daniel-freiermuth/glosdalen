@@ -96,6 +96,7 @@ class CopilotSearchScreenContentTest {
         override fun clearResponse() = Unit
         override fun dismissIntroDialog(showAgain: Boolean) = Unit
         override fun recheckAuthenticationStatus() = Unit
+        override fun recheckAnkiDroidAvailability() = Unit
         override fun createAnkiCard(cardIndex: Int) = Unit
         override fun updateCardDirection(direction: CopilotCardDirection) = Unit
     }
