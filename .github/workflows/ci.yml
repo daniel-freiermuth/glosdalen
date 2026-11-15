@@ -59,15 +59,20 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # The api35 managed device (app/build.gradle.kts) installs its system image into the SDK
-      - name: Locate system image
-        run: echo "SYSTEM_IMAGE_DIR=$ANDROID_HOME/system-images/android-35/aosp_atd" >> "$GITHUB_ENV"
+      # The api35 managed device (app/build.gradle.kts) installs the emulator and its system
+      # image into the SDK, but only installs the emulator together with a missing image: an
+      # image restored without the emulator fails api35Setup. Cache both as one unit; the key
+      # follows the AGP version (root build.gradle.kts), which decides the emulator it needs.
+      - name: Locate SDK
+        run: echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> "$GITHUB_ENV"
 
-      - name: Cache system image
+      - name: Cache emulator and system image
         uses: actions/cache@v4
         with:
-          path: ${{ env.SYSTEM_IMAGE_DIR }}
-          key: system-image-android-35-aosp_atd-x86_64
+          path: |
+            ${{ env.ANDROID_SDK_DIR }}/emulator
+            ${{ env.ANDROID_SDK_DIR }}/system-images/android-35/aosp_atd
+          key: emulator-android-35-aosp_atd-x86_64-${{ hashFiles('build.gradle.kts') }}
 
       - name: Instrumented tests
         run: ./gradlew api35DebugAndroidTest -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
