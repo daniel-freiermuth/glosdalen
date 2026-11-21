@@ -5,8 +5,6 @@ import com.glosdalen.app.libs.copilot.auth.CopilotTokenManager
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.CopilotApiService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withTimeout
 import retrofit2.Response
 import javax.inject.Inject
@@ -15,13 +13,12 @@ import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * Chat Request Handler with streaming support, error handling, and retry logic
+ * Chat Request Handler with error handling and retry logic
  * 
  * Provides robust API communication with:
  * - Automatic retry with exponential backoff
  * - Request validation and sanitization
  * - Comprehensive error handling
- * - Future streaming support
  */
 @Singleton
 class CopilotChatManager @Inject constructor(
@@ -83,25 +80,6 @@ class CopilotChatManager @Inject constructor(
         // Execute request with retry logic
         return executeWithRetry {
             performChatRequest(request)
-        }
-    }
-
-    /**
-     * Future: Streaming chat support
-     */
-    suspend fun sendStreamingMessage(
-        message: String,
-        modelId: String? = null,
-        maxTokens: Int = 150,
-        temperature: Float = 0.7f
-    ): Flow<String> = flow {
-        // This would be implemented when streaming is needed
-        // For now, fall back to regular request
-        val result = sendMessage(message, modelId, maxTokens, temperature)
-        if (result.isSuccess) {
-            emit(result.getOrThrow())
-        } else {
-            throw result.exceptionOrNull()!!
         }
     }
 

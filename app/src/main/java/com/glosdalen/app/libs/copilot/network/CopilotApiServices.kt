@@ -109,9 +109,6 @@ object CopilotApiConstants {
     const val CLIENT_ID = "Iv1.b507a08c87ecfe98"
     const val OAUTH_SCOPES = "read:user user:email copilot models"
     
-    // Headers
-    const val USER_AGENT = "GithubCopilot/1.250.0"
-    
     // Timeouts
     const val CONNECT_TIMEOUT = 30L // seconds
     const val READ_TIMEOUT = 60L // seconds

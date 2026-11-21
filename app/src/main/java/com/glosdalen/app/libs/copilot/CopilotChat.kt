@@ -1,19 +1,20 @@
 package com.glosdalen.app.libs.copilot
 
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.glosdalen.app.libs.copilot.auth.*
 import com.glosdalen.app.libs.copilot.chat.*
 import com.glosdalen.app.libs.copilot.models.*
 import com.glosdalen.app.libs.copilot.network.*
 import com.glosdalen.app.libs.copilot.storage.*
 import com.glosdalen.app.libs.copilot.util.*
-import kotlinx.coroutines.flow.Flow
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
@@ -23,9 +24,8 @@ import javax.inject.Singleton
  * functionality into Android applications.
  */
 @Singleton
-class CopilotChat private constructor(
-    private val context: Context,
-    private val configuration: CopilotConfiguration
+class CopilotChat @Inject constructor(
+    @ApplicationContext private val context: Context
 ) {
 
     // Core managers (lazy initialization)
@@ -42,7 +42,7 @@ class CopilotChat private constructor(
     private val copilotApiService by lazy { createCopilotApiService() }
 
     // ================================
-    // Simple API (for basic usage)
+    // Public API
     // ================================
 
     /**
@@ -114,20 +114,6 @@ class CopilotChat private constructor(
     }
 
     /**
-     * Get only free models
-     */
-    suspend fun getFreeModels(): Result<List<CopilotModel>> {
-        return modelManager.getFreeModels()
-    }
-
-    /**
-     * Get recommended models
-     */
-    suspend fun getRecommendedModels(): Result<List<CopilotModel>> {
-        return modelManager.getRecommendedModels()
-    }
-
-    /**
      * Force refresh models bypassing all caches
      */
     suspend fun refreshModels(): Result<List<CopilotModel>> {
@@ -143,58 +129,6 @@ class CopilotChat private constructor(
             storage.clearAllData()
         }
     }
-
-    // ================================
-    // Advanced API (for complex usage)
-    // ================================
-
-    /**
-     * Get authentication manager for advanced auth operations
-     */
-    fun auth(): CopilotAuthManager = authManager
-
-    /**
-     * Get token manager for advanced token operations
-     */
-    fun tokens(): CopilotTokenManager = tokenManager
-
-    /**
-     * Get model manager for advanced model operations
-     */
-    fun models(): CopilotModelManager = modelManager
-
-    /**
-     * Get chat manager for advanced chat operations
-     */
-    fun chat(): CopilotChatManager = chatManager
-
-    /**
-     * Get storage for advanced data operations
-     */
-    fun storage(): CopilotStorage = storage
-
-    // ================================
-    // Streaming API (future enhancement)
-    // ================================
-
-    /**
-     * Send streaming chat message
-     */
-    suspend fun chatStream(
-        message: String,
-        modelId: String? = null
-    ): Flow<String> {
-        return chatManager.sendStreamingMessage(message, modelId)
-    }
-
-    // ================================
-    // Library Information
-    // ================================
-
-    /**
-     * Get library configuration
-     */
-    fun getConfiguration(): CopilotConfiguration = configuration
 
     // ================================
     // Network Service Creation
@@ -235,8 +169,8 @@ class CopilotChat private constructor(
 
     private fun createHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .connectTimeout(configuration.connectionTimeout, TimeUnit.SECONDS)
-            .readTimeout(configuration.readTimeout, TimeUnit.SECONDS)
+            .connectTimeout(CopilotApiConstants.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(CopilotApiConstants.READ_TIMEOUT, TimeUnit.SECONDS)
             .writeTimeout(CopilotApiConstants.WRITE_TIMEOUT, TimeUnit.SECONDS)
             .build()
     }
@@ -244,70 +178,11 @@ class CopilotChat private constructor(
     private fun createJsonConverter() = 
         json.asConverterFactory("application/json".toMediaType())
 
-    // ================================
-    // Builder Pattern
-    // ================================
-
-    class Builder(private val context: Context) {
-        private var enableDebugLogging = false
-        private var customUserAgent: String? = null
-        private var connectionTimeout = CopilotApiConstants.CONNECT_TIMEOUT
-        private var readTimeout = CopilotApiConstants.READ_TIMEOUT
-
-        fun enableDebugLogging(enable: Boolean) = apply {
-            enableDebugLogging = enable
-        }
-
-        fun setUserAgent(userAgent: String) = apply {
-            customUserAgent = userAgent
-        }
-
-        fun setConnectionTimeout(timeoutSeconds: Long) = apply {
-            connectionTimeout = timeoutSeconds
-        }
-
-        fun setReadTimeout(timeoutSeconds: Long) = apply {
-            readTimeout = timeoutSeconds
-        }
-
-        fun build(): CopilotChat {
-            val configuration = CopilotConfiguration(
-                enableDebugLogging = enableDebugLogging,
-                userAgent = customUserAgent ?: CopilotApiConstants.USER_AGENT,
-                connectionTimeout = connectionTimeout,
-                readTimeout = readTimeout
-            )
-
-            return CopilotChat(context.applicationContext, configuration)
-        }
-    }
-
     companion object {
         // Shared Json instance to avoid redundant creation (performance optimization)
         private val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
-        
-        /**
-         * Create a new builder
-         */
-        fun builder(context: Context): Builder = Builder(context)
-
-        /**
-         * Quick setup with default configuration
-         */
-        fun create(context: Context): CopilotChat = builder(context).build()
     }
 }
-
-// ================================
-// Supporting Data Classes
-// ================================
-
-data class CopilotConfiguration(
-    val enableDebugLogging: Boolean = false,
-    val userAgent: String = CopilotApiConstants.USER_AGENT,
-    val connectionTimeout: Long = CopilotApiConstants.CONNECT_TIMEOUT,
-    val readTimeout: Long = CopilotApiConstants.READ_TIMEOUT
-)

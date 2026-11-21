@@ -76,19 +76,6 @@ class CopilotModelManager @Inject constructor(
     }
 
     /**
-     * Get recommended models for translation tasks
-     */
-    suspend fun getRecommendedModels(): Result<List<CopilotModel>> {
-        return getAvailableModels().map { models ->
-            // Sort by: Free first, then by capability and quality
-            models.sortedWith(compareBy<CopilotModel> { !it.isFree() }
-                .thenBy { it.category.ordinal }
-                .thenByDescending { it.capabilities.limits?.maxContextTokens ?: 0 })
-                .take(5) // Top 5 recommendations
-        }
-    }
-
-    /**
      * Find model by ID
      */
     suspend fun getModelById(modelId: String): Result<CopilotModel> {

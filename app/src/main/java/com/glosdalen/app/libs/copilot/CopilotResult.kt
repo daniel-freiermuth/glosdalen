@@ -81,7 +81,6 @@ sealed class CopilotException(
     sealed class ConfigException(message: String, cause: Throwable? = null) : CopilotException(message, cause) {
         class InvalidClientId : ConfigException("Invalid or missing client ID.")
         class InvalidConfiguration(val details: String) : ConfigException("Invalid configuration: $details")
-        class LibraryNotInitialized : ConfigException("Copilot library not initialized. Call CopilotChat.builder().build() first.")
     }
     
     /**
