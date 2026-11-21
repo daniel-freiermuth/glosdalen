@@ -46,15 +46,14 @@ Successfully integrated GitHub Copilot authentication into the app's settings wi
 - **Error Handling**: Dismissible error cards with friendly messages
 - **Info Section**: Explains what Copilot is used for
 
-### 3. CopilotModule.kt
-**Location:** `app/src/main/java/com/glosdalen/app/di/CopilotModule.kt`
+### 3. CopilotChat injection
+**Location:** `app/src/main/java/com/glosdalen/app/libs/copilot/CopilotChat.kt`
 
-**Purpose:** Provides singleton CopilotChat instance via Hilt dependency injection
+**Purpose:** `CopilotChat` is a Hilt `@Singleton` with an `@Inject` constructor taking the
+`@ApplicationContext`, so no DI module is needed
 
 **Configuration:**
-- Debug logging enabled in debug builds
-- 30 second connection timeout
-- 60 second read timeout
+- 30 second connection timeout, 60 second read timeout (`CopilotApiConstants`)
 - Application-scoped singleton
 
 ## Integration into Settings

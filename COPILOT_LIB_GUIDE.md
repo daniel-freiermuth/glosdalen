@@ -17,10 +17,8 @@ GitHub uses OAuth Device Flow for devices without a browser. The flow is:
 ### Implementation
 
 ```kotlin
-// Initialize the library
-val copilot = CopilotChat.builder(context)
-    .enableDebugLogging(true)
-    .build()
+// CopilotChat is a Hilt @Singleton with an @Inject constructor; inject it where needed
+class MyViewModel @Inject constructor(private val copilot: CopilotChat) : ViewModel()
 
 // Step 1: Start authentication
 suspend fun startAuth() {
@@ -288,56 +286,6 @@ suspend fun getModels() {
         }
     )
 }
-
-// Get only free models (don't consume tokens)
-suspend fun getFreeModels() {
-    val result = copilot.getFreeModels()
-    // Free models: gpt-4o, o3-mini, gpt-4.1, etc.
-}
-
-// Get recommended models (free + high quality)
-suspend fun getRecommendedModels() {
-    val result = copilot.getRecommendedModels()
-}
-
-// Advanced: Full control over request
-suspend fun advancedChat() {
-    val request = ChatRequest(
-        messages = listOf(
-            Message(role = "system", content = "You are a helpful coding assistant"),
-            Message(role = "user", content = "How do I sort a list in Kotlin?")
-        ),
-        model = "gpt-4o",
-        maxTokens = 500,
-        temperature = 0.7,
-        stream = false
-    )
-    
-    val result = copilot.chat().sendChatRequest(request)
-    
-    result.fold(
-        onSuccess = { response ->
-            val answer = response.choices.firstOrNull()?.message?.content
-            Log.i("Chat", "Answer: $answer")
-        },
-        onFailure = { error ->
-            when (error) {
-                is CopilotException.ModelException.ModelNotFound -> {
-                    Log.e("Chat", "Model not available")
-                }
-                is CopilotException.ModelException.TokenLimitExceeded -> {
-                    Log.e("Chat", "Too many tokens requested")
-                }
-                is CopilotException.NetworkException.RateLimited -> {
-                    Log.e("Chat", "Rate limited, retry after ${error.retryAfter}s")
-                }
-                else -> {
-                    Log.e("Chat", "Error: ${error.message}")
-                }
-            }
-        }
-    )
-}
 ```
 
 ### UI Flow Example
@@ -367,7 +315,7 @@ init {
 
 private fun loadModels() {
     viewModelScope.launch {
-        val result = copilot.getFreeModels() // Or getModels() for all
+        val result = copilot.getModels()
         
         result.fold(
             onSuccess = { models ->
@@ -602,28 +550,11 @@ when (error) {
 ## Complete Integration Example
 
 ```kotlin
-// In your Application class or DI setup
-class MyApp : Application() {
-    lateinit var copilot: CopilotChat
-    
-    override fun onCreate() {
-        super.onCreate()
-        
-        copilot = CopilotChat.builder(this)
-            .enableDebugLogging(BuildConfig.DEBUG)
-            .setConnectionTimeout(30)
-            .setReadTimeout(60)
-            .build()
-    }
-}
-
-// In your ViewModel with Hilt
+// In your ViewModel with Hilt (CopilotChat is injected as an application-scoped singleton)
 @HiltViewModel
 class CopilotViewModel @Inject constructor(
-    application: Application
+    private val copilot: CopilotChat
 ) : ViewModel() {
-    
-    private val copilot = (application as MyApp).copilot
     
     fun checkAuthAndChat() {
         viewModelScope.launch {
@@ -635,7 +566,7 @@ class CopilotViewModel @Inject constructor(
             }
             
             // 2. Get models
-            val modelsResult = copilot.getFreeModels()
+            val modelsResult = copilot.getModels()
             if (modelsResult.isFailure) {
                 // Handle error
                 return@launch
