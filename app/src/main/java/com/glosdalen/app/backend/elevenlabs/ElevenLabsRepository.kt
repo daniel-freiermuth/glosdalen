@@ -54,7 +54,8 @@ class ElevenLabsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val apiService: ElevenLabsApiService,
     private val preferences: ElevenLabsPreferences,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val mediaPlayerFactory: MediaPlayerFactory
 ) {
     private var mediaPlayer: MediaPlayer? = null
     private var currentAudioFile: File? = null
@@ -450,8 +451,10 @@ class ElevenLabsRepository @Inject constructor(
         onComplete: () -> Unit,
         onError: (ElevenLabsError) -> Unit
     ) {
+        var newPlayer: MediaPlayer? = null
         try {
-            val newPlayer = MediaPlayer().apply {
+            newPlayer = mediaPlayerFactory.create()
+            newPlayer.apply {
                 setDataSource(file.absolutePath)
                 
                 setOnCompletionListener {
@@ -499,6 +502,8 @@ class ElevenLabsRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to play audio", e)
+            // Not yet assigned to mediaPlayer, so stopPlayback() cannot release it
+            newPlayer?.release()
             stopPlayback()
             onError(ElevenLabsError.PlaybackError(e.message))
         }
