@@ -67,7 +67,7 @@ jobs:
         run: echo "ANDROID_SDK_DIR=$ANDROID_HOME" >> "$GITHUB_ENV"
 
       - name: Cache emulator and system image
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ${{ env.ANDROID_SDK_DIR }}/emulator
