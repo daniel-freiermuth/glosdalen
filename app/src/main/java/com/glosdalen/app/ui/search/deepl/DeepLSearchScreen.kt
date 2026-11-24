@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import com.glosdalen.app.ui.components.SplitButton
+import com.glosdalen.app.ui.components.TtsButton
 import com.glosdalen.app.backend.anki.toCardCreationErrorMessage
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -514,19 +515,12 @@ private fun TranslationCard(
                 }
                 
                 if (isTtsConfigured) {
-                    IconButton(
-                        onClick = { onSpeakText(vocabularyEntry.originalWord, vocabularyEntry.sourceLanguage) }
-                    ) {
-                        Icon(
-                            imageVector = if (isTtsPlaying) AppIcons.Stop else AppIcons.VolumeUp,
-                            contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
-                            tint = if (isTtsPlaying) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
+                    TtsButton(
+                        isPlaying = isTtsPlaying,
+                        onClick = { onSpeakText(vocabularyEntry.originalWord, vocabularyEntry.sourceLanguage) },
+                        idleTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        idleContentDescription = "Listen to pronunciation"
+                    )
                 }
             }
             
@@ -606,21 +600,14 @@ private fun TranslationCard(
                                 ) {
                                     // TTS button for translation
                                     if (isTtsConfigured) {
-                                        IconButton(
+                                        TtsButton(
+                                            isPlaying = isTtsPlaying,
                                             onClick = { onSpeakText(translation.text, vocabularyEntry.targetLanguage) },
-                                            modifier = Modifier.size(32.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = if (isTtsPlaying) AppIcons.Stop else AppIcons.VolumeUp,
-                                                contentDescription = if (isTtsPlaying) "Stop" else "Listen to pronunciation",
-                                                modifier = Modifier.size(18.dp),
-                                                tint = if (isTtsPlaying) {
-                                                    MaterialTheme.colorScheme.primary
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                                }
-                                            )
-                                        }
+                                            idleTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(32.dp),
+                                            iconModifier = Modifier.size(18.dp),
+                                            idleContentDescription = "Listen to pronunciation"
+                                        )
                                     }
                                 }
                                 
