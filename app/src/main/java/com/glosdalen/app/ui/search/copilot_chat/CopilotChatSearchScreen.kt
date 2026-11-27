@@ -9,14 +9,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.glosdalen.app.ui.components.TtsButton
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.glosdalen.app.backend.deepl.Language
 import com.glosdalen.app.ui.search.components.CopilotSearchScreenContent
 import com.glosdalen.app.ui.search.components.LanguageDirectionToggle
-import com.glosdalen.app.ui.theme.AppIcons
 
 @Composable
 fun CopilotChatSearchScreen(
@@ -148,30 +147,4 @@ private fun CardSideTtsButton(
         modifier = Modifier.size(32.dp),
         iconModifier = Modifier.size(18.dp)
     )
-}
-
-/** "Listen"/"Stop" icon button; the icon uses [idleTint] while nothing is playing. */
-@Composable
-private fun TtsButton(
-    isPlaying: Boolean,
-    onClick: () -> Unit,
-    idleTint: Color,
-    modifier: Modifier = Modifier,
-    iconModifier: Modifier = Modifier
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier
-    ) {
-        Icon(
-            imageVector = if (isPlaying) AppIcons.Stop else AppIcons.VolumeUp,
-            contentDescription = if (isPlaying) "Stop" else "Listen",
-            tint = if (isPlaying) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                idleTint
-            },
-            modifier = iconModifier
-        )
-    }
 }
