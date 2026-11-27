@@ -2,6 +2,8 @@ package com.glosdalen.app.di
 
 import com.glosdalen.app.backend.anki.AnkiContentApiFactory
 import com.glosdalen.app.backend.anki.AnkiDroidContentApiFactory
+import com.glosdalen.app.backend.elevenlabs.AndroidMediaPlayerFactory
+import com.glosdalen.app.backend.elevenlabs.MediaPlayerFactory
 import com.glosdalen.app.libs.copilot.util.SystemTimeProvider
 import com.glosdalen.app.libs.copilot.util.TimeProvider
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class UtilModule {
     abstract fun bindAnkiContentApiFactory(
         factory: AnkiDroidContentApiFactory
     ): AnkiContentApiFactory
+
+    @Binds
+    @Singleton
+    abstract fun bindMediaPlayerFactory(
+        factory: AndroidMediaPlayerFactory
+    ): MediaPlayerFactory
 }
