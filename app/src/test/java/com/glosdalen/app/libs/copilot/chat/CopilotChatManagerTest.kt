@@ -159,6 +159,36 @@ class CopilotChatManagerTest {
     inner class Backoff {
 
         @Test
+        fun `rate limiting waits at least the server's Retry-After before retrying`() = runTest {
+            val run = retry<String>(maxDelayMs = 60000) {
+                CopilotException.NetworkException.RateLimited(retryAfter = 30).asFailure()
+            }
+
+            assertEquals(listOf(30000L, 30000L), run.gaps)
+        }
+
+        @Test
+        fun `rate limiting with Retry-After beyond maxDelayMs fails immediately instead of waiting`() = runTest {
+            for (retryAfter in listOf(17L, 1680L, Long.MAX_VALUE)) {
+                val limited = CopilotException.NetworkException.RateLimited(retryAfter = retryAfter)
+                val run = retry<String>(maxDelayMs = 16000) { limited.asFailure() }
+
+                assertEquals(1, run.attemptTimes.size, "attempts for Retry-After $retryAfter")
+                assertSame(limited, run.result.exceptionOrNull())
+            }
+            assertEquals(0L, currentTime)
+        }
+
+        @Test
+        fun `rate limiting with Retry-After equal to maxDelayMs is still honored`() = runTest {
+            val run = retry<String>(maxDelayMs = 16000) {
+                CopilotException.NetworkException.RateLimited(retryAfter = 16).asFailure()
+            }
+
+            assertEquals(listOf(16000L, 16000L), run.gaps)
+        }
+
+        @Test
         fun `delay doubles between attempts and is not applied after the last one`() = runTest {
             val run = retry<String> { CopilotException.NetworkException.ServerError(500).asFailure() }
 

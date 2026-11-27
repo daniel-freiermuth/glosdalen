@@ -9,6 +9,7 @@ import kotlinx.coroutines.withTimeout
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -290,8 +291,15 @@ class CopilotChatManager @Inject constructor(
                         // Apply delay before retry (except on last attempt)
                         if (attempt < maxRetries) {
                             val jitter = delay * jitterFactor * Random.nextDouble(-1.0, 1.0)
-                            val actualDelay = (delay + jitter).toLong().coerceAtLeast(0)
-                            delay(actualDelay)
+                            val backoffDelay = (delay + jitter).toLong().coerceAtLeast(0)
+                            // Never retry a rate-limited request before the server's Retry-After window ends;
+                            // if that window exceeds our delay budget, fail now rather than block the caller.
+                            val retryAfterSeconds = (exception as? CopilotException.NetworkException.RateLimited)
+                                ?.retryAfter?.coerceAtLeast(0) ?: 0
+                            if (retryAfterSeconds > maxDelayMs / 1000 || retryAfterSeconds * 1000 > maxDelayMs) {
+                                return result
+                            }
+                            delay(max(backoffDelay, retryAfterSeconds * 1000))
 
                             // Exponential backoff with max limit
                             delay = min(maxDelayMs, (delay * backoffMultiplier).toLong())
